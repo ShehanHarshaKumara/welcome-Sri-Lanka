@@ -1,0 +1,1647 @@
+import { useEffect, useState } from "react"
+
+// ─── Data ────────────────────────────────────────────────────────────────────
+
+const NAV_ITEMS = [
+  { label: "Home", target: "home" },
+  { label: "Destinations", target: "destinations" },
+  { label: "Tours", target: "tours" },
+  { label: "Experiences", target: "experiences" },
+  { label: "Reach Us", target: "reach-us" },
+]
+
+const LANGUAGES = [
+  { code: "en", flag: "🇬🇧", label: "English" },
+
+  { code: "ja", flag: "🇯🇵", label: "日本語" },
+
+  { code: "ko", flag: "🇰🇷", label: "한국어" },
+
+  { code: "ru", flag: "🇷🇺", label: "Русский" },
+]
+
+const DESTINATIONS = [
+  {
+    name: "Sigiriya",
+
+    type: "Ancient Fortress",
+
+    img: "https://th.bing.com/th/id/R.141883ce9e6fd88f1071701dcdf2e4ac?rik=RMMnmYPoD6nAog&riu=http%3a%2f%2ftravellingclaus.com%2fwp-content%2fuploads%2f2018%2f02%2f1a22-1.jpg&ehk=fksnVD5daUgsXW%2b6HKdZfuU7go%2fkH6kMhY6xOVZWS3w%3d&risl=1&pid=ImgRaw&r=0",
+    tag: "UNESCO Heritage",
+  },
+
+  {
+    name: "Ella",
+
+    type: "Hill Country",
+
+    img: "https://www.cestujlevne.com/obrazky/17/89/1789-1840w.jpg",
+    tag: "Most Loved",
+  },
+
+  {
+    name: "Mirissa",
+
+    type: "Beach & Whales",
+
+    img: "https://img.traveltriangle.com/blog/wp-content/uploads/2019/09/Mirissa.jpg",
+    tag: "Beach Paradise",
+  },
+
+  {
+    name: "Kandy",
+
+    type: "Cultural Capital",
+
+    img: "https://media.istockphoto.com/id/502631824/photo/temple-of-the-tooth-kandy-sri-lanka.jpg?s=612x612&w=0&k=20&c=2ltjIh94gedLEJ0rgu8djEXhrfatIcVBZCH6WVr3z0k=",
+    tag: "Sacred City",
+  },
+
+  {
+    name: "Yala",
+
+    type: "National Park",
+
+    img: "https://storage.googleapis.com/ceybook_contents/uploads/blog_posts/media_content-1763453962.png",
+    tag: "Wildlife Safari",
+  },
+
+  {
+    name: "Galle",
+    type: "Colonial Fort",
+
+    img: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&h=1000&fit=crop&auto=format",
+    tag: "Dutch Heritage",
+  },
+  {
+    name: "Nuwara Eliya",
+    type: "Tea Country",
+    img: "https://tripjive.com/wp-content/uploads/2024/10/Nuwara-Eliya-attractions-5.jpg",
+    tag: "Misty Highlands",
+  },
+  {
+    name: "Unawatuna",
+    type: "Tropical Beach",
+    img: "https://media.istockphoto.com/photos/aerial-view-of-hiriketiya-beach-in-dikwella-blue-beach-in-sri-lanka-picture-id1371971078?k=20&m=1371971078&s=612x612&w=0&h=c-kNjpf62lRLUKtSP0U1GujvChSX1ISQo78cjEFMJdU=",
+    tag: "Golden Sands",
+  },
+  {
+    name: "Anuradhapura",
+    type: "Ancient City",
+    img: "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjmvikLUkB_5T7nvYrchBpucAuUWRRI5sQLgYcBTh4fJya76YkZWVJlbbeTzYZ2_q8Hur4_-Zh6XfulxwkJsefWUJeKhCRVflPRBQRk7zEyIRr1XRg5q1j-AhvxkbN3_CBCggI608KmHJcmgByG59ZWwfPZSq4yvaEOFqpmR_VUFdOkpVLbSHa8obGg/s1148/xl4muha3.png",
+    tag: "Sacred Ruins",
+  },
+  {
+    name: "Dambulla",
+    type: "Cave Temples",
+    img: "https://tse1.mm.bing.net/th/id/OIP.UuY8d36-b6PrRBNoqvJRGgHaEK?r=0&rs=1&pid=ImgDetMain&o=7&rm=3",
+    tag: "Golden Temple",
+  },
+  {
+    name: "Bentota",
+    type: "Coastal Escape",
+    img: "https://images.unsplash.com/photo-1473116763249-2faaef81ccda?w=600&h=800&fit=crop&auto=format",
+    tag: "Ocean Retreat",
+  },
+  {
+    name: "Hikkaduwa",
+    type: "Coral Coast",
+    img: "https://www.cestujlevne.com/obrazky/17/83/1783-1200w.jpg",
+    tag: "Surf & Sea",
+  },
+  {
+    name: "Arugam Bay",
+    type: "East Coast",
+    img: "https://srilankatravelpages.com/my_content/uploads/2022/11/Elephant-Rock-beach-Arugam-Bay.jpg",
+    tag: "Surf Paradise",
+  },
+  {
+    name: "Trincomalee",
+    type: "Harbour City",
+    img: "https://tse2.mm.bing.net/th/id/OIP.P95QuNxZ1QNbQIJx2Uv42wHaHJ?r=0&rs=1&pid=ImgDetMain&o=7&rm=3",
+    tag: "Crystal Waters",
+  },
+  {
+    name: "Jaffna",
+    type: "Northern Heritage",
+    img: "https://tse1.mm.bing.net/th/id/OIP.A3hQO3SczUYMzi5oNvOjfgHaEK?r=0&rs=1&pid=ImgDetMain&o=7&rm=3",
+    tag: "Cultural North",
+  },
+  {
+    name: "Kalpitiya",
+    type: "Kite &Dolphins",
+    img: "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/12/4e/2a/14/bay-of-bengal-resort.jpg?w=700&h=-1&s=1",
+    tag: "Wild Coast",
+  },
+  {
+    name: "Udawalawe",
+    type: "Elephant Country",
+    img: "https://cdn.forevervacation.com/uploads/digital/assets/udawalawe-national-park.webp",
+    tag: "Safari Trails",
+  },
+  {
+    name: "Minneriya",
+    type: "Wildlife Park",
+    img: "https://minneriyasafarisrilanka.com/wp-content/uploads/2023/09/IMG-20250920-WA0058.jpg",
+    tag: "Elephant Gathering",
+  },
+  {
+    name: "Polonnaruwa",
+    type: "Royal Kingdom",
+    img: "https://tse2.mm.bing.net/th/id/OIP.eh8hpZ_y49cLdVTbF7SHSQHaE8?r=0&rs=1&pid=ImgDetMain&o=7&rm=3",
+    tag: "Stone Kingdom",
+  },
+  {
+    name: "Haputale",
+    type: "Cloud Forest",
+    img: "https://www.bluelankatours.com/wp-content/uploads/2020/06/Haputale-06.png",
+    tag: "Hill Country",
+  },
+  {
+    name: "Kithulgala",
+    type: "Rainforest Adventure",
+    img: "https://bestofceylon.com/images/best-day-tours/best-day-tours-from-colombo/kitulgala-adventure-day-tour-in-sri-lanka/kitulgala10.jpg",
+    tag: "River Rapids",
+  },
+  {
+    name: "Weligama",
+    type: "Surf Town",
+    img: "https://driversinsrilanka.com/wp-content/uploads/2023/05/weligama-beach-820x520.webp",
+    tag: "Easy Waves",
+  },
+  {
+    name: "Tangalle",
+    type: "Hidden Coast",
+    img: "https://th.bing.com/th/id/R.b5a166ac11b0a20e9f192ce61a37a2e7?rik=LFWaYjOOXN1Nqg&pid=ImgRaw&r=0",
+    tag: "Quiet Beaches",
+  },
+  {
+    name: "Negombo",
+    type: "Lagoon Town",
+    img: "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/15/33/fd/17/negombo.jpg?w=1800&h=1000&s=1",
+    tag: "Seaside Welcome",
+  },
+  {
+    name: "Colombo",
+    type: "Capital Energy",
+    img: "https://www.okvoyage.com/wp-content/uploads/2025/03/incontournables-a-visiter-a-colombo-au-sri-lanka.jpg",
+    tag: "City & Coast",
+  },
+]
+
+const TOURS = [
+  {
+    title: "Cultural Triangle Trail",
+
+    days: "7 Days",
+
+    price: "$1,240",
+
+    type: "Cultural",
+
+    img: "https://images.unsplash.com/photo-1594736797933-d0501ba2fe65?w=800&h=500&fit=crop&auto=format",
+
+    highlights: ["Sigiriya", "Polonnaruwa", "Anuradhapura"],
+
+    rating: "4.9",
+
+    reviews: 214,
+  },
+
+  {
+    title: "Southern Coast Escape",
+
+    days: "5 Days",
+
+    price: "$890",
+
+    type: "Beach",
+
+    img: "https://images.unsplash.com/photo-1519046904884-53103b34b206?w=800&h=500&fit=crop&auto=format",
+
+    highlights: ["Mirissa", "Galle", "Unawatuna"],
+
+    rating: "4.8",
+
+    reviews: 318,
+  },
+
+  {
+    title: "Hill Country Immersion",
+
+    days: "5 Days",
+
+    price: "$980",
+
+    type: "Adventure",
+
+    img: "https://images.unsplash.com/photo-1470770841072-f978cf4d019e?w=800&h=500&fit=crop&auto=format",
+
+    highlights: ["Nuwara Eliya", "Ella", "Adam's Peak"],
+
+    rating: "4.9",
+
+    reviews: 176,
+  },
+
+  {
+    title: "Wildlife & Wilderness",
+
+    days: "6 Days",
+
+    price: "$1,480",
+
+    type: "Wildlife",
+
+    img: "https://images.unsplash.com/photo-1474511320723-9a56873867b5?w=800&h=500&fit=crop&auto=format",
+
+    highlights: ["Yala", "Udawalawe", "Minneriya"],
+
+    rating: "5.0",
+
+    reviews: 142,
+  },
+]
+
+const ACTIVITIES = [
+  { icon: "🏄", label: "Surfing", count: "12 spots" },
+
+  { icon: "🤿", label: "Diving", count: "8 reefs" },
+
+  { icon: "🥾", label: "Hiking", count: "24 trails" },
+
+  { icon: "🦁", label: "Safari", count: "5 parks" },
+
+  { icon: "🐋", label: "Whale Watch", count: "Mirissa Bay" },
+
+  { icon: "🎈", label: "Hot Air Balloon", count: "Dambulla" },
+
+  { icon: "🚂", label: "Train Journey", count: "Ella Route" },
+
+  { icon: "🏕️", label: "Camping", count: "16 sites" },
+]
+
+const REVIEWS = [
+  {
+    name: "Yuki Tanaka",
+
+    flag: "🇯🇵",
+
+    origin: "Tokyo, Japan",
+
+    text: "Sri Lanka exceeded every expectation. The train ride from Kandy to Ella was the most beautiful journey of my life — misty mountains, tea terraces, and waterfalls cascading from every cliff.",
+
+    rating: 5,
+
+    destination: "Ella & Hill Country",
+
+    img: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&auto=format",
+  },
+
+  {
+    name: "Marcus Weber",
+
+    flag: "🇩🇪",
+
+    origin: "Berlin, Germany",
+
+    text: "Sigiriya at dawn is something that should be on every traveler's list. The sunrise over the ancient rock fortress, with the jungle stretching endlessly below — utterly transcendent.",
+
+    rating: 5,
+
+    destination: "Cultural Triangle",
+
+    img: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop&auto=format",
+  },
+
+  {
+    name: "Priya Mehta",
+
+    flag: "🇮🇳",
+
+    origin: "Mumbai, India",
+
+    text: "The warmth of Sri Lankan people is unmatched. Every village we stopped in, someone offered tea and a smile. The food, the culture, the wildlife — a lifetime of memories in one small island.",
+
+    rating: 5,
+
+    destination: "Southern Coast",
+
+    img: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop&auto=format",
+  },
+]
+
+const STATS = [
+  { value: "9", label: "Provinces" },
+
+  { value: "25", label: "Districts" },
+
+  { value: "8", label: "UNESCO Sites" },
+
+  { value: "1,340+", label: "Attractions" },
+]
+
+// ─── Translations ─────────────────────────────────────────────────────────────
+
+const TRANSLATIONS: Record<string, Record<string, string>> = {
+  en: {
+    hero_headline_1: "Beyond the horizon,",
+
+    hero_headline_2: "lies the pearl of the",
+
+    hero_headline_3: "Indian Ocean.",
+
+    hero_desc:
+      "Sri Lanka — an island where ancient kingdoms rise from jungle mist, cerulean waves meet golden sands, and every sunrise carries a thousand years of story.",
+
+    cta: "Begin Journey",
+
+    destinations_heading: "Legendary Destinations",
+
+    destinations_sub: "From sacred summits to turquoise shores",
+
+    tours_heading: "Curated Journeys",
+
+    tours_sub: "Expertly crafted routes through paradise",
+
+    activities_heading: "Extraordinary Experiences",
+
+    reviews_heading: "Words from Wanderers",
+
+    newsletter_heading: "Travel dispatches from paradise",
+
+    newsletter_sub: "Stories, guides, and hidden places — straight to you.",
+
+    newsletter_placeholder: "Your email address",
+
+    newsletter_btn: "Subscribe",
+
+    search_placeholder: "Search destinations, hotels, experiences...",
+  },
+
+  ja: {
+    hero_headline_1: "地平線の彼方に、",
+
+    hero_headline_2: "インド洋の真珠が",
+
+    hero_headline_3: "眠っている。",
+
+    hero_desc:
+      "スリランカ — ジャングルの霧から古代王国が浮かび上がる島。エメラルドの波が黄金の砂浜に出会い、すべての夜明けに千年の物語が宿る。",
+
+    cta: "旅を始める",
+
+    destinations_heading: "伝説の目的地",
+
+    destinations_sub: "聖なる山頂からターコイズの岸辺まで",
+
+    tours_heading: "厳選された旅",
+
+    tours_sub: "楽園を巡る専門家が手がけたルート",
+
+    activities_heading: "非凡な体験",
+
+    reviews_heading: "旅人たちの声",
+
+    newsletter_heading: "楽園からの旅の便り",
+
+    newsletter_sub: "物語、ガイド、隠れた場所をお届けします。",
+
+    newsletter_placeholder: "メールアドレス",
+
+    newsletter_btn: "登録する",
+
+    search_placeholder: "目的地、ホテル、体験を検索...",
+  },
+
+  ko: {
+    hero_headline_1: "지평선 너머에는",
+
+    hero_headline_2: "인도양의 진주가",
+
+    hero_headline_3: "기다린다.",
+
+    hero_desc:
+      "스리랑카 — 정글 안개 속에서 고대 왕국이 솟아오르는 섬. 청록빛 파도가 황금빛 모래사장을 만나고, 매 일출마다 천 년의 이야기가 깃들어 있다.",
+
+    cta: "여정 시작하기",
+
+    destinations_heading: "전설적인 여행지",
+
+    destinations_sub: "신성한 정상에서 터키석 해안까지",
+
+    tours_heading: "엄선된 여정",
+
+    tours_sub: "전문가가 설계한 낙원 여행 루트",
+
+    activities_heading: "특별한 경험",
+
+    reviews_heading: "여행자들의 이야기",
+
+    newsletter_heading: "낙원에서 보내는 여행 소식",
+
+    newsletter_sub: "이야기, 가이드, 숨겨진 장소를 바로 전달합니다.",
+
+    newsletter_placeholder: "이메일 주소",
+
+    newsletter_btn: "구독하기",
+
+    search_placeholder: "여행지, 호텔, 경험 검색...",
+  },
+
+  ru: {
+    hero_headline_1: "За горизонтом",
+
+    hero_headline_2: "скрывается жемчужина",
+
+    hero_headline_3: "Индийского океана.",
+
+    hero_desc:
+      "Шри-Ланка — остров, где древние царства поднимаются из джунглевого тумана, лазурные волны встречают золотые пески, и каждый рассвет несёт в себе тысячу лет истории.",
+
+    cta: "Начать путешествие",
+
+    destinations_heading: "Легендарные места",
+
+    destinations_sub: "От священных вершин до бирюзовых берегов",
+
+    tours_heading: "Кураторские путешествия",
+
+    tours_sub: "Мастерски составленные маршруты через рай",
+
+    activities_heading: "Незабываемые впечатления",
+
+    reviews_heading: "Слова путешественников",
+
+    newsletter_heading: "Путевые заметки из рая",
+
+    newsletter_sub: "Истории, гиды и скрытые места — прямо вам.",
+
+    newsletter_placeholder: "Ваш email",
+
+    newsletter_btn: "Подписаться",
+
+    search_placeholder: "Поиск направлений, отелей, впечатлений...",
+  },
+}
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function t(lang: string, key: string): string {
+  return TRANSLATIONS[lang]?.[key] ?? TRANSLATIONS["en"][key] ?? key
+}
+
+// ─── Sub-components ──────────────────────────────────────────────────────────
+
+function StarRating({ rating }: { rating: number }) {
+  return (
+    <span className="text-amber-400 text-sm">
+      {"★".repeat(rating)}
+      {"☆".repeat(5 - rating)}
+    </span>
+  )
+}
+
+function TourCard({ tour }: { tour: typeof TOURS[0] }) {
+  const [hovered, setHovered] = useState(false)
+
+  return (
+    <div
+      className="rounded-2xl overflow-hidden cursor-pointer"
+      style={{ background: "#f9f9f9", border: "1px solid rgba(0,0,0,0.06)" }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      <div
+        className="relative overflow-hidden"
+        style={{ height: "220px", background: "#dff4ff" }}
+      >
+        <img
+          src={tour.img}
+          alt={tour.title}
+          className="w-full h-full object-cover transition-transform duration-700"
+          style={{ transform: hovered ? "scale(1.05)" : "scale(1)" }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+        <span
+          className="absolute top-4 right-4 text-xs font-medium px-3 py-1 rounded-full"
+          style={{
+            background: "#07856f",
+            color: "#fff",
+            fontFamily: "Inter, sans-serif",
+          }}
+        >
+          {tour.type}
+        </span>
+        <span
+          className="absolute bottom-4 left-4 text-white font-semibold text-sm"
+          style={{ fontFamily: "Inter, sans-serif" }}
+        >
+          {tour.days}
+        </span>
+      </div>
+      <div className="p-5">
+        <h3
+          className="text-xl mb-2"
+          style={{
+            fontFamily: "'Instrument Serif', serif",
+            fontWeight: 400,
+            color: "#064e3b",
+          }}
+        >
+          {tour.title}
+        </h3>
+        <div className="flex gap-2 flex-wrap mb-4">
+          {tour.highlights.map((h) => (
+            <span
+              key={h}
+              className="text-xs px-2 py-0.5 rounded-full"
+              style={{
+                background: "rgba(0,0,0,0.06)",
+                color: "#6f6f6f",
+                fontFamily: "Inter, sans-serif",
+              }}
+            >
+              {h}
+            </span>
+          ))}
+        </div>
+        <div className="flex items-center justify-between">
+          <div>
+            <span
+              className="text-xs text-[#6f6f6f]"
+              style={{ fontFamily: "Inter, sans-serif" }}
+            >
+              ★ {tour.rating} · {tour.reviews} reviews
+            </span>
+          </div>
+          <div>
+            <span
+              className="text-lg font-semibold"
+              style={{ fontFamily: "Inter, sans-serif", color: "#07856f" }}
+            >
+              {tour.price}
+            </span>
+            <span
+              className="text-xs text-[#6f6f6f] ml-1"
+              style={{ fontFamily: "Inter, sans-serif" }}
+            >
+              / person
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function DestinationsPage({ onBack }: { onBack: () => void }) {
+  return (
+    <main
+      className="min-h-screen px-5 py-8 sm:px-8 lg:px-12"
+      style={{ background: "#f4fcf6" }}
+    >
+      <div className="max-w-7xl mx-auto">
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 mb-12">
+          <div>
+            <button
+              type="button"
+              onClick={onBack}
+              className="inline-flex items-center gap-2 text-sm mb-6"
+              style={{ color: "#07856f", fontFamily: "Inter, sans-serif" }}
+            >
+              ← Back to home
+            </button>
+            <p
+              className="text-xs font-semibold uppercase tracking-[0.18em] mb-3"
+              style={{ color: "#07856f" }}
+            >
+              Discover Sri Lanka
+            </p>
+            <h1
+              style={{
+                fontFamily: "'Instrument Serif', serif",
+                fontSize: "clamp(3rem, 7vw, 5.5rem)",
+                color: "#064e3b",
+                fontWeight: 400,
+                lineHeight: 0.94,
+              }}
+            >
+              Every corner tells a story.
+            </h1>
+          </div>
+          <p
+            className="max-w-sm leading-relaxed"
+            style={{ color: "#4b6d62", fontFamily: "Inter, sans-serif" }}
+          >
+            Explore 25 hand-picked places across Sri Lanka—from ancient cities
+            and misty hills to beaches and wildlife reserves.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 min-[480px]:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5">
+          {DESTINATIONS.map((dest) => (
+            <article
+              key={dest.name}
+              className="relative overflow-hidden rounded-2xl group"
+              style={{ aspectRatio: "3/4", background: "#dff4ff" }}
+            >
+              <img
+                src={dest.img}
+                alt={dest.name}
+                loading="lazy"
+                className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+              />
+              <div
+                className="absolute inset-0"
+                style={{
+                  background:
+                    "linear-gradient(180deg, transparent 34%, rgba(4,61,53,0.84) 100%)",
+                }}
+              />
+              <span
+                className="absolute top-4 left-4 px-3 py-1 rounded-full text-[11px] font-semibold"
+                style={{
+                  background: "rgba(255,255,255,0.92)",
+                  color: "#075c55",
+                }}
+              >
+                {dest.tag}
+              </span>
+              <div className="absolute left-5 right-5 bottom-5 text-white">
+                <p className="text-xs mb-1 text-white/75">{dest.type}</p>
+                <h2
+                  style={{
+                    fontFamily: "'Instrument Serif', serif",
+                    fontSize: "2rem",
+                    fontWeight: 400,
+                    lineHeight: 1,
+                  }}
+                >
+                  {dest.name}
+                </h2>
+              </div>
+            </article>
+          ))}
+        </div>
+      </div>
+    </main>
+  )
+}
+
+// ─── Main Component ──────────────────────────────────────────────────────────
+
+export default function App() {
+  const [navScrolled, setNavScrolled] = useState(false)
+
+  const [langOpen, setLangOpen] = useState(false)
+
+  const [lang, setLang] = useState("en")
+
+  const [email, setEmail] = useState("")
+
+  const [subscribed, setSubscribed] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false)
+  const [page, setPage] = useState<"home" | "destinations">("home")
+
+  // ── Video fade loop ──
+
+  // ── Scroll detection ──
+
+  useEffect(() => {
+    const onScroll = () => setNavScrolled(window.scrollY > 40)
+
+    window.addEventListener("scroll", onScroll, { passive: true })
+
+    return () => window.removeEventListener("scroll", onScroll)
+  }, [])
+
+  const showHomeSection = (target: string) => {
+    setMenuOpen(false)
+    setLangOpen(false)
+    const scroll = () =>
+      document.getElementById(target)?.scrollIntoView({ behavior: "smooth" })
+
+    if (page === "home") {
+      scroll()
+      return
+    }
+
+    setPage("home")
+    window.setTimeout(scroll, 0)
+  }
+
+  const showDestinations = () => {
+    setMenuOpen(false)
+    setLangOpen(false)
+    setPage("destinations")
+    window.scrollTo({ top: 0, behavior: "smooth" })
+  }
+
+  if (page === "destinations") {
+    return <DestinationsPage onBack={() => showHomeSection("destinations")} />
+  }
+
+  return (
+    <div
+      style={{
+        background: "#f4fcf6",
+        minHeight: "100vh",
+        fontFamily: "Inter, sans-serif",
+      }}
+    >
+      {/* ── Navigation ── */}
+      <nav
+        className="fixed top-0 left-0 right-0 z-50 transition-all duration-300"
+        style={{
+          pointerEvents: "none",
+        }}
+      >
+        <div
+          className="w-full px-4 sm:px-6 lg:px-10 py-3 flex items-center justify-between transition-all duration-300"
+          style={{
+            pointerEvents: "auto",
+
+            background: navScrolled
+              ? "rgba(231,249,237,0.96)"
+              : "rgba(231,249,237,0.86)",
+
+            backdropFilter: "blur(18px) saturate(150%)",
+
+            borderBottom: "1px solid rgba(6,78,59,0.14)",
+
+            boxShadow: navScrolled
+              ? "0 12px 30px rgba(6,78,59,0.14)"
+              : "0 8px 24px rgba(6,78,59,0.1)",
+          }}
+        >
+          {/* Logo */}
+          <button
+            type="button"
+            className="flex items-center gap-2.5"
+            onClick={() => showHomeSection("home")}
+            aria-label="Wonder Lanka home"
+          >
+            <span
+              className="grid place-items-center w-8 h-8 rounded-xl text-[10px] font-bold tracking-[0.12em]"
+              style={{
+                background: "#d8f5ff",
+                color: "#075c55",
+                fontFamily: "Inter, sans-serif",
+              }}
+            >
+              SL
+            </span>
+            <span
+              style={{
+                fontFamily: "'Instrument Serif', serif",
+
+                fontSize: "1.875rem",
+
+                letterSpacing: "-0.02em",
+
+                color: "#064e3b",
+
+                lineHeight: 1,
+
+                fontWeight: 400,
+              }}
+            >
+              Wonder Lanka
+              <sup style={{ fontSize: "0.5em", verticalAlign: "super" }}>®</sup>
+            </span>
+          </button>
+
+          {/* Desktop nav */}
+          <div
+            className="hidden md:flex items-center gap-1 p-1 rounded-full"
+            style={{
+              background: "rgba(6,78,59,0.07)",
+              border: "1px solid rgba(6,78,59,0.1)",
+            }}
+          >
+            {NAV_ITEMS.map((item) => (
+              <button
+                type="button"
+                key={item.label}
+                onClick={() =>
+                  item.target === "destinations"
+                    ? showDestinations()
+                    : showHomeSection(item.target)
+                }
+                className="text-xs px-3.5 py-2 rounded-full transition-all duration-200"
+                style={{
+                  fontFamily: "Inter, sans-serif",
+
+                  color:
+                    item.target === "home" ? "#064e3b" : "rgba(6,78,59,0.72)",
+                  background:
+                    item.target === "home" ? "#ffffff" : "transparent",
+                  fontWeight: item.target === "home" ? 600 : 400,
+                }}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Right controls */}
+          <div className="flex items-center gap-3">
+            {/* Language switcher */}
+            <div className="relative hidden md:block">
+              <button
+                className="flex items-center gap-1.5 text-xs px-3 py-2 rounded-full transition-colors"
+                style={{
+                  color: "#064e3b",
+                  fontFamily: "Inter, sans-serif",
+                  background: "rgba(6,78,59,0.08)",
+                }}
+                onClick={() => setLangOpen((v) => !v)}
+                aria-expanded={langOpen}
+                aria-haspopup="menu"
+                aria-label="Choose language"
+              >
+                🌐 {LANGUAGES.find((l) => l.code === lang)?.flag}
+                <svg width="10" height="6" viewBox="0 0 10 6" fill="none">
+                  <path
+                    d="M1 1l4 4 4-4"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                  />
+                </svg>
+              </button>
+              {langOpen && (
+                <div
+                  className="absolute right-0 top-full mt-2 rounded-xl overflow-hidden shadow-lg"
+                  style={{
+                    background: "#fff",
+                    border: "1px solid rgba(0,0,0,0.08)",
+                    minWidth: "140px",
+                  }}
+                >
+                  {LANGUAGES.map((l) => (
+                    <button
+                      key={l.code}
+                      className="w-full text-left px-4 py-2.5 text-sm flex items-center gap-2 hover:bg-black/5 transition-colors"
+                      style={{
+                        fontFamily: "Inter, sans-serif",
+
+                        color: lang === l.code ? "#000" : "#6f6f6f",
+
+                        fontWeight: lang === l.code ? 500 : 400,
+                      }}
+                      onClick={() => {
+                        setLang(l.code)
+                        setLangOpen(false)
+                      }}
+                      role="menuitem"
+                    >
+                      {l.flag} {l.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* CTA */}
+            <button
+              className="hidden md:block text-xs font-semibold px-5 py-2.5 rounded-full transition-transform duration-200"
+              style={{
+                background: "#ffffff",
+
+                color: "#064e3b",
+
+                fontFamily: "Inter, sans-serif",
+
+                transform: "scale(1)",
+              }}
+              onMouseEnter={(e) =>
+                (e.currentTarget.style.transform = "scale(1.03)")
+              }
+              onMouseLeave={(e) =>
+                (e.currentTarget.style.transform = "scale(1)")
+              }
+              onClick={() => showHomeSection("destinations")}
+            >
+              {t(lang, "cta")}
+            </button>
+
+            {/* Mobile menu */}
+            <button
+              className="md:hidden p-2 rounded-xl"
+              style={{ background: "rgba(6,78,59,0.1)" }}
+              onClick={() => setMenuOpen((v) => !v)}
+              aria-label="Toggle menu"
+              aria-expanded={menuOpen}
+              aria-controls="mobile-navigation"
+            >
+              <div className="w-5 h-0.5 bg-[#064e3b] mb-1.5" />
+              <div className="w-5 h-0.5 bg-[#064e3b] mb-1.5" />
+              <div className="w-5 h-0.5 bg-[#064e3b]" />
+            </button>
+          </div>
+        </div>
+
+        {/* Mobile menu */}
+        {menuOpen && (
+          <div
+            id="mobile-navigation"
+            className="md:hidden px-5 py-3"
+            style={{
+              background: "rgba(231,249,237,0.98)",
+              backdropFilter: "blur(18px)",
+              borderBottom: "1px solid rgba(6,78,59,0.14)",
+            }}
+          >
+            {NAV_ITEMS.map((item) => (
+              <button
+                type="button"
+                key={item.label}
+                onClick={() =>
+                  item.target === "destinations"
+                    ? showDestinations()
+                    : showHomeSection(item.target)
+                }
+                className="block w-full py-3 text-left text-sm border-b"
+                style={{
+                  fontFamily: "Inter, sans-serif",
+
+                  color:
+                    item.target === "home" ? "#064e3b" : "rgba(6,78,59,0.7)",
+                  borderColor: "rgba(6,78,59,0.1)",
+                }}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+        )}
+      </nav>
+
+      {/* ── Hero ── */}
+      <section
+        id="home"
+        className="relative w-full overflow-hidden"
+        style={{ minHeight: "100vh" }}
+      >
+        {/* Video background */}
+        <video
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="metadata"
+          aria-hidden="true"
+          style={{
+            position: "absolute",
+
+            top: "50%",
+
+            left: "50%",
+
+            width: "max(100%, 177.78vh)",
+
+            height: "max(100%, 56.25vw)",
+
+            transform: "translate(-50%, -50%)",
+
+            objectFit: "cover",
+
+            pointerEvents: "none",
+
+            zIndex: 0,
+          }}
+        >
+          <source src="/assets/videos/sri-lanka-hero.mp4" type="video/mp4" />
+        </video>
+
+        {/* Gradient overlays */}
+        <div
+          className="absolute inset-0"
+          style={{
+            background:
+              "linear-gradient(180deg, rgba(4,78,59,0.62) 0%, rgba(21,151,191,0.24) 52%, rgba(4,78,59,0.7) 100%)",
+
+            zIndex: 1,
+          }}
+        />
+
+        {/* Hero content */}
+        <div
+          className="relative flex flex-col items-center justify-center text-center px-6"
+          style={{ paddingTop: "6rem", paddingBottom: "10rem", zIndex: 10 }}
+        >
+          {/* Pill badge */}
+          <div
+            className="animate-fade-rise inline-flex items-center gap-2 px-4 py-2 rounded-full mb-8 text-xs font-medium"
+            style={{
+              background: "rgba(255,255,255,0.15)",
+
+              color: "#ffffff",
+
+              fontFamily: "Inter, sans-serif",
+
+              border: "1px solid rgba(255,255,255,0.28)",
+            }}
+          >
+            <span>🇱🇰</span> The Pearl of the Indian Ocean
+          </div>
+
+          {/* Headline */}
+          <h1
+            className="animate-fade-rise max-w-5xl"
+            style={{
+              fontFamily: "'Instrument Serif', serif",
+
+              fontSize: "clamp(3rem, 8vw, 6rem)",
+
+              fontWeight: 400,
+
+              lineHeight: 0.95,
+
+              letterSpacing: "-2.46px",
+
+              color: "#ffffff",
+
+              marginBottom: 0,
+            }}
+          >
+            {t(lang, "hero_headline_1")}{" "}
+            <em style={{ color: "rgba(255,255,255,0.8)", fontStyle: "italic" }}>
+              {t(lang, "hero_headline_2")}
+            </em>{" "}
+            <span style={{ color: "#fff" }}>{t(lang, "hero_headline_3")}</span>
+          </h1>
+
+          {/* Description */}
+          <p
+            className="animate-fade-rise-delay max-w-2xl mt-8 leading-relaxed"
+            style={{
+              fontFamily: "Inter, sans-serif",
+
+              fontSize: "clamp(0.9rem, 1.5vw, 1.125rem)",
+
+              color: "rgba(255,255,255,0.85)",
+            }}
+          >
+            {t(lang, "hero_desc")}
+          </p>
+
+          {/* Stats */}
+          <div className="animate-fade-rise-delay-3 mt-16 flex flex-wrap justify-center gap-12">
+            {STATS.map((s) => (
+              <div key={s.label} className="text-center">
+                <div
+                  style={{
+                    fontFamily: "'Instrument Serif', serif",
+
+                    fontSize: "2rem",
+
+                    fontWeight: 400,
+
+                    color: "#fff",
+
+                    lineHeight: 1,
+                  }}
+                >
+                  {s.value}
+                </div>
+                <div
+                  style={{
+                    fontFamily: "Inter, sans-serif",
+                    fontSize: "0.75rem",
+                    color: "rgba(255,255,255,0.75)",
+                    marginTop: "4px",
+                  }}
+                >
+                  {s.label}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Destinations ── */}
+      <section id="destinations" className="py-24 overflow-hidden scroll-mt-20">
+        <div className="max-w-7xl mx-auto px-6 mb-14 animate-fade-rise">
+          <p
+            className="text-sm mb-3"
+            style={{
+              fontFamily: "Inter, sans-serif",
+              color: "#6f6f6f",
+              letterSpacing: "0.1em",
+              textTransform: "uppercase",
+            }}
+          >
+            Explore
+          </p>
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+            <h2
+              style={{
+                fontFamily: "'Instrument Serif', serif",
+
+                fontSize: "clamp(2rem, 4vw, 3.5rem)",
+
+                fontWeight: 400,
+
+                color: "#064e3b",
+
+                lineHeight: 1.05,
+              }}
+            >
+              {t(lang, "destinations_heading")}
+            </h2>
+            <p
+              style={{
+                fontFamily: "Inter, sans-serif",
+                color: "#6f6f6f",
+                fontSize: "1rem",
+                maxWidth: "260px",
+                textAlign: "right",
+              }}
+            >
+              {t(lang, "destinations_sub")}
+            </p>
+          </div>
+        </div>
+
+        <div className="destinations-slider" aria-label="Featured destinations">
+          <div className="destinations-slider-list">
+            {[...DESTINATIONS, ...DESTINATIONS].map((dest, index) => (
+              <article
+                key={`${dest.name}-${index}`}
+                className="destinations-slider-item"
+                aria-hidden={index >= DESTINATIONS.length}
+              >
+                <img
+                  src={dest.img}
+                  alt={index < DESTINATIONS.length ? dest.name : ""}
+                  loading="lazy"
+                />
+                <div className="destinations-slider-shade" />
+                <span className="destinations-slider-tag">{dest.tag}</span>
+                <div className="destinations-slider-copy">
+                  <p>{dest.type}</p>
+                  <h3>{dest.name}</h3>
+                </div>
+              </article>
+            ))}
+          </div>
+        </div>
+        <div className="px-6 mt-10 flex justify-center">
+          <button
+            type="button"
+            onClick={showDestinations}
+            className="rounded-full px-7 py-3.5 text-sm font-semibold transition-transform duration-200 hover:scale-[1.03]"
+            style={{
+              background: "#07856f",
+              color: "#fff",
+              fontFamily: "Inter, sans-serif",
+              boxShadow: "0 12px 24px rgba(7,133,111,0.2)",
+            }}
+          >
+            Explore More Destinations →
+          </button>
+        </div>
+      </section>
+
+      {/* ── Activities strip ── */}
+      <section
+        id="experiences"
+        className="py-16 px-6"
+        style={{
+          background: "linear-gradient(120deg, #e8faed 0%, #c9f1d6 100%)",
+          overflow: "hidden",
+        }}
+      >
+        <div className="max-w-7xl mx-auto">
+          <h2
+            className="text-center mb-10"
+            style={{
+              fontFamily: "'Instrument Serif', serif",
+
+              fontSize: "clamp(1.5rem, 3vw, 2.5rem)",
+
+              fontWeight: 400,
+
+              color: "#064e3b",
+            }}
+          >
+            {t(lang, "activities_heading")}
+          </h2>
+          <div className="grid grid-cols-4 sm:grid-cols-8 gap-2">
+            {ACTIVITIES.map((a) => (
+              <div
+                key={a.label}
+                className="flex flex-col items-center gap-2 p-4 rounded-xl cursor-pointer group transition-colors duration-200"
+                style={{ border: "1px solid rgba(6,78,59,0.14)" }}
+                onMouseEnter={(e) =>
+                  (e.currentTarget.style.background = "rgba(255,255,255,0.52)")
+                }
+                onMouseLeave={(e) =>
+                  (e.currentTarget.style.background = "transparent")
+                }
+              >
+                <span className="text-3xl">{a.icon}</span>
+                <span
+                  className="text-xs font-medium text-center"
+                  style={{ fontFamily: "Inter, sans-serif", color: "#064e3b" }}
+                >
+                  {a.label}
+                </span>
+                <span
+                  className="text-xs text-center"
+                  style={{
+                    fontFamily: "Inter, sans-serif",
+                    color: "rgba(6,78,59,0.62)",
+                  }}
+                >
+                  {a.count}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Tours ── */}
+      <section id="tours" className="py-24 px-6 max-w-7xl mx-auto scroll-mt-20">
+        <div className="mb-14">
+          <p
+            className="text-sm mb-3"
+            style={{
+              fontFamily: "Inter, sans-serif",
+              color: "#6f6f6f",
+              letterSpacing: "0.1em",
+              textTransform: "uppercase",
+            }}
+          >
+            Packages
+          </p>
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+            <h2
+              style={{
+                fontFamily: "'Instrument Serif', serif",
+
+                fontSize: "clamp(2rem, 4vw, 3.5rem)",
+
+                fontWeight: 400,
+
+                color: "#064e3b",
+
+                lineHeight: 1.05,
+              }}
+            >
+              {t(lang, "tours_heading")}
+            </h2>
+            <p
+              style={{
+                fontFamily: "Inter, sans-serif",
+                color: "#6f6f6f",
+                fontSize: "1rem",
+                maxWidth: "260px",
+                textAlign: "right",
+              }}
+            >
+              {t(lang, "tours_sub")}
+            </p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {TOURS.map((tour) => (
+            <TourCard key={tour.title} tour={tour} />
+          ))}
+        </div>
+      </section>
+
+      {/* ── Reviews ── */}
+      <section
+        className="py-24 px-6"
+        style={{
+          background: "#e8f8ff",
+          borderTop: "1px solid rgba(7,133,111,0.12)",
+        }}
+      >
+        <div className="max-w-7xl mx-auto">
+          <div className="mb-14 text-center">
+            <h2
+              style={{
+                fontFamily: "'Instrument Serif', serif",
+
+                fontSize: "clamp(2rem, 4vw, 3.5rem)",
+
+                fontWeight: 400,
+
+                color: "#064e3b",
+              }}
+            >
+              {t(lang, "reviews_heading")}
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {REVIEWS.map((r) => (
+              <div
+                key={r.name}
+                className="p-7 rounded-2xl"
+                style={{
+                  background: "#fff",
+                  border: "1px solid rgba(7,133,111,0.14)",
+                }}
+              >
+                <StarRating rating={r.rating} />
+                <p
+                  className="mt-4 leading-relaxed"
+                  style={{
+                    fontFamily: "Inter, sans-serif",
+                    fontSize: "0.9rem",
+                    color: "#333",
+                    lineHeight: 1.7,
+                  }}
+                >
+                  "{r.text}"
+                </p>
+                <div className="mt-6 flex items-center gap-3">
+                  <img
+                    src={r.img}
+                    alt={r.name}
+                    loading="lazy"
+                    className="w-10 h-10 rounded-full object-cover"
+                    style={{ background: "#dff4ff" }}
+                  />
+                  <div>
+                    <div
+                      className="text-sm font-medium"
+                      style={{
+                        fontFamily: "Inter, sans-serif",
+                        color: "#064e3b",
+                      }}
+                    >
+                      {r.name} {r.flag}
+                    </div>
+                    <div
+                      className="text-xs"
+                      style={{
+                        fontFamily: "Inter, sans-serif",
+                        color: "#6f6f6f",
+                      }}
+                    >
+                      {r.origin} · {r.destination}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Newsletter ── */}
+      <section
+        className="py-24 px-6"
+        style={{
+          background: "linear-gradient(135deg, #e8faed 0%, #c9f1d6 100%)",
+        }}
+      >
+        <div className="max-w-2xl mx-auto text-center">
+          <h2
+            className="mb-4"
+            style={{
+              fontFamily: "'Instrument Serif', serif",
+
+              fontSize: "clamp(2rem, 4vw, 3rem)",
+
+              fontWeight: 400,
+
+              color: "#064e3b",
+
+              lineHeight: 1.1,
+            }}
+          >
+            {t(lang, "newsletter_heading")}
+          </h2>
+          <p
+            className="mb-10"
+            style={{
+              fontFamily: "Inter, sans-serif",
+              color: "rgba(6,78,59,0.72)",
+              fontSize: "1rem",
+            }}
+          >
+            {t(lang, "newsletter_sub")}
+          </p>
+          <form
+            className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto"
+            onSubmit={(e) => {
+              e.preventDefault()
+              setSubscribed(true)
+              setEmail("")
+            }}
+          >
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder={t(lang, "newsletter_placeholder")}
+              aria-label={t(lang, "newsletter_placeholder")}
+              required
+              className="flex-1 px-5 py-3 rounded-full text-sm outline-none"
+              style={{
+                background: "rgba(255,255,255,0.78)",
+
+                border: "1px solid rgba(6,78,59,0.16)",
+
+                color: "#064e3b",
+
+                fontFamily: "Inter, sans-serif",
+              }}
+            />
+            <button
+              type="submit"
+              className="px-6 py-3 rounded-full text-sm font-medium transition-transform duration-200"
+              style={{
+                background: "#07856f",
+                color: "#fff",
+                fontFamily: "Inter, sans-serif",
+              }}
+              onMouseEnter={(e) =>
+                (e.currentTarget.style.transform = "scale(1.03)")
+              }
+              onMouseLeave={(e) =>
+                (e.currentTarget.style.transform = "scale(1)")
+              }
+            >
+              {t(lang, "newsletter_btn")}
+            </button>
+          </form>
+          {subscribed && (
+            <p
+              className="mt-4 text-sm"
+              style={{ color: "#064e3b" }}
+              role="status"
+            >
+              Thank you! Your travel updates are ready to go.
+            </p>
+          )}
+        </div>
+      </section>
+
+      {/* ── Footer ── */}
+      <footer
+        id="reach-us"
+        className="py-14 px-8"
+        style={{
+          background: "#043d35",
+          borderTop: "1px solid rgba(217,245,255,0.18)",
+        }}
+      >
+        <div className="max-w-7xl mx-auto">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-10 mb-12">
+            <div>
+              <span
+                className="block mb-4"
+                style={{
+                  fontFamily: "'Instrument Serif', serif",
+
+                  fontSize: "1.5rem",
+
+                  color: "#fff",
+
+                  fontWeight: 400,
+                }}
+              >
+                Wonder Lanka
+                <sup style={{ fontSize: "0.5em", verticalAlign: "super" }}>
+                  ®
+                </sup>
+              </span>
+              <p
+                style={{
+                  fontFamily: "Inter, sans-serif",
+                  fontSize: "0.8rem",
+                  color: "rgba(255,255,255,0.35)",
+                  lineHeight: 1.7,
+                }}
+              >
+                Discover the island that has enchanted travelers for over two
+                millennia.
+              </p>
+            </div>
+            {[
+              {
+                heading: "Explore",
+                links: [
+                  { label: "Destinations", target: "destinations" },
+                  { label: "Tour Packages", target: "tours" },
+                  { label: "Hotels" },
+                  { label: "Restaurants" },
+                  { label: "Activities", target: "experiences" },
+                ],
+              },
+
+              {
+                heading: "Travel Info",
+                links: [
+                  { label: "Visa Guide" },
+                  { label: "Currency" },
+                  { label: "Transport" },
+                  { label: "Safety" },
+                  { label: "Health Tips" },
+                ],
+              },
+
+              {
+                heading: "Company",
+                links: [
+                  { label: "About" },
+                  { label: "Blog" },
+                  { label: "Press" },
+                  { label: "Careers" },
+                  { label: "Contact", target: "reach-us" },
+                ],
+              },
+            ].map((col) => (
+              <div key={col.heading}>
+                <p
+                  className="mb-4 text-xs font-medium"
+                  style={{
+                    fontFamily: "Inter, sans-serif",
+                    color: "rgba(255,255,255,0.5)",
+                    letterSpacing: "0.1em",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  {col.heading}
+                </p>
+                <ul className="space-y-2">
+                  {col.links.map((link) => (
+                    <li key={link.label}>
+                      {link.target ? (
+                        <button
+                          type="button"
+                          className="text-sm transition-colors duration-200 hover:text-white"
+                          style={{
+                            fontFamily: "Inter, sans-serif",
+                            color: "rgba(255,255,255,0.4)",
+                          }}
+                          onClick={() =>
+                            link.target === "destinations"
+                              ? showDestinations()
+                              : showHomeSection(link.target)
+                          }
+                        >
+                          {link.label}
+                        </button>
+                      ) : (
+                        <span
+                          className="text-sm"
+                          style={{
+                            fontFamily: "Inter, sans-serif",
+                            color: "rgba(255,255,255,0.4)",
+                          }}
+                        >
+                          {link.label}
+                        </span>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+
+          <div
+            className="flex flex-col sm:flex-row items-center justify-between pt-8 gap-4"
+            style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}
+          >
+            <p
+              style={{
+                fontFamily: "Inter, sans-serif",
+                fontSize: "0.75rem",
+                color: "rgba(255,255,255,0.25)",
+              }}
+            >
+              © 2026 Wonder Lanka. All rights reserved.
+            </p>
+            <div className="flex gap-2">
+              {LANGUAGES.map((l) => (
+                <button
+                  key={l.code}
+                  className="text-lg transition-opacity duration-200"
+                  style={{ opacity: lang === l.code ? 1 : 0.3 }}
+                  onClick={() => setLang(l.code)}
+                  title={l.label}
+                >
+                  {l.flag}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      </footer>
+    </div>
+  )
+}

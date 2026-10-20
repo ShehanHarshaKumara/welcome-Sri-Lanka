@@ -1,0 +1,18 @@
+node_modules/
+dist/
+.build-*/
+
+# Local Vite caches and logs
+.vite/
+*.log
+
+# Local environment files
+.env
+.env.*
+!.env.example
+
+# Editor and OS files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

@@ -1,0 +1,139 @@
+@import './styles/fonts.css';
+@import 'tailwindcss';
+@import './styles/theme.css';
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: var(--background);
+  color: var(--foreground);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.destinations-slider {
+  height: 370px;
+  overflow: hidden;
+  mask-image: linear-gradient(to right, transparent, #000 7%, #000 93%, transparent);
+}
+
+.destinations-slider-list {
+  display: flex;
+  gap: 18px;
+  height: 100%;
+  width: max-content;
+  animation: destination-marquee 80s linear infinite;
+}
+
+.destinations-slider-item {
+  position: relative;
+  flex: 0 0 clamp(195px, 20vw, 270px);
+  width: clamp(195px, 20vw, 270px);
+  height: 350px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  border-radius: 20px;
+  background: #dff4ff;
+  box-shadow: 0 16px 36px rgba(6, 78, 59, 0.14);
+  transition: filter 300ms ease, transform 300ms ease;
+}
+
+.destinations-slider-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.destinations-slider-shade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(6, 78, 59, 0.03) 28%, rgba(4, 61, 53, 0.78) 100%);
+}
+
+.destinations-slider-tag {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.9);
+  color: #075c55;
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+.destinations-slider-copy {
+  position: absolute;
+  right: 18px;
+  bottom: 18px;
+  left: 18px;
+  color: #fff;
+}
+
+.destinations-slider-copy p {
+  margin: 0 0 4px;
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.destinations-slider-copy h3 {
+  margin: 0;
+  font-family: 'Instrument Serif', serif;
+  font-size: 2rem;
+  font-weight: 400;
+  line-height: 1;
+}
+
+.destinations-slider:hover .destinations-slider-list {
+  animation-play-state: paused;
+}
+
+.destinations-slider:hover .destinations-slider-item {
+  filter: grayscale(0.8);
+}
+
+.destinations-slider .destinations-slider-item:hover {
+  filter: grayscale(0);
+  transform: translateY(-6px);
+}
+
+@keyframes destination-marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(calc(-50% - 9px)); }
+}
+
+@media (max-width: 640px) {
+  .destinations-slider {
+    height: 285px;
+  }
+
+  .destinations-slider-item {
+    height: 270px;
+  }
+
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .destinations-slider-list {
+    animation-play-state: paused;
+  }
+}
+
+/* Hide scrollbar by default, show on scroll */
+::-webkit-scrollbar {
+  width: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 2px;
+}

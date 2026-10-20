@@ -1,0 +1,10 @@
+{
+  "description": "Explore Sri Lanka with an immersive travel platform featuring video backgrounds, destination guides, booking options, and personalized itineraries.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}
