@@ -1177,6 +1177,365 @@ body {
   }
 }
 
+/* Curated journey flip cards */
+.tour-carousel-heading-actions {
+  display: flex;
+  align-items: flex-end;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.tour-carousel-heading-actions > p {
+  max-width: 16rem;
+  margin: 0;
+  color: #6f6f6f;
+  font-size: 1rem;
+  text-align: right;
+}
+
+.tour-carousel-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+}
+
+.tour-carousel-controls button {
+  display: grid;
+  width: 2.5rem;
+  height: 2.5rem;
+  place-items: center;
+  border: 1px solid rgba(7, 133, 111, 0.2);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.78);
+  color: #075c55;
+  cursor: pointer;
+  transition: color 220ms ease, background 220ms ease, transform 220ms ease;
+}
+
+.tour-carousel-controls button:hover {
+  background: #07856f;
+  color: #fff;
+  transform: scale(1.06);
+}
+
+.tour-carousel-controls button:focus-visible {
+  outline: 2px solid #07856f;
+  outline-offset: 2px;
+}
+
+.tour-carousel-controls span {
+  color: #6f6f6f;
+  font-size: 0.56rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.tour-carousel-track {
+  display: flex;
+  gap: 1.5rem;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0.25rem max(1.5rem, calc((100vw - 80rem) / 2)) 1.5rem;
+  scroll-behavior: smooth;
+  scroll-padding-inline: max(1.5rem, calc((100vw - 80rem) / 2));
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  overscroll-behavior-inline: contain;
+}
+
+.tour-carousel-track::-webkit-scrollbar {
+  display: none;
+}
+
+.tour-carousel-slide {
+  flex: 0 0 calc((100% - 3rem) / 3);
+  min-width: 0;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+}
+
+.tour-flip-card {
+  width: 100%;
+  min-width: 0;
+  height: clamp(25rem, 38vw, 28rem);
+  perspective: 1100px;
+  outline: none;
+}
+
+.tour-flip-content {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 1.25rem;
+  box-shadow: 0 1.4rem 3.2rem rgba(5, 53, 43, 0.18);
+  transform-style: preserve-3d;
+  transition: transform 650ms cubic-bezier(0.2, 0.72, 0.2, 1);
+}
+
+.tour-flip-card:hover .tour-flip-content,
+.tour-flip-card:focus .tour-flip-content,
+.tour-flip-card:focus-within .tour-flip-content {
+  transform: rotateY(180deg);
+}
+
+.tour-flip-face {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 1.25rem;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.tour-flip-front {
+  isolation: isolate;
+  background: #143f36;
+  color: #fff;
+}
+
+.tour-flip-front > img,
+.tour-flip-image-shade {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.tour-flip-front > img {
+  z-index: -2;
+  object-fit: cover;
+  transition: transform 900ms ease;
+}
+
+.tour-flip-card:hover .tour-flip-front > img {
+  transform: scale(1.06);
+}
+
+.tour-flip-image-shade {
+  z-index: -1;
+  background: linear-gradient(180deg, rgba(5, 29, 24, 0.08) 18%, rgba(5, 29, 24, 0.26) 48%, rgba(5, 29, 24, 0.88) 100%);
+}
+
+.tour-flip-topline {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  left: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: rgba(255, 255, 255, 0.84);
+  font-size: 0.64rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.tour-flip-badge {
+  padding: 0.38rem 0.72rem;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 999px;
+  background: rgba(5, 55, 46, 0.38);
+  backdrop-filter: blur(10px);
+}
+
+.tour-flip-description {
+  position: absolute;
+  right: 0.8rem;
+  bottom: 0.8rem;
+  left: 0.8rem;
+  padding: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 0.9rem;
+  background: rgba(4, 28, 23, 0.58);
+  box-shadow: 0 0.8rem 2rem rgba(0, 0, 0, 0.24);
+  backdrop-filter: blur(14px) saturate(1.15);
+}
+
+.tour-flip-description > p,
+.tour-flip-back-content > div > p {
+  margin: 0 0 0.45rem;
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 0.55rem;
+  font-weight: 600;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.tour-flip-back-content .tour-flip-summary {
+  margin: 0.75rem 0 0;
+  color: rgba(255, 255, 255, 0.66);
+  font-size: 0.66rem;
+  font-weight: 400;
+  letter-spacing: 0;
+  line-height: 1.55;
+  text-transform: none;
+}
+
+.tour-flip-title-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 0.8rem;
+}
+
+.tour-flip-title-row h3,
+.tour-flip-back-content h3 {
+  margin: 0;
+  font-family: 'Instrument Serif', serif;
+  font-size: clamp(1.65rem, 2.6vw, 2.25rem);
+  font-weight: 400;
+  line-height: 0.95;
+}
+
+.tour-flip-title-row > span {
+  display: grid;
+  width: 1.8rem;
+  height: 1.8rem;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 50%;
+  background: #ec9967;
+  color: #183b31;
+}
+
+.tour-flip-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+  margin-top: 0.85rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.14);
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 0.58rem;
+}
+
+.tour-flip-footer strong {
+  color: #fff;
+  font-size: 0.78rem;
+}
+
+.tour-flip-back {
+  display: grid;
+  padding: 2px;
+  place-items: center;
+  background: #102d27;
+  color: #fff;
+  transform: rotateY(180deg);
+}
+
+.tour-flip-back::before {
+  position: absolute;
+  width: 46%;
+  height: 160%;
+  background: linear-gradient(90deg, transparent, #ff9966, #ffc16e, #ff9966, transparent);
+  content: '';
+  animation: tour-card-rotation 5s linear infinite;
+}
+
+.tour-flip-back-content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  width: 100%;
+  height: 100%;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.35rem;
+  border-radius: calc(1.25rem - 2px);
+  background:
+    radial-gradient(circle at 88% 12%, rgba(255, 153, 102, 0.16), transparent 32%),
+    #102d27;
+}
+
+.tour-flip-compass {
+  display: grid;
+  width: 3.1rem;
+  height: 3.1rem;
+  place-items: center;
+  border: 1px solid rgba(255, 193, 110, 0.65);
+  border-radius: 50%;
+  color: #ffc16e;
+  font-size: 1.2rem;
+}
+
+.tour-flip-route {
+  border-top: 1px solid rgba(255, 255, 255, 0.13);
+}
+
+.tour-flip-route span {
+  display: grid;
+  grid-template-columns: 1.8rem 1fr;
+  gap: 0.45rem;
+  padding: 0.65rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.13);
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 0.68rem;
+}
+
+.tour-flip-route b {
+  color: #ff9966;
+  font-size: 0.55rem;
+}
+
+.tour-flip-back-footer {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 0.75rem;
+  color: rgba(255, 255, 255, 0.58);
+  font-size: 0.6rem;
+}
+
+.tour-flip-back-footer strong {
+  color: #ffc16e;
+  font-family: 'Instrument Serif', serif;
+  font-size: 1.45rem;
+  font-weight: 400;
+}
+
+@keyframes tour-card-rotation {
+  to { transform: rotateZ(360deg); }
+}
+
+@media (max-width: 640px) {
+  .tour-carousel-heading-actions {
+    align-items: flex-start;
+  }
+  .tour-carousel-heading-actions > p {
+    text-align: left;
+  }
+  .tour-carousel-track {
+    padding-right: 1.5rem;
+    padding-left: 1.5rem;
+  }
+  .tour-carousel-slide {
+    flex-basis: min(86vw, 21rem);
+  }
+  .tour-flip-card {
+    height: 28rem;
+  }
+}
+
+@media (min-width: 641px) and (max-width: 1023px) {
+  .tour-carousel-slide {
+    flex-basis: calc((100% - 1.5rem) / 2);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tour-flip-content {
+    transition-duration: 1ms;
+  }
+  .tour-flip-back::before {
+    animation: none;
+  }
+}
+
 .destinations-slider {
   height: 370px;
   overflow: hidden;

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type CSSProperties } from "react"
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from "react"
 
 // ─── Data ────────────────────────────────────────────────────────────────────
 
@@ -210,9 +210,13 @@ const TOURS = [
 
     type: "Cultural",
 
-    img: "https://images.unsplash.com/photo-1594736797933-d0501ba2fe65?w=800&h=500&fit=crop&auto=format",
+    img: DESTINATIONS[0].img,
 
     highlights: ["Sigiriya", "Polonnaruwa", "Anuradhapura"],
+
+    description: "Ancient capitals, cave temples, and Sigiriya's rock gardens across Sri Lanka's UNESCO-rich heartland.",
+
+    bestFor: "History & architecture",
 
     rating: "4.9",
 
@@ -228,9 +232,13 @@ const TOURS = [
 
     type: "Beach",
 
-    img: "https://images.unsplash.com/photo-1519046904884-53103b34b206?w=800&h=500&fit=crop&auto=format",
+    img: DESTINATIONS[2].img,
 
     highlights: ["Mirissa", "Galle", "Unawatuna"],
+
+    description: "Whale-watching waters, Galle Fort, and palm-fringed beaches along the island's relaxed southern coast.",
+
+    bestFor: "Ocean & heritage",
 
     rating: "4.8",
 
@@ -246,9 +254,13 @@ const TOURS = [
 
     type: "Adventure",
 
-    img: "https://images.unsplash.com/photo-1470770841072-f978cf4d019e?w=800&h=500&fit=crop&auto=format",
+    img: DESTINATIONS[1].img,
 
     highlights: ["Nuwara Eliya", "Ella", "Adam's Peak"],
+
+    description: "Tea estates, waterfalls, cool mountain towns, and the celebrated rail journey through the central highlands.",
+
+    bestFor: "Scenery & slow travel",
 
     rating: "4.9",
 
@@ -264,13 +276,82 @@ const TOURS = [
 
     type: "Wildlife",
 
-    img: "https://images.unsplash.com/photo-1474511320723-9a56873867b5?w=800&h=500&fit=crop&auto=format",
+    img: DESTINATIONS[4].img,
 
     highlights: ["Yala", "Udawalawe", "Minneriya"],
+
+    description: "Dawn safaris through leopard and elephant country, paired with quiet wilderness lodges and open landscapes.",
+
+    bestFor: "Safaris & nature",
 
     rating: "5.0",
 
     reviews: 142,
+  },
+
+  {
+    title: "Northern Heritage Passage",
+    days: "7 Days",
+    price: "$1,190",
+    type: "Culture",
+    img: DESTINATIONS[14].img,
+    highlights: ["Anuradhapura", "Jaffna", "Trincomalee"],
+    description: "Sacred ruins, Jaffna's distinctive Tamil culture, island temples, and the clear-water northeastern coast.",
+    bestFor: "Living culture",
+    rating: "4.8",
+    reviews: 96,
+  },
+
+  {
+    title: "East Coast Sunrise Trail",
+    days: "6 Days",
+    price: "$1,060",
+    type: "Coastal",
+    img: DESTINATIONS[13].img,
+    highlights: ["Trincomalee", "Pasikudah", "Arugam Bay"],
+    description: "Harbour history, calm beaches, colourful places of worship, and sunrise coastlines along Sri Lanka's east.",
+    bestFor: "Sunrise & sea",
+    rating: "4.9",
+    reviews: 121,
+  },
+
+  {
+    title: "Surf & River Adventure",
+    days: "8 Days",
+    price: "$1,340",
+    type: "Active",
+    img: DESTINATIONS[12].img,
+    highlights: ["Arugam Bay", "Kithulgala", "Weligama"],
+    description: "Surf breaks, rainforest rapids, and laid-back beach towns shaped for travellers who prefer to keep moving.",
+    bestFor: "Surf & white water",
+    rating: "4.8",
+    reviews: 88,
+  },
+
+  {
+    title: "Ayurveda & Coastal Calm",
+    days: "5 Days",
+    price: "$1,120",
+    type: "Wellness",
+    img: DESTINATIONS[10].img,
+    highlights: ["Bentota", "Hikkaduwa", "Galle"],
+    description: "Ayurvedic rituals, spa time, lagoon calm, and an unhurried southern-coast reset rooted in island wellness.",
+    bestFor: "Rest & renewal",
+    rating: "4.9",
+    reviews: 109,
+  },
+
+  {
+    title: "Grand Island Discovery",
+    days: "10 Days",
+    price: "$1,890",
+    type: "Signature",
+    img: DESTINATIONS[24].img,
+    highlights: ["Colombo", "Sigiriya", "Kandy & Ella"],
+    description: "A first-time visitor's sweep from Colombo to ancient kingdoms, sacred Kandy, and the tea-covered highlands.",
+    bestFor: "First-time visitors",
+    rating: "5.0",
+    reviews: 204,
   },
 ]
 
@@ -512,96 +593,58 @@ function StarRating({ rating }: { rating: number }) {
   )
 }
 
-function TourCard({ tour }: { tour: typeof TOURS[0] }) {
-  const [hovered, setHovered] = useState(false)
-
+function TourCard({ tour, interactive = true }: { tour: typeof TOURS[0]; interactive?: boolean }) {
   return (
-    <div
-      className="rounded-2xl overflow-hidden cursor-pointer"
-      style={{ background: "#f9f9f9", border: "1px solid rgba(0,0,0,0.06)" }}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
+    <article
+      className="tour-flip-card"
+      tabIndex={interactive ? 0 : -1}
+      aria-label={`${tour.title}. Flip card for journey details.`}
     >
-      <div
-        className="relative overflow-hidden"
-        style={{ height: "220px", background: "#dff4ff" }}
-      >
-        <img
-          src={tour.img}
-          alt={tour.title}
-          className="w-full h-full object-cover transition-transform duration-700"
-          style={{ transform: hovered ? "scale(1.05)" : "scale(1)" }}
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
-        <span
-          className="absolute top-4 right-4 text-xs font-medium px-3 py-1 rounded-full"
-          style={{
-            background: "#07856f",
-            color: "#fff",
-            fontFamily: "Inter, sans-serif",
-          }}
-        >
-          {tour.type}
-        </span>
-        <span
-          className="absolute bottom-4 left-4 text-white font-semibold text-sm"
-          style={{ fontFamily: "Inter, sans-serif" }}
-        >
-          {tour.days}
-        </span>
-      </div>
-      <div className="p-5">
-        <h3
-          className="text-xl mb-2"
-          style={{
-            fontFamily: "'Instrument Serif', serif",
-            fontWeight: 400,
-            color: "#064e3b",
-          }}
-        >
-          {tour.title}
-        </h3>
-        <div className="flex gap-2 flex-wrap mb-4">
-          {tour.highlights.map((h) => (
-            <span
-              key={h}
-              className="text-xs px-2 py-0.5 rounded-full"
-              style={{
-                background: "rgba(0,0,0,0.06)",
-                color: "#6f6f6f",
-                fontFamily: "Inter, sans-serif",
-              }}
-            >
-              {h}
-            </span>
-          ))}
-        </div>
-        <div className="flex items-center justify-between">
-          <div>
-            <span
-              className="text-xs text-[#6f6f6f]"
-              style={{ fontFamily: "Inter, sans-serif" }}
-            >
-              ★ {tour.rating} · {tour.reviews} reviews
-            </span>
+      <div className="tour-flip-content">
+        <div className="tour-flip-face tour-flip-front">
+          <img src={tour.img} alt={tour.title} loading="lazy" />
+          <div className="tour-flip-image-shade" aria-hidden="true" />
+          <div className="tour-flip-topline">
+            <span className="tour-flip-badge">{tour.type}</span>
+            <span>{tour.days}</span>
           </div>
-          <div>
-            <span
-              className="text-lg font-semibold"
-              style={{ fontFamily: "Inter, sans-serif", color: "#07856f" }}
-            >
-              {tour.price}
-            </span>
-            <span
-              className="text-xs text-[#6f6f6f] ml-1"
-              style={{ fontFamily: "Inter, sans-serif" }}
-            >
-              / person
-            </span>
+          <div className="tour-flip-description">
+            <p>Best for · {tour.bestFor}</p>
+            <div className="tour-flip-title-row">
+              <h3>{tour.title}</h3>
+              <span aria-hidden="true">↗</span>
+            </div>
+            <div className="tour-flip-footer">
+              <span>★ {tour.rating} · {tour.reviews} reviews</span>
+              <strong>From {tour.price}</strong>
+            </div>
+          </div>
+        </div>
+
+        <div className="tour-flip-face tour-flip-back">
+          <div className="tour-flip-back-content">
+            <div className="tour-flip-compass" aria-hidden="true">✦</div>
+            <div>
+              <p>{tour.type} · {tour.days}</p>
+              <h3>{tour.title}</h3>
+              <p className="tour-flip-summary">{tour.description}</p>
+            </div>
+            <div className="tour-flip-route" aria-label="Journey highlights">
+              {tour.highlights.map((highlight, index) => (
+                <span key={highlight}>
+                  <b>{String(index + 1).padStart(2, "0")}</b>
+                  {highlight}
+                </span>
+              ))}
+            </div>
+            <div className="tour-flip-back-footer">
+              <span><strong>{tour.price}</strong> / person</span>
+              <span>Explore journey →</span>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </article>
   )
 }
 
@@ -717,8 +760,12 @@ export default function App() {
   const [experiencePaused, setExperiencePaused] = useState(false)
   const [experienceInView, setExperienceInView] = useState(false)
   const [destinationFocus, setDestinationFocus] = useState(0)
+  const [toursInView, setToursInView] = useState(false)
+  const [toursPaused, setToursPaused] = useState(false)
   const experienceDragStart = useRef<number | null>(null)
   const experiencesRef = useRef<HTMLElement | null>(null)
+  const toursTrackRef = useRef<HTMLDivElement | null>(null)
+  const toursSectionRef = useRef<HTMLElement | null>(null)
 
   // ── Video fade loop ──
 
@@ -795,6 +842,71 @@ export default function App() {
     return () => window.clearTimeout(timer)
   }, [destinationFocus, experienceInView, experiencePaused, experienceSlide])
 
+  useEffect(() => {
+    const section = toursSectionRef.current
+    if (!section) return
+
+    const observer = new IntersectionObserver(
+      ([entry]) => setToursInView(entry.isIntersecting),
+      { threshold: 0.3 },
+    )
+
+    observer.observe(section)
+    return () => observer.disconnect()
+  }, [])
+
+  useEffect(() => {
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    if (!toursInView || toursPaused || reducedMotion) return
+
+    const timer = window.setInterval(() => {
+      const track = toursTrackRef.current
+      if (!track) return
+      track.scrollBy({
+        left: track.clientWidth,
+        behavior: "smooth",
+      })
+    }, 4500)
+
+    return () => window.clearInterval(timer)
+  }, [toursInView, toursPaused])
+
+  useLayoutEffect(() => {
+    const track = toursTrackRef.current
+    if (!track) return
+
+    const slides = Array.from(track.querySelectorAll<HTMLElement>("[data-tour-slide]"))
+    const firstMiddleSlide = slides[TOURS.length]
+    const firstSlide = slides[0]
+    if (!firstSlide || !firstMiddleSlide) return
+
+    const loopWidth = firstMiddleSlide.offsetLeft - firstSlide.offsetLeft
+    track.scrollLeft = loopWidth
+
+    let settleTimer = 0
+    const wrapLoop = () => {
+      window.clearTimeout(settleTimer)
+      settleTimer = window.setTimeout(() => {
+        const current = track.scrollLeft
+        let wrapped = current
+
+        if (current < loopWidth * 0.5) wrapped = current + loopWidth
+        if (current > loopWidth * 1.5) wrapped = current - loopWidth
+        if (wrapped === current) return
+
+        track.style.scrollBehavior = "auto"
+        track.scrollLeft = wrapped
+        window.requestAnimationFrame(() => track.style.removeProperty("scroll-behavior"))
+      }, 140)
+    }
+
+    track.addEventListener("scroll", wrapLoop, { passive: true })
+    return () => {
+      window.clearTimeout(settleTimer)
+      track.removeEventListener("scroll", wrapLoop)
+    }
+  }, [])
+
   const showHomeSection = (target: string) => {
     setMenuOpen(false)
     setLangOpen(false)
@@ -862,14 +974,18 @@ export default function App() {
             aria-label="Wonder Lanka home"
           >
             <span
-              className="grid place-items-center w-8 h-8 rounded-xl text-[10px] font-bold tracking-[0.12em]"
+              className="grid place-items-center w-8 h-8 rounded-lg text-[1.35rem]"
+              aria-hidden="true"
               style={{
-                background: "#d8f5ff",
-                color: "#075c55",
-                fontFamily: "Inter, sans-serif",
+                background: "rgba(255,255,255,0.48)",
+                boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.52)",
               }}
             >
-              SL
+              <img
+                src="https://flagcdn.com/w40/lk.png"
+                alt=""
+                className="w-6 h-auto rounded-[2px] shadow-sm"
+              />
             </span>
             <span
               style={{
@@ -1566,8 +1682,20 @@ export default function App() {
       </section>
 
       {/* ── Tours ── */}
-      <section id="tours" className="py-24 px-6 max-w-7xl mx-auto scroll-mt-20">
-        <div className="mb-14">
+      <section
+        ref={toursSectionRef}
+        id="tours"
+        className="py-24 w-full overflow-hidden scroll-mt-20"
+        onMouseEnter={() => setToursPaused(true)}
+        onMouseLeave={() => setToursPaused(false)}
+        onFocusCapture={() => setToursPaused(true)}
+        onBlurCapture={(event) => {
+          if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
+            setToursPaused(false)
+          }
+        }}
+      >
+        <div className="mb-14 max-w-7xl mx-auto px-6">
           <p
             className="text-sm mb-3"
             style={{
@@ -1595,24 +1723,53 @@ export default function App() {
             >
               {t(lang, "tours_heading")}
             </h2>
-            <p
-              style={{
-                fontFamily: "Inter, sans-serif",
-                color: "#6f6f6f",
-                fontSize: "1rem",
-                maxWidth: "260px",
-                textAlign: "right",
-              }}
-            >
-              {t(lang, "tours_sub")}
-            </p>
+            <div className="tour-carousel-heading-actions">
+              <p>{t(lang, "tours_sub")}</p>
+              <div className="tour-carousel-controls" aria-label="Journey slider controls">
+                <button
+                  type="button"
+                  aria-label="Previous journeys"
+                  onClick={() => toursTrackRef.current?.scrollBy({
+                    left: -toursTrackRef.current.clientWidth,
+                    behavior: "smooth",
+                  })}
+                >
+                  ←
+                </button>
+                <span>Swipe to explore</span>
+                <button
+                  type="button"
+                  aria-label="Next journeys"
+                  onClick={() => toursTrackRef.current?.scrollBy({
+                    left: toursTrackRef.current.clientWidth,
+                    behavior: "smooth",
+                  })}
+                >
+                  →
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {TOURS.map((tour) => (
-            <TourCard key={tour.title} tour={tour} />
-          ))}
+        <div
+          ref={toursTrackRef}
+          className="tour-carousel-track"
+          aria-label="Curated journey packages"
+          onPointerDown={() => setToursPaused(true)}
+          onPointerUp={() => setToursPaused(false)}
+          onPointerCancel={() => setToursPaused(false)}
+        >
+          {[0, 1, 2].flatMap((loop) => TOURS.map((tour) => (
+            <div
+              className="tour-carousel-slide"
+              data-tour-slide
+              aria-hidden={loop === 1 ? undefined : true}
+              key={`${loop}-${tour.title}`}
+            >
+              <TourCard tour={tour} interactive={loop === 1} />
+            </div>
+          )))}
         </div>
       </section>
 
