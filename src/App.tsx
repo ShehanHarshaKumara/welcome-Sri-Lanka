@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState, type CSSProperties } from "react"
 
 // ─── Data ────────────────────────────────────────────────────────────────────
 
@@ -189,6 +189,17 @@ const DESTINATIONS = [
   },
 ]
 
+const DESTINATION_THEMES = [
+  "#b95f3b",
+  "#4f765f",
+  "#287f88",
+  "#9a6738",
+  "#6f7042",
+  "#486a84",
+  "#7a607e",
+  "#b87854",
+]
+
 const TOURS = [
   {
     title: "Cultural Triangle Trail",
@@ -261,24 +272,6 @@ const TOURS = [
 
     reviews: 142,
   },
-]
-
-const ACTIVITIES = [
-  { icon: "🏄", label: "Surfing", count: "12 spots" },
-
-  { icon: "🤿", label: "Diving", count: "8 reefs" },
-
-  { icon: "🥾", label: "Hiking", count: "24 trails" },
-
-  { icon: "🦁", label: "Safari", count: "5 parks" },
-
-  { icon: "🐋", label: "Whale Watch", count: "Mirissa Bay" },
-
-  { icon: "🎈", label: "Hot Air Balloon", count: "Dambulla" },
-
-  { icon: "🚂", label: "Train Journey", count: "Ella Route" },
-
-  { icon: "🏕️", label: "Camping", count: "16 sites" },
 ]
 
 const REVIEWS = [
@@ -489,6 +482,23 @@ const TRANSLATIONS: Record<string, Record<string, string>> = {
 
 function t(lang: string, key: string): string {
   return TRANSLATIONS[lang]?.[key] ?? TRANSLATIONS["en"][key] ?? key
+}
+
+function LetterReveal({ text }: { text: string }) {
+  return (
+    <span className="editorial-letters" aria-label={text}>
+      {Array.from(text).map((character, index) => (
+        <span
+          key={`${character}-${index}`}
+          aria-hidden="true"
+          className={character === " " ? "editorial-space" : "editorial-letter"}
+          style={{ "--letter-index": index } as CSSProperties}
+        >
+          {character === " " ? "\u00a0" : character}
+        </span>
+      ))}
+    </span>
+  )
 }
 
 // ─── Sub-components ──────────────────────────────────────────────────────────
@@ -703,6 +713,12 @@ export default function App() {
   const [subscribed, setSubscribed] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const [page, setPage] = useState<"home" | "destinations">("home")
+  const [experienceSlide, setExperienceSlide] = useState(0)
+  const [experiencePaused, setExperiencePaused] = useState(false)
+  const [experienceInView, setExperienceInView] = useState(false)
+  const [destinationFocus, setDestinationFocus] = useState(0)
+  const experienceDragStart = useRef<number | null>(null)
+  const experiencesRef = useRef<HTMLElement | null>(null)
 
   // ── Video fade loop ──
 
@@ -715,6 +731,69 @@ export default function App() {
 
     return () => window.removeEventListener("scroll", onScroll)
   }, [])
+
+  useEffect(() => {
+    const reveals = document.querySelectorAll<HTMLElement>(".experience-reveal")
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("is-visible")
+            observer.unobserve(entry.target)
+          }
+        })
+      },
+      { threshold: 0.28 },
+    )
+
+    reveals.forEach((element) => observer.observe(element))
+    return () => observer.disconnect()
+  }, [])
+
+  useEffect(() => {
+    const section = experiencesRef.current
+    if (!section) return
+
+    const observer = new IntersectionObserver(
+      ([entry]) => setExperienceInView(entry.isIntersecting),
+      { threshold: 0.35 },
+    )
+
+    observer.observe(section)
+    return () => observer.disconnect()
+  }, [])
+
+  useEffect(() => {
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    if (!experienceInView || experiencePaused || reducedMotion || experienceSlide === 2) return
+
+    const timer = window.setTimeout(() => {
+      setExperienceSlide((current) => (current + 1) % 3)
+    }, 7000)
+
+    return () => window.clearTimeout(timer)
+  }, [experienceInView, experiencePaused, experienceSlide])
+
+  useEffect(() => {
+    if (experienceSlide === 2) setDestinationFocus(0)
+  }, [experienceSlide])
+
+  useEffect(() => {
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    if (experienceSlide !== 2 || !experienceInView || experiencePaused || reducedMotion) return
+
+    const timer = window.setTimeout(() => {
+      setDestinationFocus((current) => {
+        if (current === DESTINATIONS.length - 1) {
+          setExperienceSlide(0)
+          return 0
+        }
+        return current + 1
+      })
+    }, 1800)
+
+    return () => window.clearTimeout(timer)
+  }, [destinationFocus, experienceInView, experiencePaused, experienceSlide])
 
   const showHomeSection = (target: string) => {
     setMenuOpen(false)
@@ -1207,62 +1286,282 @@ export default function App() {
         </div>
       </section>
 
-      {/* ── Activities strip ── */}
+      {/* ── Experiences ── */}
       <section
+        ref={experiencesRef}
         id="experiences"
-        className="py-16 px-6"
+        className={`experiences-editorial scroll-mt-20${experiencePaused ? " is-autoplay-paused" : ""}`}
         style={{
-          background: "linear-gradient(120deg, #e8faed 0%, #c9f1d6 100%)",
-          overflow: "hidden",
+          "--experience-duration": experienceSlide === 2
+            ? `${DESTINATIONS.length * 1.8}s`
+            : "7s",
+        } as CSSProperties}
+        aria-roledescription="carousel"
+        aria-label="Extraordinary experiences"
+        tabIndex={0}
+        onMouseEnter={() => setExperiencePaused(true)}
+        onMouseLeave={() => setExperiencePaused(false)}
+        onFocusCapture={() => setExperiencePaused(true)}
+        onBlurCapture={(event) => {
+          if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
+            setExperiencePaused(false)
+          }
+        }}
+        onKeyDown={(event) => {
+          if (event.key === "ArrowRight") {
+            setExperienceSlide((current) => (current + 1) % 3)
+          }
+          if (event.key === "ArrowLeft") {
+            setExperienceSlide((current) => (current + 2) % 3)
+          }
         }}
       >
-        <div className="max-w-7xl mx-auto">
-          <h2
-            className="text-center mb-10"
-            style={{
-              fontFamily: "'Instrument Serif', serif",
+        <div className="experience-grain" aria-hidden="true" />
 
-              fontSize: "clamp(1.5rem, 3vw, 2.5rem)",
-
-              fontWeight: 400,
-
-              color: "#064e3b",
-            }}
+        <div
+          className="experience-slider-window"
+          onPointerDown={(event) => {
+            if ((event.target as HTMLElement).closest("button, a")) return
+            setExperiencePaused(true)
+            experienceDragStart.current = event.clientX
+            event.currentTarget.setPointerCapture(event.pointerId)
+          }}
+          onPointerUp={(event) => {
+            if (experienceDragStart.current === null) return
+            const distance = event.clientX - experienceDragStart.current
+            if (distance < -55) {
+              setExperienceSlide((current) => (current + 1) % 3)
+            } else if (distance > 55) {
+              setExperienceSlide((current) => (current + 2) % 3)
+            }
+            experienceDragStart.current = null
+            setExperiencePaused(false)
+          }}
+          onPointerCancel={() => {
+            experienceDragStart.current = null
+            setExperiencePaused(false)
+          }}
+        >
+          <div
+            className="experience-slider-track"
+            style={{ transform: `translate3d(-${experienceSlide * 100}%, 0, 0)` }}
           >
-            {t(lang, "activities_heading")}
-          </h2>
-          <div className="grid grid-cols-4 sm:grid-cols-8 gap-2">
-            {ACTIVITIES.map((a) => (
-              <div
-                key={a.label}
-                className="flex flex-col items-center gap-2 p-4 rounded-xl cursor-pointer group transition-colors duration-200"
-                style={{ border: "1px solid rgba(6,78,59,0.14)" }}
-                onMouseEnter={(e) =>
-                  (e.currentTarget.style.background = "rgba(255,255,255,0.52)")
-                }
-                onMouseLeave={(e) =>
-                  (e.currentTarget.style.background = "transparent")
-                }
-              >
-                <span className="text-3xl">{a.icon}</span>
-                <span
-                  className="text-xs font-medium text-center"
-                  style={{ fontFamily: "Inter, sans-serif", color: "#064e3b" }}
-                >
-                  {a.label}
+
+        <div
+          className="experience-cover experience-reveal"
+          aria-hidden={experienceSlide !== 0}
+          inert={experienceSlide !== 0}
+        >
+          <img
+            className="experience-cover-photo"
+            src="https://d2ol7oe51mr4n9.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/934f4b51-d05b-4498-9c4a-8262f044da66.jpg"
+            alt="Elephant crossing golden grassland"
+            draggable={false}
+          />
+          <div className="experience-cover-title">
+            <p>{t(lang, "activities_heading")}</p>
+            <h2>
+              <LetterReveal text="WILD" />
+              <span className="experience-cover-title-space" aria-hidden="true"> </span>
+              <br className="experience-cover-mobile-break" />
+              <LetterReveal text="ENCOUNTERS" />
+            </h2>
+          </div>
+          <button
+            type="button"
+            className="experience-cover-pill"
+            onClick={() => setExperienceSlide(1)}
+          >
+            Enter the story <span aria-hidden="true">→</span>
+          </button>
+          <div className="experience-cover-melt" aria-hidden="true" />
+        </div>
+
+        <div
+          id="experience-story"
+          className="experience-statement experience-reveal"
+          aria-hidden={experienceSlide !== 1}
+          inert={experienceSlide !== 1}
+        >
+          <img
+            className="experience-statement-background"
+            src="https://images.unsplash.com/photo-1516426122078-c23e76319801?w=1800&h=1100&fit=crop&auto=format"
+            alt="Safari landscape at golden hour"
+            draggable={false}
+          />
+          <div className="experience-statement-shade" aria-hidden="true" />
+
+          <div className="experience-statement-panel">
+            <p className="experience-editorial-label">The island, fully alive</p>
+            <div className="experience-statement-copy" aria-label="The wild is not watched, it is felt">
+              <div><LetterReveal text="THE WILD" /></div>
+              <div>
+                <span className="experience-photo-pill">
+                  <img
+                    src="https://d2ol7oe51mr4n9.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/a6ea3433-41c4-46b8-aac3-faefa9ad7558.jpg"
+                    alt="Elephant beneath acacia trees"
+                    draggable={false}
+                  />
                 </span>
-                <span
-                  className="text-xs text-center"
-                  style={{
-                    fontFamily: "Inter, sans-serif",
-                    color: "rgba(6,78,59,0.62)",
-                  }}
-                >
-                  {a.count}
+                <LetterReveal text="IS NOT" />
+              </div>
+              <div>
+                <LetterReveal text="WATCHED" />
+                <span className="experience-photo-pill">
+                  <img
+                    src="https://d2ol7oe51mr4n9.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/9152c213-6763-4147-83f3-b985e6c65a00.jpg"
+                    alt="Elephants at sunset"
+                    draggable={false}
+                  />
                 </span>
               </div>
+              <div><LetterReveal text="IT IS FELT" /></div>
+            </div>
+            <div className="experience-emblem" aria-hidden="true"><span>✦</span></div>
+          </div>
+
+          <div className="experience-statement-gallery" aria-label="Wildlife moments">
+            <figure className="experience-statement-photo experience-statement-photo-main">
+              <img
+                src="https://d2ol7oe51mr4n9.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/9152c213-6763-4147-83f3-b985e6c65a00.jpg"
+                alt="Mother elephant and calf at sunset"
+                draggable={false}
+              />
+              <figcaption><span>01</span> Golden-hour encounters</figcaption>
+            </figure>
+            <figure className="experience-statement-photo experience-statement-photo-small">
+                <img
+                  src="https://d2ol7oe51mr4n9.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/a6ea3433-41c4-46b8-aac3-faefa9ad7558.jpg"
+                  alt="Elephant in a wide savanna"
+                  draggable={false}
+                />
+              <figcaption><span>02</span> Into the open</figcaption>
+            </figure>
+            <div className="experience-statement-note">
+              <span>Field note</span>
+              <strong>Move slowly.<br />Notice everything.</strong>
+            </div>
+          </div>
+        </div>
+
+        <div
+          className="experience-guide experience-reveal"
+          aria-hidden={experienceSlide !== 2}
+          inert={experienceSlide !== 2}
+        >
+          <div
+            className="experience-guide-background-plane"
+            style={{ backgroundImage: `url(${DESTINATIONS[destinationFocus].img})` }}
+            aria-hidden="true"
+          />
+          <div className="experience-guide-background-shade" aria-hidden="true" />
+
+          <div className="experience-guide-heading">
+            <p className="experience-editorial-label">Choose your pace</p>
+            <h3>
+              <LetterReveal text="FIND YOUR" /><br />
+              <LetterReveal text="OWN WAY" /><br />
+              <LetterReveal text="INTO THE" /><br />
+              <LetterReveal text="ISLAND" />
+            </h3>
+            <a href="#reach-us" className="experience-play-badge" aria-label="Plan an experience">
+              <span className="experience-play-ticks" aria-hidden="true" />
+              <span className="experience-play-icon" aria-hidden="true">→</span>
+            </a>
+            <span className="experience-play-caption">Plan your journey</span>
+          </div>
+
+          <div className="experience-destination-showcase">
+            <div className="experience-destination-intro">
+              <p>
+                One island, many moods. Select a place and let the landscape
+                take over the story.
+              </p>
+              <span><strong>{String(DESTINATIONS.length).padStart(2, "0")}</strong> curated places</span>
+            </div>
+
+            <div
+              className="experience-destination-stage"
+              style={{
+                "--destination-tone": DESTINATION_THEMES[destinationFocus % DESTINATION_THEMES.length],
+              } as CSSProperties}
+            >
+              <div className="experience-destination-visual">
+                <img
+                  key={DESTINATIONS[destinationFocus].name}
+                  src={DESTINATIONS[destinationFocus].img}
+                  alt={DESTINATIONS[destinationFocus].name}
+                  draggable={false}
+                />
+                <div className="experience-destination-visual-shade" aria-hidden="true" />
+                <span className="experience-destination-number">
+                  {String(destinationFocus + 1).padStart(2, "0")}
+                </span>
+                <div className="experience-destination-feature-copy">
+                  <p>{DESTINATIONS[destinationFocus].tag}</p>
+                  <h4>{DESTINATIONS[destinationFocus].name}</h4>
+                  <span>{DESTINATIONS[destinationFocus].type}</span>
+                </div>
+              </div>
+
+              <div className="experience-destination-selector" role="tablist" aria-label="Choose a destination">
+                {Array.from({ length: 6 }, (_, offset) => {
+                  const index = (destinationFocus + offset) % DESTINATIONS.length
+                  const destination = DESTINATIONS[index]
+                  return (
+                    <button
+                      type="button"
+                      role="tab"
+                      aria-selected={offset === 0}
+                      className={offset === 0 ? "is-active" : ""}
+                      key={`${destination.name}-${index}`}
+                      onClick={() => setDestinationFocus(index)}
+                    >
+                      <span>{String(index + 1).padStart(2, "0")}</span>
+                      <strong>{destination.name}</strong>
+                      <i aria-hidden="true">↗</i>
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          </div>
+        </div>
+          </div>
+        </div>
+
+        <div className="experience-slider-nav" aria-label="Experience slides">
+          <button
+            type="button"
+            className="experience-slider-arrow"
+            onClick={() => setExperienceSlide((current) => (current + 2) % 3)}
+            aria-label="Previous experience slide"
+          >
+            ←
+          </button>
+          <div className="experience-slider-dots">
+            {["Wild encounters", "The island alive", "Choose your pace"].map((label, index) => (
+              <button
+                type="button"
+                key={label}
+                className={experienceSlide === index ? "is-active" : ""}
+                onClick={() => setExperienceSlide(index)}
+                aria-label={`Show ${label}`}
+                aria-current={experienceSlide === index ? "true" : undefined}
+              />
             ))}
           </div>
+          <span className="experience-slider-count" aria-live="polite">
+            0{experienceSlide + 1} / 03
+          </span>
+          <button
+            type="button"
+            className="experience-slider-arrow"
+            onClick={() => setExperienceSlide((current) => (current + 1) % 3)}
+            aria-label="Next experience slide"
+          >
+            →
+          </button>
         </div>
       </section>
 
