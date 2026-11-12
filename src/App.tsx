@@ -1,4 +1,9 @@
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from "react"
+import DestinationsPage from "./pages/DestinationsPage"
+import ExperiencesPage from "./pages/ExperiencesPage"
+import ReachUsPage from "./pages/ReachUsPage"
+import ToursPage from "./pages/ToursPage"
+import ScrollVanStory from "./components/ScrollVanStory"
 
 // ─── Data ────────────────────────────────────────────────────────────────────
 
@@ -166,7 +171,7 @@ const DESTINATIONS = [
   {
     name: "Weligama",
     type: "Surf Town",
-    img: "https://driversinsrilanka.com/wp-content/uploads/2023/05/weligama-beach-820x520.webp",
+    img: "/assets/destinations/weligama-island.png",
     tag: "Easy Waves",
   },
   {
@@ -369,6 +374,12 @@ const REVIEWS = [
 
     destination: "Ella & Hill Country",
 
+    trip: "7-day highland escape",
+
+    date: "April 2026",
+
+    cover: DESTINATIONS[1].img,
+
     img: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&auto=format",
   },
 
@@ -385,6 +396,12 @@ const REVIEWS = [
 
     destination: "Cultural Triangle",
 
+    trip: "Ancient cities journey",
+
+    date: "February 2026",
+
+    cover: DESTINATIONS[0].img,
+
     img: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop&auto=format",
   },
 
@@ -400,6 +417,12 @@ const REVIEWS = [
     rating: 5,
 
     destination: "Southern Coast",
+
+    trip: "Coast & culture journey",
+
+    date: "January 2026",
+
+    cover: DESTINATIONS[5].img,
 
     img: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop&auto=format",
   },
@@ -442,6 +465,12 @@ const TRANSLATIONS: Record<string, Record<string, string>> = {
 
     reviews_heading: "Words from Wanderers",
 
+    reviews_eyebrow: "Traveller stories",
+
+    reviews_intro: "Real journeys, remembered in their own words.",
+
+    reviews_verified: "Verified journey",
+
     newsletter_heading: "Travel dispatches from paradise",
 
     newsletter_sub: "Stories, guides, and hidden places — straight to you.",
@@ -476,6 +505,12 @@ const TRANSLATIONS: Record<string, Record<string, string>> = {
     activities_heading: "非凡な体験",
 
     reviews_heading: "旅人たちの声",
+
+    reviews_eyebrow: "旅人のストーリー",
+
+    reviews_intro: "心に残った本物の旅を、旅人自身の言葉で。",
+
+    reviews_verified: "認証済みの旅",
 
     newsletter_heading: "楽園からの旅の便り",
 
@@ -512,6 +547,12 @@ const TRANSLATIONS: Record<string, Record<string, string>> = {
 
     reviews_heading: "여행자들의 이야기",
 
+    reviews_eyebrow: "여행자 이야기",
+
+    reviews_intro: "오래도록 기억될 진짜 여정을 여행자의 목소리로 만나보세요.",
+
+    reviews_verified: "인증된 여정",
+
     newsletter_heading: "낙원에서 보내는 여행 소식",
 
     newsletter_sub: "이야기, 가이드, 숨겨진 장소를 바로 전달합니다.",
@@ -546,6 +587,12 @@ const TRANSLATIONS: Record<string, Record<string, string>> = {
     activities_heading: "Незабываемые впечатления",
 
     reviews_heading: "Слова путешественников",
+
+    reviews_eyebrow: "Истории гостей",
+
+    reviews_intro: "Настоящие путешествия, рассказанные своими словами.",
+
+    reviews_verified: "Проверенное путешествие",
 
     newsletter_heading: "Путевые заметки из рая",
 
@@ -648,97 +695,82 @@ function TourCard({ tour, interactive = true }: { tour: typeof TOURS[0]; interac
   )
 }
 
-function DestinationsPage({ onBack }: { onBack: () => void }) {
+function TransportShowcase({ onPlan }: { onPlan: () => void }) {
   return (
-    <main
-      className="min-h-screen px-5 py-8 sm:px-8 lg:px-12"
-      style={{ background: "#f4fcf6" }}
-    >
-      <div className="max-w-7xl mx-auto">
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 mb-12">
-          <div>
-            <button
-              type="button"
-              onClick={onBack}
-              className="inline-flex items-center gap-2 text-sm mb-6"
-              style={{ color: "#07856f", fontFamily: "Inter, sans-serif" }}
-            >
-              ← Back to home
-            </button>
-            <p
-              className="text-xs font-semibold uppercase tracking-[0.18em] mb-3"
-              style={{ color: "#07856f" }}
-            >
-              Discover Sri Lanka
-            </p>
-            <h1
-              style={{
-                fontFamily: "'Instrument Serif', serif",
-                fontSize: "clamp(3rem, 7vw, 5.5rem)",
-                color: "#064e3b",
-                fontWeight: 400,
-                lineHeight: 0.94,
-              }}
-            >
-              Every corner tells a story.
-            </h1>
-          </div>
-          <p
-            className="max-w-sm leading-relaxed"
-            style={{ color: "#4b6d62", fontFamily: "Inter, sans-serif" }}
-          >
-            Explore 25 hand-picked places across Sri Lanka—from ancient cities
-            and misty hills to beaches and wildlife reserves.
-          </p>
+    <section className="transport-showcase experience-reveal" aria-labelledby="transport-showcase-title">
+      <div
+        className="transport-showcase-canvas"
+        onPointerMove={(event) => {
+          const scene = event.currentTarget
+          const bounds = scene.getBoundingClientRect()
+          const x = (event.clientX - bounds.left) / bounds.width
+          const y = (event.clientY - bounds.top) / bounds.height
+          const currentFrame = Number(scene.dataset.pointerFrame || 0)
+          if (currentFrame) window.cancelAnimationFrame(currentFrame)
+          const frame = window.requestAnimationFrame(() => {
+            scene.style.setProperty("--scene-rx", `${(0.5 - y) * 4.5}deg`)
+            scene.style.setProperty("--scene-ry", `${(x - 0.5) * 6}deg`)
+            scene.style.setProperty("--pointer-x", `${x * 100}%`)
+            scene.style.setProperty("--pointer-y", `${y * 100}%`)
+          })
+          scene.dataset.pointerFrame = String(frame)
+        }}
+        onPointerLeave={(event) => {
+          const scene = event.currentTarget
+          scene.style.setProperty("--scene-rx", "0deg")
+          scene.style.setProperty("--scene-ry", "0deg")
+          scene.style.setProperty("--pointer-x", "66%")
+          scene.style.setProperty("--pointer-y", "35%")
+        }}
+      >
+        <div className="transport-showcase-sky" aria-hidden="true">
+          <span className="transport-showcase-sun" />
+          <span className="transport-showcase-cloud transport-showcase-cloud-one" />
+          <span className="transport-showcase-cloud transport-showcase-cloud-two" />
+        </div>
+        <div className="transport-showcase-mountains" aria-hidden="true"><i /><i /><i /></div>
+        <div className="transport-showcase-palms" aria-hidden="true"><i /><i /><i /><i /></div>
+        <div className="transport-showcase-road" aria-hidden="true">
+          <div className="transport-road-lines"><i /><i /><i /><i /><i /></div>
         </div>
 
-        <div className="grid grid-cols-1 min-[480px]:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5">
-          {DESTINATIONS.map((dest) => (
-            <article
-              key={dest.name}
-              className="relative overflow-hidden rounded-2xl group"
-              style={{ aspectRatio: "3/4", background: "#dff4ff" }}
-            >
-              <img
-                src={dest.img}
-                alt={dest.name}
-                loading="lazy"
-                className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-              />
-              <div
-                className="absolute inset-0"
-                style={{
-                  background:
-                    "linear-gradient(180deg, transparent 34%, rgba(4,61,53,0.84) 100%)",
-                }}
-              />
-              <span
-                className="absolute top-4 left-4 px-3 py-1 rounded-full text-[11px] font-semibold"
-                style={{
-                  background: "rgba(255,255,255,0.92)",
-                  color: "#075c55",
-                }}
-              >
-                {dest.tag}
-              </span>
-              <div className="absolute left-5 right-5 bottom-5 text-white">
-                <p className="text-xs mb-1 text-white/75">{dest.type}</p>
-                <h2
-                  style={{
-                    fontFamily: "'Instrument Serif', serif",
-                    fontSize: "2rem",
-                    fontWeight: 400,
-                    lineHeight: 1,
-                  }}
-                >
-                  {dest.name}
-                </h2>
-              </div>
-            </article>
-          ))}
+        <div className="transport-showcase-copy">
+          <p className="transport-showcase-eyebrow"><i aria-hidden="true" /> Private island transfer</p>
+          <h2 id="transport-showcase-title">Ride the island.<br /><em>Keep the freedom.</em></h2>
+          <p className="transport-showcase-description">
+            Your air-conditioned Suzuki Every, a trusted local driver, and a route that changes whenever curiosity calls.
+          </p>
+          <div className="transport-showcase-route" aria-label="Example route from Colombo to Ella">
+            <span><b>01</b> Colombo</span><i><strong /></i><span><b>02</b> Ella</span>
+          </div>
+          <button type="button" className="transport-showcase-cta" onClick={onPlan}>
+            Plan your ride <span aria-hidden="true">↗</span>
+          </button>
         </div>
+
+        <div className="transport-vehicle-stage" aria-label="Animated white Suzuki Every van">
+          <div className="transport-vehicle-shadow" aria-hidden="true" />
+          <div className="transport-vehicle-bob">
+            <div className="transport-vehicle-asset">
+              <img src="/suzuki-every-3d-cutout.png" alt="White Suzuki Every compact van" loading="lazy" />
+              <span className="transport-vehicle-wheel transport-vehicle-wheel-front" aria-hidden="true"><i /></span>
+              <span className="transport-vehicle-wheel transport-vehicle-wheel-rear" aria-hidden="true"><i /></span>
+            </div>
+          </div>
+          <span className="transport-vehicle-speed transport-vehicle-speed-one" aria-hidden="true" />
+          <span className="transport-vehicle-speed transport-vehicle-speed-two" aria-hidden="true" />
+          <span className="transport-vehicle-speed transport-vehicle-speed-three" aria-hidden="true" />
+        </div>
+
+        <div className="transport-showcase-specs" aria-label="Vehicle features">
+          <span><i>04</i><b>Travellers</b></span>
+          <span><i>AC</i><b>Climate</b></span>
+          <span><i>24/7</i><b>Pickup</b></span>
+        </div>
+        <div className="transport-showcase-status"><i aria-hidden="true" /> Suzuki Every · Ready now</div>
+        <div className="transport-showcase-glare" aria-hidden="true" />
       </div>
-    </main>
+    </section>
   )
 }
 
@@ -755,7 +787,12 @@ export default function App() {
 
   const [subscribed, setSubscribed] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
-  const [page, setPage] = useState<"home" | "destinations">("home")
+  type Page = "home" | "destinations" | "tours" | "experiences" | "reach-us"
+  const getPageFromPath = (): Page => {
+    const route = window.location.pathname.replace(/^\//, "") as Page
+    return ["destinations", "tours", "experiences", "reach-us"].includes(route) ? route : "home"
+  }
+  const [page, setPage] = useState<Page>(getPageFromPath)
   const [experienceSlide, setExperienceSlide] = useState(0)
   const [experiencePaused, setExperiencePaused] = useState(false)
   const [experienceInView, setExperienceInView] = useState(false)
@@ -777,6 +814,16 @@ export default function App() {
     window.addEventListener("scroll", onScroll, { passive: true })
 
     return () => window.removeEventListener("scroll", onScroll)
+  }, [])
+
+  useEffect(() => {
+    const onPopState = () => {
+      setPage(getPageFromPath())
+      window.scrollTo({ top: 0 })
+    }
+
+    window.addEventListener("popstate", onPopState)
+    return () => window.removeEventListener("popstate", onPopState)
   }, [])
 
   useEffect(() => {
@@ -918,6 +965,7 @@ export default function App() {
       return
     }
 
+    window.history.pushState({}, "", "/")
     setPage("home")
     window.setTimeout(scroll, 0)
   }
@@ -925,22 +973,32 @@ export default function App() {
   const showDestinations = () => {
     setMenuOpen(false)
     setLangOpen(false)
+    if (window.location.pathname !== "/destinations") {
+      window.history.pushState({}, "", "/destinations")
+    }
     setPage("destinations")
     window.scrollTo({ top: 0, behavior: "smooth" })
   }
 
-  if (page === "destinations") {
-    return <DestinationsPage onBack={() => showHomeSection("destinations")} />
+  const showPage = (target: Page) => {
+    setMenuOpen(false)
+    setLangOpen(false)
+    const path = target === "home" ? "/" : `/${target}`
+    if (window.location.pathname !== path) window.history.pushState({}, "", path)
+    setPage(target)
+    window.scrollTo({ top: 0, behavior: "smooth" })
   }
 
   return (
     <div
+      className="motion-prompt-shell"
       style={{
-        background: "#f4fcf6",
+        background: "#e7e3fb",
         minHeight: "100vh",
         fontFamily: "Inter, sans-serif",
       }}
     >
+      <ScrollVanStory hidden={page === "home"} />
       {/* ── Navigation ── */}
       <nav
         className="fixed top-0 left-0 right-0 z-50 transition-all duration-300"
@@ -954,16 +1012,16 @@ export default function App() {
             pointerEvents: "auto",
 
             background: navScrolled
-              ? "rgba(231,249,237,0.96)"
-              : "rgba(231,249,237,0.86)",
+              ? "rgba(8,18,15,0.96)"
+              : "rgba(8,18,15,0.86)",
 
             backdropFilter: "blur(18px) saturate(150%)",
 
-            borderBottom: "1px solid rgba(6,78,59,0.14)",
+            borderBottom: "1px solid rgba(255,255,255,0.1)",
 
             boxShadow: navScrolled
-              ? "0 12px 30px rgba(6,78,59,0.14)"
-              : "0 8px 24px rgba(6,78,59,0.1)",
+              ? "0 12px 34px rgba(0,0,0,0.28)"
+              : "0 8px 28px rgba(0,0,0,0.18)",
           }}
         >
           {/* Logo */}
@@ -977,7 +1035,7 @@ export default function App() {
               className="grid place-items-center w-8 h-8 rounded-lg text-[1.35rem]"
               aria-hidden="true"
               style={{
-                background: "rgba(255,255,255,0.48)",
+                background: "rgba(255,255,255,0.1)",
                 boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.52)",
               }}
             >
@@ -995,7 +1053,7 @@ export default function App() {
 
                 letterSpacing: "-0.02em",
 
-                color: "#064e3b",
+                color: "#ffffff",
 
                 lineHeight: 1,
 
@@ -1011,33 +1069,33 @@ export default function App() {
           <div
             className="hidden md:flex items-center gap-1 p-1 rounded-full"
             style={{
-              background: "rgba(6,78,59,0.07)",
-              border: "1px solid rgba(6,78,59,0.1)",
+              background: "rgba(255,255,255,0.06)",
+              border: "1px solid rgba(255,255,255,0.08)",
             }}
           >
-            {NAV_ITEMS.map((item) => (
-              <button
-                type="button"
-                key={item.label}
-                onClick={() =>
-                  item.target === "destinations"
-                    ? showDestinations()
-                    : showHomeSection(item.target)
-                }
-                className="text-xs px-3.5 py-2 rounded-full transition-all duration-200"
-                style={{
-                  fontFamily: "Inter, sans-serif",
+            {NAV_ITEMS.map((item) => {
+              const isActive = item.target === page
 
-                  color:
-                    item.target === "home" ? "#064e3b" : "rgba(6,78,59,0.72)",
-                  background:
-                    item.target === "home" ? "#ffffff" : "transparent",
-                  fontWeight: item.target === "home" ? 600 : 400,
-                }}
-              >
-                {item.label}
-              </button>
-            ))}
+              return (
+                <button
+                  type="button"
+                  key={item.label}
+                  onClick={() =>
+                    showPage(item.target as Page)
+                  }
+                  aria-current={isActive ? "page" : undefined}
+                  className="text-xs px-3.5 py-2 rounded-full transition-all duration-200"
+                  style={{
+                    fontFamily: "Inter, sans-serif",
+                    color: isActive ? "#071a15" : "rgba(255,255,255,0.68)",
+                    background: isActive ? "#b8f5d8" : "transparent",
+                    fontWeight: isActive ? 600 : 400,
+                  }}
+                >
+                  {item.label}
+                </button>
+              )
+            })}
           </div>
 
           {/* Right controls */}
@@ -1047,9 +1105,9 @@ export default function App() {
               <button
                 className="flex items-center gap-1.5 text-xs px-3 py-2 rounded-full transition-colors"
                 style={{
-                  color: "#064e3b",
+                  color: "#ffffff",
                   fontFamily: "Inter, sans-serif",
-                  background: "rgba(6,78,59,0.08)",
+                  background: "rgba(255,255,255,0.08)",
                 }}
                 onClick={() => setLangOpen((v) => !v)}
                 aria-expanded={langOpen}
@@ -1105,7 +1163,7 @@ export default function App() {
               style={{
                 background: "#ffffff",
 
-                color: "#064e3b",
+                color: "#071a15",
 
                 fontFamily: "Inter, sans-serif",
 
@@ -1117,7 +1175,7 @@ export default function App() {
               onMouseLeave={(e) =>
                 (e.currentTarget.style.transform = "scale(1)")
               }
-              onClick={() => showHomeSection("destinations")}
+              onClick={() => showPage("destinations")}
             >
               {t(lang, "cta")}
             </button>
@@ -1125,15 +1183,15 @@ export default function App() {
             {/* Mobile menu */}
             <button
               className="md:hidden p-2 rounded-xl"
-              style={{ background: "rgba(6,78,59,0.1)" }}
+              style={{ background: "rgba(255,255,255,0.1)" }}
               onClick={() => setMenuOpen((v) => !v)}
               aria-label="Toggle menu"
               aria-expanded={menuOpen}
               aria-controls="mobile-navigation"
             >
-              <div className="w-5 h-0.5 bg-[#064e3b] mb-1.5" />
-              <div className="w-5 h-0.5 bg-[#064e3b] mb-1.5" />
-              <div className="w-5 h-0.5 bg-[#064e3b]" />
+              <div className="w-5 h-0.5 bg-white mb-1.5" />
+              <div className="w-5 h-0.5 bg-white mb-1.5" />
+              <div className="w-5 h-0.5 bg-white" />
             </button>
           </div>
         </div>
@@ -1144,36 +1202,51 @@ export default function App() {
             id="mobile-navigation"
             className="md:hidden px-5 py-3"
             style={{
-              background: "rgba(231,249,237,0.98)",
+              background: "rgba(8,18,15,0.98)",
               backdropFilter: "blur(18px)",
-              borderBottom: "1px solid rgba(6,78,59,0.14)",
+              borderBottom: "1px solid rgba(255,255,255,0.1)",
             }}
           >
-            {NAV_ITEMS.map((item) => (
-              <button
-                type="button"
-                key={item.label}
-                onClick={() =>
-                  item.target === "destinations"
-                    ? showDestinations()
-                    : showHomeSection(item.target)
-                }
-                className="block w-full py-3 text-left text-sm border-b"
-                style={{
-                  fontFamily: "Inter, sans-serif",
+            {NAV_ITEMS.map((item) => {
+              const isActive = item.target === page
 
-                  color:
-                    item.target === "home" ? "#064e3b" : "rgba(6,78,59,0.7)",
-                  borderColor: "rgba(6,78,59,0.1)",
-                }}
-              >
-                {item.label}
-              </button>
-            ))}
+              return (
+                <button
+                  type="button"
+                  key={item.label}
+                  onClick={() =>
+                    showPage(item.target as Page)
+                  }
+                  aria-current={isActive ? "page" : undefined}
+                  className="block w-full py-3 text-left text-sm border-b"
+                  style={{
+                    fontFamily: "Inter, sans-serif",
+                    color: isActive ? "#b8f5d8" : "rgba(255,255,255,0.7)",
+                    borderColor: "rgba(255,255,255,0.08)",
+                    fontWeight: isActive ? 600 : 400,
+                  }}
+                >
+                  {item.label}
+                </button>
+              )
+            })}
           </div>
         )}
       </nav>
 
+      {page === "destinations" ? (
+        <DestinationsPage
+          destinations={DESTINATIONS}
+          onBack={() => showPage("home")}
+        />
+      ) : page === "tours" ? (
+        <ToursPage tours={TOURS} onNavigate={showPage} />
+      ) : page === "experiences" ? (
+        <ExperiencesPage destinations={DESTINATIONS} onNavigate={showPage} />
+      ) : page === "reach-us" ? (
+        <ReachUsPage onNavigate={showPage} />
+      ) : (
+        <>
       {/* ── Hero ── */}
       <section
         id="home"
@@ -1774,86 +1847,89 @@ export default function App() {
       </section>
 
       {/* ── Reviews ── */}
-      <section
-        className="py-24 px-6"
-        style={{
-          background: "#e8f8ff",
-          borderTop: "1px solid rgba(7,133,111,0.12)",
-        }}
-      >
-        <div className="max-w-7xl mx-auto">
-          <div className="mb-14 text-center">
-            <h2
-              style={{
-                fontFamily: "'Instrument Serif', serif",
+      <section className="wanderer-stories" aria-labelledby="wanderer-stories-title">
+        <div className="wanderer-stories-orb wanderer-stories-orb-one" />
+        <div className="wanderer-stories-orb wanderer-stories-orb-two" />
 
-                fontSize: "clamp(2rem, 4vw, 3.5rem)",
+        <div className="wanderer-stories-inner">
+          <header className="wanderer-stories-header">
+            <div>
+              <p className="wanderer-stories-eyebrow">
+                <span aria-hidden="true">✦</span>
+                {t(lang, "reviews_eyebrow")}
+              </p>
+              <h2 id="wanderer-stories-title">{t(lang, "reviews_heading")}</h2>
+            </div>
+            <div className="wanderer-stories-intro">
+              <p>{t(lang, "reviews_intro")}</p>
+              <div aria-label="Five out of five average rating">
+                <strong>4.9</strong>
+                <span><StarRating rating={5} /> 1,240+ stories</span>
+              </div>
+            </div>
+          </header>
 
-                fontWeight: 400,
-
-                color: "#064e3b",
-              }}
-            >
-              {t(lang, "reviews_heading")}
-            </h2>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {REVIEWS.map((r) => (
-              <div
-                key={r.name}
-                className="p-7 rounded-2xl"
-                style={{
-                  background: "#fff",
-                  border: "1px solid rgba(7,133,111,0.14)",
-                }}
-              >
-                <StarRating rating={r.rating} />
-                <p
-                  className="mt-4 leading-relaxed"
-                  style={{
-                    fontFamily: "Inter, sans-serif",
-                    fontSize: "0.9rem",
-                    color: "#333",
-                    lineHeight: 1.7,
-                  }}
-                >
-                  "{r.text}"
-                </p>
-                <div className="mt-6 flex items-center gap-3">
-                  <img
-                    src={r.img}
-                    alt={r.name}
-                    loading="lazy"
-                    className="w-10 h-10 rounded-full object-cover"
-                    style={{ background: "#dff4ff" }}
-                  />
-                  <div>
-                    <div
-                      className="text-sm font-medium"
-                      style={{
-                        fontFamily: "Inter, sans-serif",
-                        color: "#064e3b",
-                      }}
-                    >
-                      {r.name} {r.flag}
-                    </div>
-                    <div
-                      className="text-xs"
-                      style={{
-                        fontFamily: "Inter, sans-serif",
-                        color: "#6f6f6f",
-                      }}
-                    >
-                      {r.origin} · {r.destination}
+          <div className="wanderer-stories-grid">
+            <article className="wanderer-feature-card">
+              <img src={REVIEWS[0].cover} alt="Tea-covered hills around Ella" loading="lazy" />
+              <div className="wanderer-feature-shade" />
+              <div className="wanderer-feature-topline">
+                <span>{REVIEWS[0].destination}</span>
+                <span className="wanderer-verified">
+                  <svg viewBox="0 0 20 20" aria-hidden="true"><path d="m7.7 13.2-3-3 1.4-1.4 1.6 1.6 5-5 1.4 1.4-6.4 6.4Z" /></svg>
+                  {t(lang, "reviews_verified")}
+                </span>
+              </div>
+              <div className="wanderer-feature-copy">
+                <span className="wanderer-quote-mark" aria-hidden="true">“</span>
+                <blockquote>{REVIEWS[0].text}</blockquote>
+                <footer>
+                  <div className="wanderer-person">
+                    <img src={REVIEWS[0].img} alt="" loading="lazy" />
+                    <div>
+                      <strong>{REVIEWS[0].name} <span>{REVIEWS[0].flag}</span></strong>
+                      <small>{REVIEWS[0].origin}</small>
                     </div>
                   </div>
-                </div>
+                  <div className="wanderer-trip-meta">
+                    <span>{REVIEWS[0].trip}</span>
+                    <small>{REVIEWS[0].date}</small>
+                  </div>
+                </footer>
               </div>
-            ))}
+            </article>
+
+            <div className="wanderer-side-stories">
+              {REVIEWS.slice(1).map((review, index) => (
+                <article className="wanderer-story-card" key={review.name}>
+                  <div className="wanderer-story-number">0{index + 2}</div>
+                  <div className="wanderer-story-rating">
+                    <StarRating rating={review.rating} />
+                    <span>{t(lang, "reviews_verified")}</span>
+                  </div>
+                  <blockquote>“{review.text}”</blockquote>
+                  <footer>
+                    <div className="wanderer-person">
+                      <img src={review.img} alt="" loading="lazy" />
+                      <div>
+                        <strong>{review.name} <span>{review.flag}</span></strong>
+                        <small>{review.origin}</small>
+                      </div>
+                    </div>
+                    <div className="wanderer-place-pill">
+                      <span>{review.destination}</span>
+                      <small>{review.date}</small>
+                    </div>
+                  </footer>
+                </article>
+              ))}
+            </div>
           </div>
         </div>
       </section>
+
+      {/* ── Private island transport ── */}
+      <TransportShowcase onPlan={() => showHomeSection("reach-us")} />
 
       {/* ── Newsletter ── */}
       <section
@@ -1945,153 +2021,120 @@ export default function App() {
         </div>
       </section>
 
+        </>
+      )}
+
       {/* ── Footer ── */}
-      <footer
-        id="reach-us"
-        className="py-14 px-8"
-        style={{
-          background: "#043d35",
-          borderTop: "1px solid rgba(217,245,255,0.18)",
-        }}
-      >
-        <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-10 mb-12">
-            <div>
-              <span
-                className="block mb-4"
-                style={{
-                  fontFamily: "'Instrument Serif', serif",
-
-                  fontSize: "1.5rem",
-
-                  color: "#fff",
-
-                  fontWeight: 400,
-                }}
-              >
-                Wonder Lanka
-                <sup style={{ fontSize: "0.5em", verticalAlign: "super" }}>
-                  ®
-                </sup>
-              </span>
-              <p
-                style={{
-                  fontFamily: "Inter, sans-serif",
-                  fontSize: "0.8rem",
-                  color: "rgba(255,255,255,0.35)",
-                  lineHeight: 1.7,
-                }}
-              >
-                Discover the island that has enchanted travelers for over two
-                millennia.
-              </p>
-            </div>
-            {[
-              {
-                heading: "Explore",
-                links: [
-                  { label: "Destinations", target: "destinations" },
-                  { label: "Tour Packages", target: "tours" },
-                  { label: "Hotels" },
-                  { label: "Restaurants" },
-                  { label: "Activities", target: "experiences" },
-                ],
-              },
-
-              {
-                heading: "Travel Info",
-                links: [
-                  { label: "Visa Guide" },
-                  { label: "Currency" },
-                  { label: "Transport" },
-                  { label: "Safety" },
-                  { label: "Health Tips" },
-                ],
-              },
-
-              {
-                heading: "Company",
-                links: [
-                  { label: "About" },
-                  { label: "Blog" },
-                  { label: "Press" },
-                  { label: "Careers" },
-                  { label: "Contact", target: "reach-us" },
-                ],
-              },
-            ].map((col) => (
-              <div key={col.heading}>
-                <p
-                  className="mb-4 text-xs font-medium"
-                  style={{
-                    fontFamily: "Inter, sans-serif",
-                    color: "rgba(255,255,255,0.5)",
-                    letterSpacing: "0.1em",
-                    textTransform: "uppercase",
-                  }}
-                >
-                  {col.heading}
-                </p>
-                <ul className="space-y-2">
-                  {col.links.map((link) => (
-                    <li key={link.label}>
-                      {link.target ? (
-                        <button
-                          type="button"
-                          className="text-sm transition-colors duration-200 hover:text-white"
-                          style={{
-                            fontFamily: "Inter, sans-serif",
-                            color: "rgba(255,255,255,0.4)",
-                          }}
-                          onClick={() =>
-                            link.target === "destinations"
-                              ? showDestinations()
-                              : showHomeSection(link.target)
-                          }
-                        >
-                          {link.label}
-                        </button>
-                      ) : (
-                        <span
-                          className="text-sm"
-                          style={{
-                            fontFamily: "Inter, sans-serif",
-                            color: "rgba(255,255,255,0.4)",
-                          }}
-                        >
-                          {link.label}
-                        </span>
-                      )}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
+      <footer id="reach-us" className="site-footer">
+        <div className="site-footer-glow" />
+        <div className="site-footer-inner">
+          <div className="site-footer-topline">
+            <span className="site-footer-kicker">
+              <i aria-hidden="true" /> Plan less. Feel more.
+            </span>
+            <button
+              type="button"
+              className="site-footer-top-button"
+              onClick={() => showHomeSection("home")}
+              aria-label="Back to the top"
+            >
+              Back to top <span aria-hidden="true">↑</span>
+            </button>
           </div>
 
-          <div
-            className="flex flex-col sm:flex-row items-center justify-between pt-8 gap-4"
-            style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}
-          >
-            <p
-              style={{
-                fontFamily: "Inter, sans-serif",
-                fontSize: "0.75rem",
-                color: "rgba(255,255,255,0.25)",
-              }}
-            >
-              © 2026 Wonder Lanka. All rights reserved.
-            </p>
-            <div className="flex gap-2">
-              {LANGUAGES.map((l) => (
+          <div className="site-footer-main">
+            <div className="site-footer-brand">
+              <button
+                type="button"
+                className="site-footer-wordmark"
+                onClick={() => showHomeSection("home")}
+                aria-label="Wonder Lanka home"
+              >
+                Wonder<br />Lanka<sup>®</sup>
+              </button>
+              <p>
+                Thoughtful journeys through an island of ancient stories,
+                wild landscapes, and generous welcomes.
+              </p>
+              <div className="site-footer-signal">
+                <span aria-hidden="true" />
+                <div>
+                  <strong>Sri Lanka time · GMT+5:30</strong>
+                  <small>Colombo, Sri Lanka</small>
+                </div>
+              </div>
+            </div>
+
+            <nav className="site-footer-nav" aria-label="Footer navigation">
+              {[
+                {
+                  heading: "Discover",
+                  links: [
+                    { label: "Destinations", target: "destinations" },
+                    { label: "Curated journeys", target: "tours" },
+                    { label: "Experiences", target: "experiences" },
+                  ],
+                },
+                {
+                  heading: "Travel well",
+                  links: [
+                    { label: "Visa guide" },
+                    { label: "Getting around" },
+                    { label: "When to visit" },
+                  ],
+                },
+                {
+                  heading: "Wonder Lanka",
+                  links: [
+                    { label: "Our story" },
+                    { label: "Travel journal" },
+                    { label: "Reach us", target: "reach-us" },
+                  ],
+                },
+              ].map((column) => (
+                <div className="site-footer-column" key={column.heading}>
+                  <p>{column.heading}</p>
+                  <ul>
+                    {column.links.map((link) => (
+                      <li key={link.label}>
+                        {link.target ? (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              showPage(link.target as Page)
+                            }
+                          >
+                            {link.label}<span aria-hidden="true">↗</span>
+                          </button>
+                        ) : (
+                          <span>{link.label}</span>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </nav>
+          </div>
+
+          <div className="site-footer-bottom">
+            <p>© 2026 Wonder Lanka. Made with care for curious travellers.</p>
+            <div className="site-footer-legal" aria-label="Legal information">
+              <span>Privacy</span>
+              <span>Terms</span>
+              <span>Cookies</span>
+            </div>
+            <div className="site-footer-languages" aria-label="Choose language">
+              {LANGUAGES.map((language) => (
                 <button
-                  key={l.code}
-                  className="text-lg transition-opacity duration-200"
-                  style={{ opacity: lang === l.code ? 1 : 0.3 }}
-                  onClick={() => setLang(l.code)}
-                  title={l.label}
+                  type="button"
+                  key={language.code}
+                  className={lang === language.code ? "is-active" : ""}
+                  onClick={() => setLang(language.code)}
+                  title={language.label}
+                  aria-label={language.label}
                 >
-                  {l.flag}
+                  {language.code.toUpperCase()}
                 </button>
               ))}
             </div>
