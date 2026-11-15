@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from "react"
 import DestinationsPage from "./pages/DestinationsPage"
 import ExperiencesPage from "./pages/ExperiencesPage"
+import GalleryPage from "./pages/GalleryPage"
 import ReachUsPage from "./pages/ReachUsPage"
 import ToursPage from "./pages/ToursPage"
 import ScrollVanStory from "./components/ScrollVanStory"
@@ -12,6 +13,7 @@ const NAV_ITEMS = [
   { label: "Destinations", target: "destinations" },
   { label: "Tours", target: "tours" },
   { label: "Experiences", target: "experiences" },
+  { label: "Gallery", target: "gallery" },
   { label: "Reach Us", target: "reach-us" },
 ]
 
@@ -787,10 +789,10 @@ export default function App() {
 
   const [subscribed, setSubscribed] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
-  type Page = "home" | "destinations" | "tours" | "experiences" | "reach-us"
+  type Page = "home" | "destinations" | "tours" | "experiences" | "gallery" | "reach-us"
   const getPageFromPath = (): Page => {
     const route = window.location.pathname.replace(/^\//, "") as Page
-    return ["destinations", "tours", "experiences", "reach-us"].includes(route) ? route : "home"
+    return ["destinations", "tours", "experiences", "gallery", "reach-us"].includes(route) ? route : "home"
   }
   const [page, setPage] = useState<Page>(getPageFromPath)
   const [experienceSlide, setExperienceSlide] = useState(0)
@@ -998,7 +1000,7 @@ export default function App() {
         fontFamily: "Inter, sans-serif",
       }}
     >
-      <ScrollVanStory hidden={page === "home"} />
+      <ScrollVanStory hidden={page === "home" || page === "experiences" || page === "gallery"} fixedHero={page === "tours"} />
       {/* ── Navigation ── */}
       <nav
         className="fixed top-0 left-0 right-0 z-50 transition-all duration-300"
@@ -1243,6 +1245,8 @@ export default function App() {
         <ToursPage tours={TOURS} onNavigate={showPage} />
       ) : page === "experiences" ? (
         <ExperiencesPage destinations={DESTINATIONS} onNavigate={showPage} />
+      ) : page === "gallery" ? (
+        <GalleryPage destinations={DESTINATIONS} onNavigate={showPage} />
       ) : page === "reach-us" ? (
         <ReachUsPage onNavigate={showPage} />
       ) : (
@@ -2073,6 +2077,7 @@ export default function App() {
                     { label: "Destinations", target: "destinations" },
                     { label: "Curated journeys", target: "tours" },
                     { label: "Experiences", target: "experiences" },
+                    { label: "Destination gallery", target: "gallery" },
                   ],
                 },
                 {

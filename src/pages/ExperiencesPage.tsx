@@ -1,63 +1,148 @@
+import type { CSSProperties } from "react"
 import type { Destination } from "./DestinationsPage"
-import VehicleMotionBanner from "../components/VehicleMotionBanner"
 
 type ExperiencesPageProps = {
   destinations: Destination[]
-  onNavigate: (page: "home" | "tours" | "reach-us") => void
+  onNavigate: (page: "home" | "tours" | "gallery" | "reach-us") => void
 }
 
-const EXPERIENCES = [
-  { title: "Climb before sunrise", place: "Sigiriya", eyebrow: "Heritage", copy: "Rise with the jungle and reach the ancient summit while the plains are still washed in first light." },
-  { title: "Ride the blue train", place: "Ella", eyebrow: "Highlands", copy: "Wind through tea country, cloud forest and tiny hill stations on the island’s most beautiful railway." },
-  { title: "Follow the wild", place: "Yala", eyebrow: "Wildlife", copy: "Enter the park at dawn with a naturalist and watch the landscape wake around elephants, birds and big cats." },
-  { title: "Sail into blue", place: "Mirissa", eyebrow: "Ocean", copy: "Leave the southern shore with the morning tide in search of whales and a horizon without edges." },
-  { title: "Walk the old ramparts", place: "Galle", eyebrow: "Culture", copy: "Meet the fort through shaded lanes, sea walls, local studios and stories gathered over centuries." },
-  { title: "Taste the north", place: "Jaffna", eyebrow: "Food", copy: "Explore markets, home kitchens and bold regional flavours shaped by the peninsula’s distinct culture." },
+const STORIES = [
+  {
+    id: "heritage",
+    number: "01",
+    kicker: "Heritage · Sigiriya",
+    title: "Wake before the kings.",
+    lead: "Climb through water gardens and painted caves while the jungle is still blue with morning.",
+    copy: "Sigiriya is more than the view from the top. It is the quiet approach through ancient gardens, the first warm light on the rock face, and the moment the plains open in every direction. Go early, take your time, and let a local guide reveal the stories hidden in the stone.",
+    image: "/assets/pidurangala-main.png",
+    detailImage: "/assets/dambulla-cave-temple-main.png",
+    mood: "Ancient · Quiet · Awe-inspiring",
+    best: "Best at sunrise",
+    time: "4–5 hours",
+    accent: "#d9693f",
+  },
+  {
+    id: "wild",
+    number: "02",
+    kicker: "Wildlife · Minneriya",
+    title: "Stand quietly. The wild comes closer.",
+    lead: "Watch elephants move across open grassland as the dry-zone sky turns gold.",
+    copy: "The most powerful wildlife moments are often the least hurried. In Minneriya, a naturalist helps you read tracks, bird calls and changing light before the elephants appear. Keep your distance, lower your voice and experience the park on its own terms.",
+    image: "/assets/minneriya-national-park-main.png",
+    detailImage: "/assets/ritigala-monastery-main.png",
+    mood: "Untamed · Spacious · Humbling",
+    best: "Best May–September",
+    time: "Half day",
+    accent: "#9aaa61",
+  },
+  {
+    id: "highlands",
+    number: "03",
+    kicker: "Highlands · Ella",
+    title: "Take the long way through the clouds.",
+    lead: "Open the train window and watch tea country unfold one green curve at a time.",
+    copy: "The hill-country railway is not simply transport—it is the experience. Waterfalls flash between trees, tea pickers work bright slopes, and small stations arrive with hot milk tea and mountain air. The best plan is to leave room for the journey to surprise you.",
+    image: "/assets/nine-arch-bridge-main.png",
+    detailImage: "/assets/ravana-falls-main.png",
+    mood: "Slow · Cinematic · Refreshing",
+    best: "Best December–April",
+    time: "Half or full day",
+    accent: "#5d8f83",
+  },
+  {
+    id: "coast",
+    number: "04",
+    kicker: "Coast · Weligama",
+    title: "Let the Indian Ocean set the pace.",
+    lead: "Learn your first wave, follow the coast and stay until the sky turns coral.",
+    copy: "Sri Lanka's south is made for unhurried days. Begin with a warm-water surf lesson in Weligama, stop for a king coconut, then follow the road towards Mirissa. The coast is at its best when you mix movement with long, delicious pauses.",
+    image: "/assets/weligama-bay-main.png",
+    detailImage: "/assets/coconut-tree-hill-main.png",
+    mood: "Salty · Playful · Unhurried",
+    best: "Best November–April",
+    time: "A full easy day",
+    accent: "#e6a64c",
+  },
+  {
+    id: "flavours",
+    number: "05",
+    kicker: "Flavours · Island kitchens",
+    title: "Taste the story behind the spice.",
+    lead: "Meet the island through market baskets, family recipes and food made to be shared.",
+    copy: "The best Sri Lankan meals begin before the table. Walk through a local market, learn how roasted curry powder changes from region to region, and cook alongside a host who measures by memory. Come hungry—the conversation matters as much as the food.",
+    image: "/assets/local-flavours-mirissa-main.png",
+    detailImage: "/assets/local-flavours-ella-main.png",
+    mood: "Generous · Fragrant · Social",
+    best: "Wonderful year-round",
+    time: "3–4 hours",
+    accent: "#c9573c",
+  },
 ]
 
-export default function ExperiencesPage({ destinations, onNavigate }: ExperiencesPageProps) {
-  const imageFor = (place: string) => destinations.find((item) => item.name === place)?.img ?? destinations[0].img
-
+export default function ExperiencesPage({ onNavigate }: ExperiencesPageProps) {
   return (
-    <main className="min-h-screen bg-[#ece9fc] text-[#0d0b1a]">
-      <section className="relative isolate min-h-screen overflow-hidden pt-20 text-white">
-        <img src={imageFor("Ella")} alt="Train journey through Sri Lanka's green hill country" className="absolute inset-0 -z-20 h-full w-full object-cover" />
-        <div className="absolute inset-0 -z-10 bg-[linear-gradient(90deg,rgba(44,26,27,.9),rgba(44,26,27,.4)_55%,rgba(44,26,27,.16)),linear-gradient(0deg,rgba(44,26,27,.75),transparent_50%)]" />
-        <div className="mx-auto flex min-h-[calc(100vh-5rem)] max-w-7xl flex-col justify-between px-5 pb-10 pt-14 sm:px-8 lg:px-12">
-          <button type="button" onClick={() => onNavigate("home")} className="w-fit rounded-full border border-white/25 bg-white/10 px-4 py-2 text-xs font-semibold backdrop-blur-xl transition hover:bg-white hover:text-[#43282a]">← Back to home</button>
-          <div className="max-w-5xl">
-            <p className="mb-5 text-[10px] font-bold uppercase tracking-[.34em] text-[#ffd7ad]">Not a checklist. A feeling.</p>
-            <h1 className="font-['Instrument_Serif'] text-[clamp(5rem,12vw,11rem)] font-normal leading-[.72] tracking-[-.055em]">Come closer<br /><em className="text-[#ffd7ad]">to the island.</em></h1>
-            <div className="mt-10 flex flex-col gap-5 border-t border-white/25 pt-6 md:flex-row md:items-center md:justify-between"><p className="max-w-xl text-base leading-7 text-white/75">The moments you remember rarely happen from a distance. Meet Sri Lanka through its landscapes, kitchens, rituals and people.</p><span className="text-[10px] font-bold uppercase tracking-[.25em] text-white/55">Scroll to feel more ↓</span></div>
+    <main className="island-stories">
+      <section className="island-stories__hero">
+        <video autoPlay muted loop playsInline poster="/assets/nine-arch-bridge-main.png" aria-label="Scenes from a journey through Sri Lanka">
+          <source src="/assets/videos/sri-lanka-hero.mp4" type="video/mp4" />
+        </video>
+        <div className="island-stories__hero-shade" />
+        <div className="island-stories__hero-copy">
+          <p><span /> Experiences worth travelling for</p>
+          <h1>Don’t just visit.<br /><em>Feel Sri Lanka.</em></h1>
+          <div className="island-stories__hero-bottom">
+            <p>Five ways to meet the island—through ancient places, wild landscapes, mountain journeys, ocean days and generous tables.</p>
+            <button type="button" onClick={() => document.getElementById("story-menu")?.scrollIntoView({ behavior: "smooth" })}>Begin the journey <span>↓</span></button>
           </div>
         </div>
+        <div className="island-stories__hero-note"><span>06° 56′ N</span><span>79° 51′ E</span><span>Indian Ocean</span></div>
       </section>
 
-      <VehicleMotionBanner
-        eyebrow="Experience transfer"
-        title="From feeling to feeling."
-        description="Move from sunrise climbs to tea-country rails and southern surf without losing the quiet moments between them."
-        origin="Sigiriya"
-        destination="Ella"
-        actionLabel="Build an experience route"
-        onAction={() => onNavigate("reach-us")}
-        accent="#ffd7ad"
-        stats={[{ value: "06", label: "Signature moments" }, { value: "AC", label: "Cool interior" }, { value: "∞", label: "Detours welcome" }]}
-      />
-
-      <section className="mx-auto max-w-7xl px-5 py-24 sm:px-8 lg:px-12 lg:py-32">
-        <div className="mb-16 grid gap-7 lg:grid-cols-2 lg:items-end"><h2 className="font-['Instrument_Serif'] text-[clamp(3.5rem,7vw,7rem)] font-normal leading-[.82] tracking-[-.045em]">Six stories.<br /><em className="text-[#a86438]">All yours.</em></h2><p className="max-w-md text-sm leading-7 text-[#745d58] lg:justify-self-end">Begin with the experience that pulls you in. We will help connect it to the right places, seasons and pace.</p></div>
-        <div className="space-y-7">
-          {EXPERIENCES.map((experience, index) => (
-            <article key={experience.title} className="group grid overflow-hidden rounded-[2rem] border border-[#43282a]/10 bg-[#fffaf0] shadow-[0_22px_70px_rgba(67,40,42,.08)] lg:grid-cols-[1.05fr_.95fr]">
-              <div className={`relative min-h-[25rem] overflow-hidden ${index % 2 ? "lg:order-2" : ""}`}><img src={imageFor(experience.place)} alt="" className="absolute inset-0 h-full w-full object-cover transition duration-1000 group-hover:scale-105" loading="lazy" /><div className="absolute inset-0 bg-gradient-to-t from-[#302021]/65 via-transparent to-transparent" /><span className="absolute bottom-6 left-6 text-[10px] font-bold uppercase tracking-[.25em] text-white/75">0{index + 1} · {experience.place}</span></div>
-              <div className="flex min-h-[25rem] flex-col justify-between p-8 sm:p-10 lg:p-14"><div><p className="mb-6 text-[10px] font-bold uppercase tracking-[.28em] text-[#a86438]">{experience.eyebrow}</p><h3 className="max-w-xl font-['Instrument_Serif'] text-[clamp(3rem,5vw,5.2rem)] font-normal leading-[.86] tracking-[-.04em]">{experience.title}</h3></div><div><p className="mb-8 max-w-md text-sm leading-7 text-[#745d58]">{experience.copy}</p><button type="button" onClick={() => onNavigate("reach-us")} className="rounded-full border border-[#43282a]/20 px-5 py-3 text-xs font-semibold transition hover:bg-[#43282a] hover:text-white">Add to my journey →</button></div></div>
-            </article>
-          ))}
-        </div>
+      <section className="island-stories__intro">
+        <p className="island-stories__eyebrow">The island, experienced</p>
+        <div><h2>Some places you see.<br />Sri Lanka is a place you <em>feel.</em></h2><p>The cool stone beneath your feet before sunrise. A train leaning into the mountains. Cinnamon and woodsmoke drifting from a kitchen. These are the moments that turn a trip into a story.</p></div>
       </section>
 
-      <section className="bg-[#43282a] px-5 py-20 text-[#f5eddd] sm:px-8 lg:px-12"><div className="mx-auto flex max-w-7xl flex-col gap-8 md:flex-row md:items-end md:justify-between"><h2 className="max-w-3xl font-['Instrument_Serif'] text-[clamp(3rem,6vw,6rem)] font-normal leading-[.88]">Build a journey around what makes you <em className="text-[#ffd7ad]">feel alive.</em></h2><div className="flex gap-3"><button type="button" onClick={() => onNavigate("tours")} className="rounded-full border border-white/20 px-6 py-3 text-xs font-semibold">View tours</button><button type="button" onClick={() => onNavigate("reach-us")} className="rounded-full bg-[#ffd7ad] px-6 py-3 text-xs font-semibold text-[#43282a]">Reach us →</button></div></div></section>
+      <nav id="story-menu" className="island-stories__menu" aria-label="Explore experience stories">
+        <span>Choose a feeling</span>
+        <div>{STORIES.map((story) => <a key={story.id} href={`#${story.id}`}><b>{story.number}</b>{story.id}<span>↘</span></a>)}</div>
+      </nav>
+
+      <section className="island-stories__chapters">
+        {STORIES.map((story, index) => (
+          <article id={story.id} className={`island-story island-story--${index % 2 ? "reverse" : "forward"}`} key={story.id} style={{ "--story-accent": story.accent } as CSSProperties}>
+            <div className="island-story__visual">
+              <img className="island-story__main-image" src={story.image} alt={`${story.kicker} experience in Sri Lanka`} loading={index < 2 ? "eager" : "lazy"} />
+              <div className="island-story__number">{story.number}</div>
+              <figure><img src={story.detailImage} alt="Another view from this Sri Lankan experience" loading="lazy" /><figcaption>{story.mood}</figcaption></figure>
+            </div>
+            <div className="island-story__copy">
+              <p className="island-stories__eyebrow">{story.kicker}</p>
+              <h2>{story.title}</h2>
+              <p className="island-story__lead">{story.lead}</p>
+              <p className="island-story__body">{story.copy}</p>
+              <dl><div><dt>When to go</dt><dd>{story.best}</dd></div><div><dt>Make time for</dt><dd>{story.time}</dd></div></dl>
+              <button type="button" onClick={() => onNavigate("reach-us")}>Add this to my journey <span>↗</span></button>
+            </div>
+          </article>
+        ))}
+      </section>
+
+      <section className="island-stories__day">
+        <div className="island-stories__day-heading"><p className="island-stories__eyebrow">One unforgettable day</p><h2>From first light<br />to firelight.</h2></div>
+        <ol>
+          <li><time>05:30</time><span>Climb before sunrise</span><p>Cool air, quiet paths and the first light over the plains.</p></li>
+          <li><time>10:00</time><span>Meet a village kitchen</span><p>Fresh hoppers, sambols and stories shared around the table.</p></li>
+          <li><time>15:30</time><span>Follow the wild</span><p>A slow safari as elephants emerge into the evening light.</p></li>
+          <li><time>19:30</time><span>Dinner under the stars</span><p>Local flavours, night sounds and nowhere else to be.</p></li>
+        </ol>
+      </section>
+
+      <section className="island-stories__closing">
+        <img src="/assets/boutique-stays-mirissa-main.png" alt="A peaceful Sri Lankan coastal stay" loading="lazy" />
+        <div className="island-stories__closing-shade" />
+        <div><p className="island-stories__eyebrow">Your Sri Lanka can feel different</p><h2>What do you want<br />to remember?</h2><p>Tell us what draws you in. We’ll shape a journey with the right places, pace and people.</p><div><button type="button" onClick={() => onNavigate("reach-us")}>Create my journey <span>↗</span></button><button type="button" onClick={() => onNavigate("tours")}>Explore curated tours</button></div></div>
+      </section>
     </main>
   )
 }

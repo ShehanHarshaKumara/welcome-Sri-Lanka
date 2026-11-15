@@ -15,7 +15,7 @@ type Tour = {
 
 type ToursPageProps = {
   tours: Tour[]
-  onNavigate: (page: "home" | "experiences" | "reach-us") => void
+  onNavigate: (page: "home" | "experiences" | "gallery" | "reach-us") => void
 }
 
 export default function ToursPage({ tours, onNavigate }: ToursPageProps) {
@@ -46,6 +46,7 @@ export default function ToursPage({ tours, onNavigate }: ToursPageProps) {
         actionLabel="Design my private tour"
         onAction={() => onNavigate("reach-us")}
         accent="#b8f5d8"
+        layout="editorial"
         stats={[{ value: "10d", label: "Flexible route" }, { value: "AC", label: "Private comfort" }, { value: "24/7", label: "Trip support" }]}
       />
 
@@ -80,6 +81,7 @@ export default function ToursPage({ tours, onNavigate }: ToursPageProps) {
           <div className="flex flex-wrap gap-3"><button type="button" onClick={() => onNavigate("experiences")} className="rounded-full border border-white/25 px-6 py-3 text-xs font-semibold transition hover:bg-white hover:text-[#064e3b]">Explore experiences</button><button type="button" onClick={() => onNavigate("reach-us")} className="rounded-full bg-[#b8f5d8] px-6 py-3 text-xs font-semibold text-[#064e3b] transition hover:bg-white">Plan my tour →</button></div>
         </div>
       </section>
+
     </main>
   )
 }

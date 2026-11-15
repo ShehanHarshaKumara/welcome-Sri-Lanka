@@ -114,7 +114,7 @@ const PLACE_INTELLIGENCE: Record<string, PlaceIntelligence> = {
   Colombo: { district: "Colombo", nearby: ["National Museum", "Pettah Market", "Gangaramaya Temple", "Mount Lavinia"], bestFor: "Food, design & city life", routeNote: "Explore by neighbourhood rather than treating it as a transit stop." },
 }
 
-const PLACE_IMAGE_GALLERIES: Record<string, string[]> = {
+export const PLACE_IMAGE_GALLERIES: Record<string, string[]> = {
   "Coconut Tree Hill": [
     "/assets/coconut-tree-hill-main.png",
     "/assets/coconut-tree-hill-view-2.png",
