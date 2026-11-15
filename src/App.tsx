@@ -2028,6 +2028,7 @@ export default function App() {
         </>
       )}
 
+
       {/* ── Footer ── */}
       <footer id="reach-us" className="site-footer">
         <div className="site-footer-glow" />
