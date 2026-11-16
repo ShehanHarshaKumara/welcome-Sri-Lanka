@@ -1263,7 +1263,8 @@ export default function App() {
           muted
           loop
           playsInline
-          preload="metadata"
+          preload="auto"
+          poster="/assets/nine-arch-bridge-main.png"
           aria-hidden="true"
           style={{
             position: "absolute",
@@ -1287,6 +1288,26 @@ export default function App() {
         >
           <source src="/assets/videos/sri-lanka-hero.mp4" type="video/mp4" />
         </video>
+
+        <iframe
+          src="https://www.youtube.com/embed/IPpiw_LWDBA?autoplay=1&mute=1&loop=1&playlist=IPpiw_LWDBA&controls=0&modestbranding=1&playsinline=1&rel=0&vq=hd2160&iv_load_policy=3&fs=0&disablekb=1"
+          title="Cinematic Sri Lanka travel film"
+          allow="autoplay; encrypted-media; picture-in-picture"
+          referrerPolicy="strict-origin-when-cross-origin"
+          tabIndex={-1}
+          aria-hidden="true"
+          style={{
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            width: "max(100%, 177.78vh)",
+            height: "max(100%, 56.25vw)",
+            transform: "translate(-50%, -50%)",
+            border: 0,
+            pointerEvents: "none",
+            zIndex: 0,
+          }}
+        />
 
         {/* Gradient overlays */}
         <div
