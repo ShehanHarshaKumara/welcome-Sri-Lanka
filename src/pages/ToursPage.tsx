@@ -1,87 +1,204 @@
-import VehicleMotionBanner from "../components/VehicleMotionBanner"
+import { useMemo, useState } from "react"
+import interactiveTourMap from "../assets/sri-lanka-interactive-tour-map.png"
 
-type Tour = {
-  title: string
-  days: string
-  price: string
-  type: string
-  img: string
-  highlights: string[]
-  description: string
-  bestFor: string
-  rating: string
-  reviews: number
+type Tour = { title:string; days:string; price:string; type:string; img:string; highlights:string[]; description:string; bestFor:string; rating:string; reviews:number }
+type ToursPageProps = { tours:Tour[]; onNavigate:(page:"home"|"experiences"|"gallery"|"reach-us")=>void }
+
+const filters=["All tours","Culture","Coast","Wildlife","Adventure"]
+const aboutCards=[
+  ["◉","History & Culture","Sri Lanka boasts over 2,500 years of history, with Buddhist cultural heritage and ancient kingdom ruins across the island. Sigiriya Fortress, Dambulla Cave Temple and Kandy’s Temple of the Tooth are essential landmarks."],
+  ["☀","Climate","Sri Lanka has a warm tropical climate throughout the year. Coastal areas stay warm, while the central highlands offer cooler air. Two monsoons make route planning important."],
+  ["♨","Food","Sri Lankan cuisine is famous for richly spiced curries. Coconut, rice and fresh seafood are key ingredients, while Ceylon tea is considered among the world’s finest."],
+  ["⌖","Location","Sri Lanka is an island nation in the Indian Ocean, south of India. Its area is approximately 65,610 km², making culture, wildlife, mountains and coast easy to combine."],
+]
+const destinations=[
+  {icon:"🏙️",name:"Colombo",note:"Capital, casino and shopping",highlights:["Galle Face Green","Gangaramaya Temple","Pettah Market"]},
+  {icon:"🛕",name:"Kandy",note:"Temple of the Tooth and gem traditions",highlights:["Kandy Lake","Royal Botanical Gardens","Cultural dance"]},
+  {icon:"🏰",name:"Sigiriya",note:"Ancient rock fortress",highlights:["Lion’s Gate","Royal frescoes","Water gardens"]},
+  {icon:"🍃",name:"Nuwara Eliya",note:"Tea plantations and waterfalls",highlights:["Gregory Lake","Tea factory","Victoria Park"]},
+  {icon:"🌉",name:"Ella",note:"Nine Arch Bridge and mountain scenery",highlights:["Little Adam’s Peak","Ella Rock","Scenic railway"]},
+  {icon:"🐆",name:"Yala National Park",note:"Leopards, elephants and safari",highlights:["Jeep safari","Birdlife","Coastal wilderness"]},
+  {icon:"🐋",name:"Mirissa",note:"Whale watching and beach",highlights:["Golden beach","Coconut Tree Hill","Ocean excursions"]},
+  {icon:"🏛️",name:"Galle",note:"Historic Dutch Fort",highlights:["Fort ramparts","Lighthouse","Colonial streets"]},
+]
+const mapPlaces=[
+  {name:"Sigiriya",district:"Matale District",category:"Heritage",image:"/assets/sigiriya-01.jpg",x:47,y:28,color:"#ef4444",rating:"4.9",summary:"Climb the legendary rock citadel and explore royal gardens shaped more than 1,500 years ago.",tags:["Heritage","Hiking","History","Nature"]},
+  {name:"Kandy",district:"Kandy District",category:"Culture",image:"/assets/local-flavours-sigiriya-main.png",x:41,y:43,color:"#f59e0b",rating:"4.8",summary:"Experience Sri Lanka's sacred hill capital, lakeside calm and living cultural traditions.",tags:["Temple","Culture","Gardens","Dance"]},
+  {name:"Nuwara Eliya",district:"Nuwara Eliya District",category:"Highlands",image:"/assets/nuwara-eliya-01.jpg",x:50,y:49,color:"#22c55e",rating:"4.8",summary:"Follow tea roads through cool mountain air, waterfalls and rolling emerald estates.",tags:["Tea","Scenery","Cool Air","Walks"]},
+  {name:"Ella",district:"Badulla District",category:"Adventure",image:"/assets/nine-arch-bridge-main.png",x:61,y:54,color:"#8b5cf6",rating:"4.9",summary:"Ride the highland railway, cross Nine Arch Bridge and hike above cloud-filled valleys.",tags:["Rail","Hiking","Views","Waterfalls"]},
+  {name:"Galle Fort",district:"Galle District",category:"Heritage",image:"/assets/galle-fort-01.jpg",x:36,y:75,color:"#3b82f6",rating:"4.8",summary:"Walk sunset ramparts, lighthouse lanes and beautifully preserved streets beside the sea.",tags:["Fort","Coast","History","Food"]},
+  {name:"Mirissa",district:"Matara District",category:"Coast",image:"/assets/mirissa-01.jpg",x:50,y:80,color:"#ec4899",rating:"4.9",summary:"Slow down on a palm-fringed beach and head offshore for responsible whale watching.",tags:["Beach","Whales","Surf","Sunset"]},
+  {name:"Yala National Park",district:"Hambantota District",category:"Wildlife",image:"/assets/kandalama-01.jpg",x:69,y:67,color:"#d97706",rating:"4.9",summary:"Search for leopards, elephants and brilliant birdlife across wild coastal landscapes.",tags:["Safari","Leopards","Birds","Nature"]},
+  {name:"Trincomalee",district:"Trincomalee District",category:"Coast",image:"/assets/trincomalee-01.jpg",x:56,y:17,color:"#2563eb",rating:"4.8",summary:"Discover clear eastern water, cliff-top temples and calm beaches around a vast natural harbour.",tags:["Beach","Temple","Diving","Harbour"]},
+]
+const travelGuide=[
+  {icon:"✈",title:"Visa Information",copy:"Entry requirements depend on nationality and can change.",items:["Check Sri Lanka’s official immigration guidance","Keep passport and onward-travel details available","Confirm your airport pickup before arrival"]},
+  {icon:"☀",title:"Weather & Season",copy:"Two monsoons make Sri Lanka a year-round destination.",items:["December–April: west, south and hills","May–September: east coast and Cultural Triangle","Highland evenings can feel cool"]},
+  {icon:"▣",title:"What to Pack",copy:"Light, comfortable and respectful clothing works best.",items:["Walking shoes, sun protection and repellent","A light rain layer and warm highland layer","Shoulders and knees covered at temples"]},
+  {icon:"$",title:"Budget Planning",copy:"Choose the travel style that works for you.",items:["Value, comfort, boutique or premium stays","Entrance fees and activities listed clearly","Carry local currency for small purchases"]},
+  {icon:"◎",title:"Safety Information",copy:"Simple preparation makes island travel straightforward.",items:["Use sealed or properly filtered water","Follow guides around wildlife and ocean conditions","Comprehensive travel insurance is recommended"]},
+  {icon:"✦",title:"Culture & Etiquette",copy:"Small gestures create warmer local encounters.",items:["Remove shoes and hats at temples","Do not pose with your back to a Buddha image","Ask before photographing people"]},
+]
+const sampleRoute=[
+  {day:"1",title:"Arrival Colombo & Transfer to Kandy",theme:"Cultural Experience Begins",activities:[["08:00","Airport Arrival"],["10:00","Coconut Plantation Visit"],["12:30","Traditional Sri Lankan Lunch"],["14:00","Scenic Transfer to Kandy"],["19:00","Kandy Lake Walk"]],stay:"Kandy · 4-star hotel"},
+  {day:"2",title:"Kandy Cultural Tour",theme:"Buddhist Culture & Gem Exploration",activities:[["08:30","Temple of the Tooth"],["11:00","Gem Museum & Workshop"],["13:00","Kandy Lunch"],["14:30","Royal Botanical Gardens"],["17:00","Cultural Performance"]],stay:"Kandy · 4-star hotel"},
+  {day:"3",title:"Nuwara Eliya Tea Plantations",theme:"Highlands & Tea Culture",activities:[["08:30","Tea Plantation Tour"],["11:30","Ceylon Tea Tasting"],["13:00","Estate Lunch"],["14:30","Gregory Lake"],["16:30","Victoria Park"]],stay:"Nuwara Eliya · 4-star hotel"},
+  {day:"4",title:"Ella & Yala National Park",theme:"Nature & Wildlife",activities:[["08:00","Nine Arch Bridge"],["10:00","Little Adam’s Peak"],["12:30","Ella Lunch"],["14:00","Transfer to Yala"],["16:00","Jeep Safari"]],stay:"Yala · safari lodge"},
+  {day:"5",title:"Mirissa & Return to Colombo",theme:"Beach & Whale Watching",activities:[["05:00","Optional Whale Watching"],["10:30","Mirissa Beach"],["12:30","Seafood Lunch"],["14:00","Galle Fort Visit"],["16:30","Return to Colombo"]],stay:"Departure or optional Colombo stay"},
+]
+const faq=[
+  ["Can I customise a tour?","Yes. Every package is a starting point and can be changed around your dates, pace, hotels and interests."],
+  ["Are the tours private?","Yes. Our journeys include private transport and a dedicated English-speaking driver."],
+  ["What is normally included?","Your proposal lists accommodation, transport, agreed meals, guiding, entrance fees and activities clearly."],
+  ["How many days should I plan?","Seven days is suitable for two regions. Ten to fourteen days is ideal for culture, hills, wildlife and coast."],
+  ["When is the best time to visit?","Sri Lanka is a year-round destination when the route follows the seasonal weather on each coast."],
+  ["Do I need travel insurance?","Comprehensive travel insurance is strongly recommended for medical care, cancellation and planned activities."],
+]
+
+function categoryOf(tour:Tour){
+  const value=`${tour.type} ${tour.title} ${tour.description}`.toLowerCase()
+  if(/wild|safari|elephant|leopard/.test(value)) return "Wildlife"
+  if(/beach|coast|ocean|surf|wellness/.test(value)) return "Coast"
+  if(/hike|trek|adventure|rail|active/.test(value)) return "Adventure"
+  return "Culture"
 }
 
-type ToursPageProps = {
-  tours: Tour[]
-  onNavigate: (page: "home" | "experiences" | "gallery" | "reach-us") => void
-}
+export default function ToursPage({tours,onNavigate}:ToursPageProps){
+  const [filter,setFilter]=useState("All tours")
+  const [showAll,setShowAll]=useState(false)
+  const [openFaq,setOpenFaq]=useState(0)
+  const [selectedMapPlace,setSelectedMapPlace]=useState<string|null>(null)
+  const [mapZoom,setMapZoom]=useState(1)
+  const filtered=useMemo(()=>filter==="All tours"?tours:tours.filter((tour)=>categoryOf(tour)===filter),[filter,tours])
+  const visible=showAll?filtered:filtered.slice(0,6)
+  const heroImage=tours[2]?.img||tours[0]?.img
+  const activeMapPlace=mapPlaces.find((place)=>place.name===selectedMapPlace)??mapPlaces[0]
 
-export default function ToursPage({ tours, onNavigate }: ToursPageProps) {
-  return (
-    <main className="min-h-screen bg-[#e7e3fb] text-[#0d0b1a]">
-      <section className="relative isolate min-h-[82vh] overflow-hidden pt-20 text-white">
-        <img src={tours[8].img} alt="Sri Lankan highlands on a curated island journey" className="absolute inset-0 -z-20 h-full w-full object-cover" />
-        <div className="absolute inset-0 -z-10 bg-[linear-gradient(90deg,rgba(3,35,29,.92)_0%,rgba(3,35,29,.65)_50%,rgba(3,35,29,.18)_100%),linear-gradient(0deg,rgba(3,35,29,.72),transparent_55%)]" />
-        <div className="mx-auto flex min-h-[calc(82vh-5rem)] max-w-7xl flex-col justify-between px-5 pb-10 pt-14 sm:px-8 lg:px-12">
-          <button type="button" onClick={() => onNavigate("home")} className="w-fit rounded-full border border-white/25 bg-white/10 px-4 py-2 text-xs font-semibold backdrop-blur-xl transition hover:bg-white hover:text-[#064e3b]">← Back to home</button>
-          <div className="max-w-4xl">
-            <p className="mb-5 flex items-center gap-3 text-[10px] font-bold uppercase tracking-[.3em] text-[#b8f5d8]"><span className="h-px w-10 bg-current" /> Journeys, thoughtfully made</p>
-            <h1 className="font-['Instrument_Serif'] text-[clamp(4.5rem,10vw,9rem)] font-normal leading-[.78] tracking-[-.045em]">See more.<br /><em className="text-[#c9f5d5]">Rush less.</em></h1>
-            <div className="mt-9 flex flex-col gap-7 border-t border-white/20 pt-6 md:flex-row md:items-end md:justify-between">
-              <p className="max-w-xl text-base leading-7 text-white/75">Private routes that join Sri Lanka’s ancient cities, wild parks, tea country and warm-water coast—with space to follow your curiosity.</p>
-              <div className="flex gap-8 text-sm"><span><strong className="block text-2xl">9</strong><small className="uppercase tracking-widest text-white/55">Routes</small></span><span><strong className="block text-2xl">4.9</strong><small className="uppercase tracking-widest text-white/55">Guest score</small></span></div>
+  const focusMapPlace=(name:string)=>{
+    setSelectedMapPlace(name)
+    setMapZoom(1.45)
+  }
+
+  return <main className="min-h-screen bg-gradient-to-b from-white to-gray-50 text-gray-800">
+    <section className="relative flex min-h-[34rem] items-center justify-center overflow-hidden px-1 pb-10 pt-28 text-center sm:h-96 sm:min-h-0 sm:pb-0 sm:pt-20">
+      <img src={heroImage} alt="Sri Lanka tour packages" className="absolute inset-0 h-full w-full object-cover"/>
+      <div className="absolute inset-0 bg-gradient-to-b from-[#0A2342]/75 to-[#0A2342]/55"/>
+      <div className="relative z-10 mx-auto max-w-3xl px-4 text-white">
+        <h1 className="mb-4 text-4xl font-medium leading-tight sm:text-5xl md:text-6xl">Sri Lanka Tour Packages</h1>
+        <p className="mx-auto max-w-2xl text-base leading-7 text-white/90 sm:text-lg md:text-xl">Sri Lanka, known as the Pearl of the Indian Ocean, is a beautiful island where rich history, diverse culture and stunning natural landscapes come together.</p>
+        <div className="mt-6 flex flex-wrap justify-center gap-3">
+          <span className="rounded-full bg-[#FFD700] px-4 py-2 text-sm font-semibold text-[#0A2342]">◷ 5–14 Days</span>
+          <span className="rounded-full bg-[#FFD700] px-4 py-2 text-sm font-semibold text-[#0A2342]">♟ Private Travel</span>
+          <span className="rounded-full bg-[#FFD700] px-4 py-2 text-sm font-semibold text-[#0A2342]">★ 4.9/5</span>
+        </div>
+      </div>
+    </section>
+
+    <section className="py-12 sm:py-20">
+      <div className="container mx-auto max-w-7xl px-4">
+        <div className="mb-12 text-center">
+          <h2 className="mb-4 text-4xl font-medium text-[#0A2342] md:text-5xl">About Sri Lanka</h2>
+          <p className="mx-auto max-w-3xl text-lg text-gray-600">Discover the history, climate, food and location that make this compact island an extraordinary place to tour.</p>
+        </div>
+
+        <div className="mb-20 grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+          {aboutCards.map(([icon,title,copy])=><article key={title} className="rounded-xl border border-gray-200 bg-white p-6 text-center shadow-sm transition hover:-translate-y-1 hover:shadow-lg">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-[#FFD700] to-[#FFA500] text-2xl text-[#0A2342]">{icon}</div>
+            <h3 className="mb-2 text-xl font-medium text-[#0A2342]">{title}</h3><p className="text-sm leading-6 text-gray-600">{copy}</p>
+          </article>)}
+        </div>
+
+        <div className="mb-10 text-center"><h2 className="mb-4 text-4xl font-medium text-[#0A2342] md:text-5xl">Choose Your Tour</h2><p className="text-lg text-gray-600">Our most-loved routes across the island</p></div>
+        <div className="mb-8 flex flex-wrap justify-center gap-3">
+          {filters.map((item)=><button type="button" key={item} onClick={()=>{setFilter(item);setShowAll(false)}} className={`rounded-full px-5 py-2 text-sm font-semibold transition ${filter===item?"bg-[#0A2342] text-white shadow-lg":"border border-gray-200 bg-white text-gray-600 hover:border-[#FFD700]"}`}>{item}</button>)}
+        </div>
+
+        <div className="mx-auto max-w-6xl space-y-8">
+          {visible.map((tour,index)=><article key={tour.title} className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-md transition hover:shadow-xl">
+            <div className="grid md:grid-cols-3">
+              <div className="relative h-64 md:h-auto"><img src={tour.img} alt={tour.title} loading="lazy" className="h-full w-full object-cover"/><div className="absolute left-4 top-4 flex h-16 w-16 items-center justify-center rounded-full bg-[#FFD700] text-xl font-semibold text-[#0A2342]">{String(index+1).padStart(2,"0")}</div></div>
+              <div className="p-5 sm:p-7 md:col-span-2 md:p-8">
+                <div className="mb-3 flex flex-wrap items-center gap-2"><span className="rounded-full bg-[#0A2342] px-3 py-1 text-xs font-semibold text-white">{categoryOf(tour)}</span><span className="rounded-full bg-gray-100 px-3 py-1 text-xs text-gray-600">◷ {tour.days}</span><span className="text-sm text-amber-500">★ {tour.rating} ({tour.reviews})</span></div>
+                <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start"><div><h3 className="mb-3 text-3xl font-medium text-[#0A2342]">{tour.title}</h3><p className="max-w-2xl leading-7 text-gray-600">{tour.description}</p></div><strong className="whitespace-nowrap text-2xl text-[#0A2342]">{tour.price}<small className="block text-right text-xs font-normal text-gray-500">starting price</small></strong></div>
+                <div className="my-5 flex flex-wrap gap-2">{tour.highlights.map((place)=><span key={place} className="rounded-full bg-gray-100 px-3 py-1 text-sm text-gray-600">⌖ {place}</span>)}</div>
+                <div className="flex flex-wrap items-center justify-between gap-4 border-t border-gray-100 pt-5"><p className="text-sm text-gray-500">Best for <strong className="text-gray-700">{tour.bestFor}</strong></p><button type="button" onClick={()=>onNavigate("reach-us")} className="rounded-lg bg-[#FFD700] px-5 py-2.5 font-semibold text-[#0A2342] transition hover:bg-[#FFA500]">View Tour →</button></div>
+              </div>
+            </div>
+          </article>)}
+        </div>
+        {!showAll&&filtered.length>6&&<div className="mt-10 text-center"><button type="button" onClick={()=>setShowAll(true)} className="rounded-lg bg-[#0A2342] px-7 py-3 font-semibold text-white shadow-lg">Show All Tours</button></div>}
+
+        <section className="relative left-1/2 my-20 w-screen -translate-x-1/2 overflow-hidden bg-[#021d31] text-white shadow-[0_35px_100px_rgba(3,29,50,.35)]" aria-labelledby="tour-route-map-title">
+          <div className="relative min-h-[62rem] overflow-hidden lg:aspect-[16/9] lg:min-h-0">
+            <div className="absolute inset-0 transition-transform duration-700 ease-[cubic-bezier(.2,.8,.2,1)]" style={{transform:`scale(${mapZoom})`,transformOrigin:`${activeMapPlace.x}% ${activeMapPlace.y}%`}}>
+              <img src={interactiveTourMap} alt="Illustrated Sri Lanka tourist map with major destinations" className="h-full w-full object-cover object-center" />
+              <div className="absolute inset-0 bg-[#00182a]/5" />
+              {mapPlaces.map((place)=><button type="button" key={place.name} onClick={()=>focusMapPlace(place.name)} aria-label={`Show ${place.name} details`} className="absolute z-10 hidden h-14 w-24 -translate-x-1/2 -translate-y-1/2 rounded-full bg-transparent outline-none focus-visible:ring-4 focus-visible:ring-white/70 lg:block" style={{left:`${place.x}%`,top:`${place.y}%`}}><span className="sr-only">{place.name}</span></button>)}
+            </div>
+
+            <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-[#021725]/95 to-transparent lg:hidden" />
+            <div className="relative z-30 grid min-h-[62rem] content-between gap-5 p-4 sm:p-6 lg:absolute lg:inset-0 lg:block lg:min-h-0 lg:p-0">
+              <aside className="rounded-2xl border border-white/20 bg-[#031c2f]/88 p-4 shadow-2xl backdrop-blur-xl lg:absolute lg:left-[1.4%] lg:top-[9%] lg:w-[18.5%] lg:p-3 xl:p-4">
+                <p className="text-xs font-semibold text-white/80 sm:text-sm">Explore Sri Lanka</p>
+                <h2 id="tour-route-map-title" className="mt-1 text-3xl font-black leading-none sm:text-4xl lg:text-[clamp(1.3rem,2.1vw,2.2rem)]">Tourist Map</h2>
+                <p className="mt-2 text-xs leading-5 text-white/65 lg:text-[10px] lg:leading-4 xl:text-xs xl:leading-5">Click a destination to reveal its travel details.</p>
+                <div className="mt-4 flex gap-2 overflow-x-auto pb-1 lg:flex-col lg:overflow-visible">
+                  {mapPlaces.map((place)=><button type="button" key={place.name} onClick={()=>focusMapPlace(place.name)} aria-pressed={selectedMapPlace===place.name} className={`flex min-w-[12rem] shrink-0 items-center gap-2 rounded-xl border px-3 py-2 text-left transition lg:min-w-0 ${selectedMapPlace===place.name?"border-[#ffc25a] bg-[#173950] shadow-[0_0_18px_rgba(255,194,90,.6)]":"border-white/20 bg-[#08253a]/90 hover:border-white/45"}`}>
+                    <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-xs font-black text-white" style={{background:place.color}}>⌖</span>
+                    <span className="min-w-0 flex-1 truncate text-xs font-bold xl:text-sm">{place.name}</span><span>›</span>
+                  </button>)}
+                </div>
+              </aside>
+
+              {selectedMapPlace ? <article className="relative self-end overflow-hidden rounded-2xl border border-white/25 bg-[#04243a]/94 p-3 shadow-2xl backdrop-blur-xl lg:absolute lg:right-[1.2%] lg:top-[9%] lg:w-[21.5%] lg:p-3 xl:p-4" aria-live="polite">
+                <button type="button" onClick={()=>{setSelectedMapPlace(null);setMapZoom(1)}} className="absolute right-5 top-5 z-10 grid h-8 w-8 place-items-center rounded-full border border-white/25 bg-[#021827]/75 text-sm text-white backdrop-blur hover:bg-white hover:text-[#06223a]" aria-label="Close destination details">×</button>
+                <img key={activeMapPlace.image} src={activeMapPlace.image} alt={activeMapPlace.name} className="h-40 w-full rounded-xl object-cover lg:h-[clamp(6.5rem,11vw,10rem)]" />
+                <div className="mt-3 flex items-center gap-2"><span className="text-xl" style={{color:activeMapPlace.color}}>⌖</span><h3 className="min-w-0 truncate text-2xl font-black lg:text-[clamp(1.1rem,1.7vw,1.8rem)]">{activeMapPlace.name}</h3></div>
+                <p className="mt-1 text-xs text-white/55">⌖ {activeMapPlace.district}</p>
+                <p className="mt-2 text-xs font-bold text-[#ffd05e]">★ {activeMapPlace.rating} <span className="font-normal text-white/60">traveller rating</span></p>
+                <p className="mt-3 text-xs leading-5 text-white/75 lg:text-[10px] lg:leading-4 xl:text-xs xl:leading-5">{activeMapPlace.summary}</p>
+                <div className="mt-3 grid grid-cols-4 gap-1">{activeMapPlace.tags.map((tag)=><span key={tag} className="grid min-h-11 place-items-center rounded-lg border border-white/15 bg-white/[.04] px-1 text-center text-[8px] font-bold text-white/75">{tag}</span>)}</div>
+                <button type="button" onClick={()=>onNavigate("reach-us")} className="mt-4 w-full rounded-full bg-gradient-to-r from-[#ffad19] to-[#f23f6d] px-4 py-3 text-xs font-black text-white shadow-lg">Explore tours →</button>
+              </article> : <div className="self-end rounded-2xl border border-white/20 bg-[#032139]/80 p-4 shadow-xl backdrop-blur-xl lg:absolute lg:right-[1.5%] lg:top-[10%] lg:w-[18rem]">
+                <p className="text-[9px] font-black uppercase tracking-[.2em] text-[#60bdf3]">Interactive map</p>
+                <p className="mt-2 text-sm leading-6 text-white/75">Choose a destination from the list or tap a coloured map pin to open its details.</p>
+              </div>}
+
+              <div className="absolute bottom-4 right-4 hidden flex-col overflow-hidden rounded-xl border border-white/25 bg-[#031b2d]/90 shadow-xl backdrop-blur lg:flex">
+                <button type="button" onClick={()=>{setSelectedMapPlace(null);setMapZoom(1)}} className="grid h-10 w-10 place-items-center border-b border-white/15 text-xs hover:bg-white/10" aria-label="Show the full island map">⌂</button>
+                <button type="button" onClick={()=>setMapZoom((zoom)=>Math.min(1.55,Number((zoom+.12).toFixed(2))))} className="grid h-10 w-10 place-items-center border-b border-white/15 text-lg hover:bg-white/10" aria-label="Zoom map in">+</button>
+                <button type="button" onClick={()=>setMapZoom((zoom)=>Math.max(1,Number((zoom-.12).toFixed(2))))} className="grid h-10 w-10 place-items-center text-lg hover:bg-white/10" aria-label="Zoom map out">−</button>
+              </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      <VehicleMotionBanner
-        eyebrow="Signature island transport"
-        title="Every route. One private ride."
-        description="Your Suzuki Every and local driver stay with the journey, leaving room for viewpoints, village stops and spontaneous detours."
-        origin="Colombo"
-        destination="Grand island loop"
-        actionLabel="Design my private tour"
-        onAction={() => onNavigate("reach-us")}
-        accent="#b8f5d8"
-        layout="editorial"
-        stats={[{ value: "10d", label: "Flexible route" }, { value: "AC", label: "Private comfort" }, { value: "24/7", label: "Trip support" }]}
-      />
+        <section className="mb-20">
+          <div className="mb-12 text-center"><span className="inline-block rounded-full border border-[#FFD700]/40 bg-white px-6 py-2 text-sm uppercase tracking-wider text-[#0A2342]">Location Guide</span><h2 className="mt-4 text-4xl font-medium text-[#0A2342] md:text-5xl">Places to Experience</h2><p className="mx-auto mt-3 max-w-2xl text-lg text-gray-600">Eight essential destinations from the original About Sri Lanka guide</p></div>
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">{destinations.map((destination)=><article key={destination.name} className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-lg transition hover:-translate-y-1 hover:shadow-xl"><div className="bg-gradient-to-br from-[#0A2342] to-[#1a4a7a] p-6 text-white"><span className="text-4xl">{destination.icon}</span><h3 className="mt-4 text-2xl font-medium">{destination.name}</h3><p className="mt-1 text-sm text-white/70">{destination.note}</p></div><div className="p-5"><h4 className="mb-3 text-sm font-semibold uppercase tracking-wider text-amber-600">Highlights</h4><ul className="space-y-2">{destination.highlights.map((item)=><li key={item} className="flex gap-2 text-sm text-gray-600"><span className="text-amber-500">✓</span>{item}</li>)}</ul></div></article>)}</div>
+        </section>
 
-      <section className="mx-auto max-w-7xl px-5 py-20 sm:px-8 lg:px-12 lg:py-28">
-        <div className="mb-12 grid gap-6 lg:grid-cols-[1fr_24rem] lg:items-end">
-          <div><p className="mb-3 text-[10px] font-bold uppercase tracking-[.28em] text-[#07856f]">Choose your rhythm</p><h2 className="font-['Instrument_Serif'] text-[clamp(3rem,6vw,5.5rem)] font-normal leading-[.9] tracking-[-.04em]">Nine ways into<br />the island.</h2></div>
-          <p className="text-sm leading-7 text-[#56746c]">Each itinerary is a starting point. Add a quiet beach, extend a safari, or slow the route down—we shape the final journey around you.</p>
-        </div>
+        <section className="mb-20">
+          <div className="mb-12 text-center"><span className="inline-block rounded-full border border-[#FFD700]/40 bg-white px-6 py-2 text-sm uppercase tracking-wider text-[#0A2342]">Good to Know</span><h2 className="mt-4 text-4xl font-medium text-[#0A2342] md:text-5xl">Sri Lanka Travel Guide</h2></div>
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">{travelGuide.map((guide)=><article key={guide.title} className="rounded-2xl border border-gray-200 bg-white p-6 shadow-lg transition hover:border-[#FFD700] hover:shadow-xl"><div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-[#FFD700] to-[#FFA500] text-xl text-[#0A2342]">{guide.icon}</div><h3 className="mb-2 text-xl font-medium text-[#0A2342]">{guide.title}</h3><p className="mb-4 text-sm leading-6 text-gray-600">{guide.copy}</p><ul className="space-y-2">{guide.items.map((item)=><li key={item} className="flex gap-2 text-sm text-gray-600"><span className="font-bold text-amber-500">✓</span>{item}</li>)}</ul></article>)}</div>
+        </section>
 
-        <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-          {tours.map((tour, index) => (
-            <article key={tour.title} className="group overflow-hidden rounded-[1.8rem] border border-[#0b5b4c]/10 bg-white shadow-[0_18px_55px_rgba(6,78,59,.09)]">
-              <div className="relative h-72 overflow-hidden">
-                <img src={tour.img} alt="" className="h-full w-full object-cover transition duration-700 group-hover:scale-105" loading="lazy" />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#052d26]/85 via-transparent to-transparent" />
-                <div className="absolute left-5 top-5 flex w-[calc(100%-2.5rem)] items-center justify-between text-[10px] font-bold uppercase tracking-[.16em] text-white"><span className="rounded-full border border-white/25 bg-black/20 px-3 py-1.5 backdrop-blur">{tour.type}</span><span>0{index + 1}</span></div>
-                <div className="absolute inset-x-5 bottom-5 text-white"><p className="mb-2 text-[10px] uppercase tracking-[.18em] text-white/65">{tour.days} · {tour.bestFor}</p><h3 className="font-['Instrument_Serif'] text-4xl leading-none">{tour.title}</h3></div>
-              </div>
-              <div className="p-6">
-                <p className="min-h-20 text-sm leading-6 text-[#5b726c]">{tour.description}</p>
-                <div className="my-5 flex flex-wrap gap-2">{tour.highlights.map((place) => <span key={place} className="rounded-full bg-[#e6f5eb] px-3 py-1.5 text-[10px] font-semibold text-[#08715f]">{place}</span>)}</div>
-                <div className="flex items-end justify-between border-t border-[#0b5b4c]/10 pt-5"><div><small className="block text-[9px] uppercase tracking-widest text-[#789089]">From</small><strong className="font-['Instrument_Serif'] text-2xl font-normal">{tour.price}</strong></div><div className="text-right"><strong className="text-sm text-[#e38b58]">★ {tour.rating}</strong><small className="block text-[10px] text-[#789089]">{tour.reviews} reviews</small></div></div>
-              </div>
-            </article>
-          ))}
-        </div>
-      </section>
+        <section className="mb-20">
+          <div className="mb-12 text-center"><span className="inline-block rounded-full border border-[#FFD700]/40 bg-white px-6 py-2 text-sm uppercase tracking-wider text-[#0A2342]">Day by Day</span><h2 className="mt-4 text-4xl font-medium text-[#0A2342] md:text-5xl">Sample 5-Day Journey</h2></div>
+          <div className="space-y-8">{sampleRoute.map((day)=><article key={day.day} className="rounded-2xl border border-gray-200 bg-white p-4 shadow-xl sm:p-6 md:p-8"><div className="mb-7 flex flex-col gap-4 md:flex-row md:items-center"><div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#FFD700] to-[#FFA500] text-2xl font-semibold text-[#0A2342] shadow-lg">{day.day}</div><div><span className="inline-block rounded-full bg-gradient-to-r from-blue-500 to-cyan-500 px-3 py-1 text-xs font-semibold text-white">{day.theme}</span><h3 className="mt-2 text-2xl font-medium text-[#0A2342]">{day.title}</h3></div></div><div className="ml-2 space-y-3 border-l-4 border-[#FFD700]/30 pl-5 sm:ml-5 sm:pl-7">{day.activities.map(([time,activity])=><div key={time} className="relative rounded-xl border border-gray-200 bg-gradient-to-br from-white to-gray-50 p-3 sm:p-4"><span className="absolute -left-[35px] top-4 flex h-7 w-7 items-center justify-center rounded-full bg-[#FFD700] text-xs text-[#0A2342] sm:-left-[45px]">●</span><div className="flex flex-wrap items-center gap-3"><span className="rounded-md bg-[#0A2342] px-2.5 py-1 text-xs text-white">{time}</span><strong className="font-medium text-[#0A2342]">{activity}</strong></div></div>)}</div><div className="mt-6 rounded-xl border border-blue-100 bg-blue-50 p-4 text-sm text-gray-600"><strong className="text-[#0A2342]">Accommodation:</strong> {day.stay}</div></article>)}</div>
+        </section>
 
-      <section className="bg-[#063d34] px-5 py-20 text-white sm:px-8 lg:px-12">
-        <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[1fr_auto] lg:items-end">
-          <div><p className="mb-4 text-[10px] font-bold uppercase tracking-[.28em] text-[#8ee8c1]">Made for you</p><h2 className="max-w-4xl font-['Instrument_Serif'] text-[clamp(3rem,6vw,5.8rem)] font-normal leading-[.88]">Your best route may not exist <em className="text-[#b8f5d8]">yet.</em></h2></div>
-          <div className="flex flex-wrap gap-3"><button type="button" onClick={() => onNavigate("experiences")} className="rounded-full border border-white/25 px-6 py-3 text-xs font-semibold transition hover:bg-white hover:text-[#064e3b]">Explore experiences</button><button type="button" onClick={() => onNavigate("reach-us")} className="rounded-full bg-[#b8f5d8] px-6 py-3 text-xs font-semibold text-[#064e3b] transition hover:bg-white">Plan my tour →</button></div>
-        </div>
-      </section>
+        <section className="mb-20">
+          <div className="mb-10 text-center"><h2 className="text-4xl font-medium text-[#0A2342] md:text-5xl">Frequently Asked Questions</h2></div>
+          <div className="mx-auto max-w-4xl space-y-3">{faq.map(([question,answer],index)=><article key={question} className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm"><button type="button" onClick={()=>setOpenFaq(openFaq===index?-1:index)} className="flex w-full items-center justify-between gap-4 p-5 text-left font-semibold text-[#0A2342]"><span>{question}</span><b className="text-xl text-amber-500">{openFaq===index?"−":"+"}</b></button>{openFaq===index&&<p className="border-t border-gray-100 px-5 py-4 leading-7 text-gray-600">{answer}</p>}</article>)}</div>
+        </section>
 
-    </main>
-  )
+        <section className="overflow-hidden rounded-2xl bg-[#0A2342] p-5 text-center text-white shadow-2xl sm:p-8 md:p-12">
+          <h2 className="mb-3 text-3xl font-medium md:text-4xl">Discover Sri Lanka</h2><p className="mx-auto mb-8 max-w-2xl text-white/75">A small island filled with unforgettable journeys.</p>
+          <div className="mx-auto aspect-video max-w-4xl overflow-hidden rounded-xl"><iframe className="h-full w-full" src="https://www.youtube.com/embed/gd-7oInAQrg" title="Discover Sri Lanka" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen/></div>
+          <button type="button" onClick={()=>onNavigate("reach-us")} className="mt-8 rounded-lg bg-[#FFD700] px-7 py-3 font-semibold text-[#0A2342] transition hover:bg-[#FFA500]">Plan My Sri Lanka Tour →</button>
+        </section>
+      </div>
+    </section>
+  </main>
 }

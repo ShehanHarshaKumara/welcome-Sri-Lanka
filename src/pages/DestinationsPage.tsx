@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from "react"
+import destinationAdventureMap from "../assets/sri-lanka-destination-adventure-map.png"
 
 export type Destination = {
   name: string
@@ -14,6 +15,33 @@ type DestinationsPageProps = {
 
 const FILTERS = ["All", "Heritage", "Coast", "Highlands", "Wildlife", "Cities"] as const
 type Filter = (typeof FILTERS)[number]
+
+const DESTINATION_TOURIST_MAP_POINTS = [
+  { label: "Jaffna", destination: "Jaffna", x: 28, y: 7, color: "#ef4444" },
+  { label: "Trincomalee", destination: "Trincomalee", x: 64, y: 17, color: "#2563eb" },
+  { label: "Anuradhapura", destination: "Anuradhapura", x: 35, y: 21, color: "#ef4444" },
+  { label: "Sigiriya", destination: "Sigiriya", x: 46, y: 27, color: "#ef4444" },
+  { label: "Polonnaruwa", destination: "Polonnaruwa", x: 56, y: 25, color: "#ef4444" },
+  { label: "Dambulla", destination: "Dambulla", x: 53, y: 38, color: "#ef4444" },
+  { label: "Kandy", destination: "Kandy", x: 37, y: 37, color: "#f59e0b" },
+  { label: "Nuwara Eliya", destination: "Nuwara Eliya", x: 48, y: 45, color: "#22c55e" },
+  { label: "Ella", destination: "Ella", x: 67, y: 47, color: "#8b5cf6" },
+  { label: "Arugam Bay", destination: "Arugam Bay", x: 80, y: 48, color: "#ef4444" },
+  { label: "Yala National Park", destination: "Yala", x: 72, y: 60, color: "#d97706" },
+  { label: "Udawalawe National Park", destination: "Udawalawe", x: 53, y: 64, color: "#d97706" },
+  { label: "Haputale", destination: "Haputale", x: 56, y: 55, color: "#ef4444" },
+  { label: "Mirissa", destination: "Mirissa", x: 47, y: 81, color: "#ec4899" },
+  { label: "Weligama", destination: "Weligama", x: 53, y: 84, color: "#ef4444" },
+  { label: "Tangalle", destination: "Tangalle", x: 61, y: 82, color: "#ef4444" },
+  { label: "Galle Fort", destination: "Galle", x: 32, y: 78, color: "#3b82f6" },
+  { label: "Unawatuna", destination: "Unawatuna", x: 35, y: 85, color: "#ef4444" },
+  { label: "Hikkaduwa", destination: "Hikkaduwa", x: 20, y: 72, color: "#ef4444" },
+  { label: "Bentota", destination: "Bentota", x: 18, y: 65, color: "#ef4444" },
+  { label: "Negombo", destination: "Negombo", x: 17, y: 40, color: "#ef4444" },
+  { label: "Colombo", destination: "Colombo", x: 18, y: 49, color: "#ef4444" },
+  { label: "Kalpitiya", destination: "Kalpitiya", x: 17, y: 31, color: "#ef4444" },
+  { label: "Kithulgala", destination: "Kithulgala", x: 29, y: 49, color: "#ef4444" },
+] as const
 
 const DESTINATION_GUIDES: Record<Exclude<Filter, "All">, { intro: string; bestTime: string; stay: string; highlights: string[] }> = {
   Heritage: {
@@ -423,6 +451,11 @@ export default function DestinationsPage({ destinations, onBack }: DestinationsP
   const [aroundPageDestination, setAroundPageDestination] = useState<Destination | null>(null)
   const [nearbySelection, setNearbySelection] = useState<NearbyPlaceSelection | null>(null)
   const [mapSelectionName, setMapSelectionName] = useState(destinations[0]?.name ?? "Sri Lanka")
+  const [touristMapOpen, setTouristMapOpen] = useState(false)
+  const [touristMapZoom, setTouristMapZoom] = useState(1)
+  const [touristMapDrag, setTouristMapDrag] = useState({ x: 0, y: 0 })
+  const [isTouristMapDragging, setIsTouristMapDragging] = useState(false)
+  const touristMapDragRef = useRef({ active: false, startX: 0, startY: 0, startPanX: 0, startPanY: 0 })
 
   useEffect(() => {
     if (!selected) return
@@ -483,7 +516,19 @@ export default function DestinationsPage({ destinations, onBack }: DestinationsP
       .slice(0, 4)
     : []
   const smartTrip = SMART_TRIP_FACTS[mapSelection.name] ?? { distance: "Flexible", drive: "Your pace", mood: mapSelection.tag }
+  const mapGuide = DESTINATION_GUIDES[getCategory(mapSelection)]
+  const mapIntel = PLACE_INTELLIGENCE[mapSelection.name]
   const mapSelectionIndex = Math.max(0, popularMapDestinations.findIndex((destination) => destination.name === mapSelection.name))
+  const selectedTouristMapPoint = DESTINATION_TOURIST_MAP_POINTS.find((point) => point.destination === mapSelection.name)
+  const touristMapPanLimit = Math.max(0, (touristMapZoom - 1) * 50)
+  const touristMapAutoTranslateX = touristMapOpen && selectedTouristMapPoint
+    ? Math.max(-touristMapPanLimit, Math.min(touristMapPanLimit, touristMapZoom * (50 - selectedTouristMapPoint.x)))
+    : 0
+  const touristMapAutoTranslateY = touristMapOpen && selectedTouristMapPoint
+    ? Math.max(-touristMapPanLimit, Math.min(touristMapPanLimit, touristMapZoom * (50 - selectedTouristMapPoint.y)))
+    : 0
+  const touristMapTranslateX = Math.max(-touristMapPanLimit, Math.min(touristMapPanLimit, touristMapAutoTranslateX + touristMapDrag.x))
+  const touristMapTranslateY = Math.max(-touristMapPanLimit, Math.min(touristMapPanLimit, touristMapAutoTranslateY + touristMapDrag.y))
 
   const selectRelativeDestination = (direction: number) => {
     if (!popularMapDestinations.length) return
@@ -495,6 +540,58 @@ export default function DestinationsPage({ destinations, onBack }: DestinationsP
     setActiveFilter("All")
     setQuery(mapSelection.name)
     document.getElementById("destination-gallery")?.scrollIntoView({ behavior: "smooth" })
+  }
+
+  const focusTouristMapPlace = (destinationName: string) => {
+    setTouristMapDrag({ x: 0, y: 0 })
+    setMapSelectionName(destinationName)
+    setTouristMapOpen(true)
+    setTouristMapZoom(1.65)
+  }
+
+  const resetTouristMap = () => {
+    setTouristMapDrag({ x: 0, y: 0 })
+    setTouristMapOpen(false)
+    setTouristMapZoom(1)
+  }
+
+  const beginTouristMapDrag = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (touristMapZoom <= 1) return
+    if (event.pointerType === "mouse" && event.button !== 0) return
+    if ((event.target as HTMLElement).closest("button, aside, article, [data-map-ui]")) return
+    event.currentTarget.setPointerCapture(event.pointerId)
+    touristMapDragRef.current = {
+      active: true,
+      startX: event.clientX,
+      startY: event.clientY,
+      startPanX: touristMapDrag.x,
+      startPanY: touristMapDrag.y,
+    }
+    setIsTouristMapDragging(true)
+  }
+
+  const moveTouristMapDrag = (event: ReactPointerEvent<HTMLDivElement>) => {
+    const drag = touristMapDragRef.current
+    if (!drag.active || touristMapZoom <= 1) return
+    const bounds = event.currentTarget.getBoundingClientRect()
+    const deltaX = ((event.clientX - drag.startX) / bounds.width) * 100
+    const deltaY = ((event.clientY - drag.startY) / bounds.height) * 100
+    const minX = -touristMapPanLimit - touristMapAutoTranslateX
+    const maxX = touristMapPanLimit - touristMapAutoTranslateX
+    const minY = -touristMapPanLimit - touristMapAutoTranslateY
+    const maxY = touristMapPanLimit - touristMapAutoTranslateY
+    setTouristMapDrag({
+      x: Math.max(minX, Math.min(maxX, drag.startPanX + deltaX)),
+      y: Math.max(minY, Math.min(maxY, drag.startPanY + deltaY)),
+    })
+  }
+
+  const endTouristMapDrag = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (touristMapDragRef.current.active && event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId)
+    }
+    touristMapDragRef.current.active = false
+    setIsTouristMapDragging(false)
   }
 
   if (aroundPageDestination) {
@@ -510,21 +607,21 @@ export default function DestinationsPage({ destinations, onBack }: DestinationsP
         <div className="destination-hero-orbit absolute -right-36 top-24 -z-10 h-[34rem] w-[34rem] rounded-full border border-white/15" />
         <div className="absolute right-[12%] top-[18%] -z-10 h-40 w-40 rounded-full bg-[#b9ffd5]/20 blur-3xl" />
 
-        <div className="relative mx-auto grid min-h-[calc(100vh-5rem)] max-w-7xl grid-cols-1 px-5 pb-8 pt-8 sm:px-8 lg:grid-cols-[1.08fr_.92fr] lg:px-12">
+        <div className="relative mx-auto grid min-h-[calc(100svh-5rem)] max-w-7xl grid-cols-1 px-5 pb-8 pt-6 sm:px-8 sm:pt-8 lg:grid-cols-[1.08fr_.92fr] lg:px-12">
           <div className="flex min-w-0 flex-col justify-between">
             <button type="button" onClick={onBack} className="group flex w-fit items-center gap-3 rounded-full border border-white/20 bg-black/15 px-4 py-2 text-xs font-medium text-white backdrop-blur-xl transition hover:bg-white hover:text-[#064e3b]">
               <span className="transition-transform group-hover:-translate-x-1">←</span> Back to home
             </button>
 
-            <div className="max-w-[48rem] py-12 lg:py-8">
+            <div className="max-w-[48rem] py-9 sm:py-12 lg:py-8">
               <div className="mb-5 flex items-center gap-3 text-[10px] font-bold uppercase tracking-[0.3em] text-[#b9ffd5]">
                 <span className="relative flex h-2 w-2"><span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#8ff1ba] opacity-60" /><span className="relative h-2 w-2 rounded-full bg-[#8ff1ba]" /></span>
                 Your Sri Lanka begins here
               </div>
-              <h1 className="max-w-4xl font-['Instrument_Serif'] text-[clamp(4.2rem,8.1vw,8.4rem)] font-normal leading-[.78] tracking-[-.052em]">
+              <h1 className="max-w-4xl font-['Instrument_Serif'] text-[clamp(3.35rem,16vw,5.25rem)] font-normal leading-[.8] tracking-[-.052em] sm:text-[clamp(4.2rem,8.1vw,8.4rem)]">
                 Come for a place.<br /><em className="text-[#c9f5d5]">Leave with a story.</em>
               </h1>
-              <p className="mt-8 max-w-xl text-base leading-7 text-white/72 sm:text-lg">
+              <p className="mt-6 max-w-xl text-sm leading-6 text-white/72 sm:mt-8 sm:text-lg sm:leading-7">
                 Wake above ancient kingdoms, follow elephants through golden grass, and end the day barefoot beside the Indian Ocean. This is not a list of places—it is the trip you will still talk about years from now.
               </p>
 
@@ -553,9 +650,9 @@ export default function DestinationsPage({ destinations, onBack }: DestinationsP
               </div>
             </div>
 
-            <div className="flex max-w-2xl items-center justify-between gap-5 border-t border-white/18 py-5 text-[9px] font-bold uppercase tracking-[.2em] text-white/45">
+            <div className="flex max-w-2xl flex-col items-start justify-between gap-3 border-t border-white/18 py-5 text-[9px] font-bold uppercase tracking-[.2em] text-white/45 sm:flex-row sm:items-center sm:gap-5">
               <span>6.9271° N · 79.8612° E</span>
-              <button type="button" onClick={() => document.querySelector(".living-map-section")?.scrollIntoView({ behavior: "smooth" })} className="flex items-center gap-3 text-white/75 transition hover:text-[#b9ffd5]">Explore the living map <span className="grid h-8 w-8 place-items-center rounded-full border border-white/20">↓</span></button>
+              <button type="button" onClick={() => document.getElementById("key-destinations-guide")?.scrollIntoView({ behavior: "smooth", block: "start" })} className="flex items-center gap-3 text-white/75 transition hover:text-[#b9ffd5]">Explore destinations <span className="grid h-8 w-8 place-items-center rounded-full border border-white/20">↓</span></button>
             </div>
           </div>
 
@@ -572,7 +669,132 @@ export default function DestinationsPage({ destinations, onBack }: DestinationsP
         </div>
       </section>
 
-      <section className="living-map-section relative isolate min-h-[calc(100svh-4rem)] scroll-mt-16 overflow-hidden bg-[#041d1b] text-white lg:h-[calc(100svh-4rem)] lg:min-h-0">
+      <section id="destination-tourist-map" className="relative w-full scroll-mt-20 overflow-hidden bg-[#021d31] text-white shadow-[0_35px_100px_rgba(3,29,50,.35)]" aria-labelledby="destination-tourist-map-title">
+        <div
+          className={`relative min-h-[62rem] touch-pan-y overflow-hidden lg:aspect-[16/9] lg:min-h-0 ${touristMapZoom > 1 ? (isTouristMapDragging ? "cursor-grabbing" : "cursor-grab") : "cursor-default"}`}
+          onPointerDown={beginTouristMapDrag}
+          onPointerMove={moveTouristMapDrag}
+          onPointerUp={endTouristMapDrag}
+          onPointerCancel={endTouristMapDrag}
+        >
+          <div className={`absolute inset-0 ${isTouristMapDragging ? "transition-none" : "transition-transform duration-700 ease-[cubic-bezier(.2,.8,.2,1)]"}`} style={{ transform: `translate3d(${touristMapTranslateX}%, ${touristMapTranslateY}%, 0) scale(${touristMapZoom})`, transformOrigin: "50% 50%" }}>
+            <img src={destinationAdventureMap} alt="Detailed illustrated Sri Lanka adventure map with destinations across the island" className="h-full w-full object-contain object-center" />
+            <div className="absolute inset-0 bg-[#00182a]/5" />
+            {DESTINATION_TOURIST_MAP_POINTS.map((point) => <button type="button" key={point.label} onClick={() => focusTouristMapPlace(point.destination)} aria-label={`Show ${point.label} details`} className="absolute z-10 hidden h-14 w-24 -translate-x-1/2 -translate-y-1/2 rounded-full bg-transparent outline-none focus-visible:ring-4 focus-visible:ring-white/70 lg:block" style={{ left: `${point.x}%`, top: `${point.y}%` }}><span className="sr-only">{point.label}</span></button>)}
+          </div>
+
+          <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-[#021725]/95 to-transparent lg:hidden" />
+          <div className="relative z-30 grid min-h-[62rem] content-between gap-5 p-4 sm:p-6 lg:absolute lg:inset-0 lg:block lg:min-h-0 lg:p-0">
+            <aside className="rounded-2xl border border-white/20 bg-[#031c2f]/88 p-4 shadow-2xl backdrop-blur-xl lg:absolute lg:left-[1.4%] lg:top-[9%] lg:w-[18.5%] lg:p-3 xl:p-4">
+              <p className="text-xs font-semibold text-white/80 sm:text-sm">Explore Sri Lanka</p>
+              <h2 id="destination-tourist-map-title" className="mt-1 text-3xl font-black leading-none sm:text-4xl lg:text-[clamp(1.3rem,2.1vw,2.2rem)]">Tourist Map</h2>
+              <p className="mt-2 text-xs leading-5 text-white/65 lg:text-[10px] lg:leading-4 xl:text-xs xl:leading-5">Choose a destination to zoom into the island and reveal its travel details.</p>
+              <div className="mt-4 flex gap-2 overflow-x-auto pb-1 lg:max-h-[36rem] lg:flex-col lg:overflow-y-auto lg:pr-1">
+                {DESTINATION_TOURIST_MAP_POINTS.map((point) => {
+                  const isActive = touristMapOpen && mapSelection.name === point.destination
+                  return <button type="button" key={point.label} onClick={() => focusTouristMapPlace(point.destination)} aria-pressed={isActive} className={`flex min-w-[12rem] shrink-0 items-center gap-2 rounded-xl border px-3 py-2 text-left transition lg:min-w-0 ${isActive ? "border-[#ffc25a] bg-[#173950] shadow-[0_0_18px_rgba(255,194,90,.6)]" : "border-white/20 bg-[#08253a]/90 hover:border-white/45"}`}>
+                    <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-xs font-black text-white" style={{ background: point.color }}>⌖</span>
+                    <span className="min-w-0 flex-1 truncate text-xs font-bold xl:text-sm">{point.label}</span><span aria-hidden="true">›</span>
+                  </button>
+                })}
+              </div>
+            </aside>
+
+            {touristMapOpen ? <article className="relative self-end overflow-hidden rounded-2xl border border-white/25 bg-[#04243a]/94 p-3 shadow-2xl backdrop-blur-xl lg:absolute lg:right-[1.2%] lg:top-[9%] lg:w-[21.5%] lg:p-3 xl:p-4" aria-live="polite">
+              <button type="button" onClick={resetTouristMap} className="absolute right-5 top-5 z-10 grid h-8 w-8 place-items-center rounded-full border border-white/25 bg-[#021827]/75 text-sm text-white backdrop-blur hover:bg-white hover:text-[#06223a]" aria-label="Close destination details">×</button>
+              <img key={mapSelection.img} src={mapSelection.img} alt={mapSelection.name} className="h-40 w-full rounded-xl object-cover lg:h-[clamp(6.5rem,11vw,10rem)]" />
+              <div className="mt-3 flex items-center gap-2"><span className="text-xl text-[#ffbf4a]">⌖</span><h3 className="min-w-0 truncate text-2xl font-black lg:text-[clamp(1.1rem,1.7vw,1.8rem)]">{mapSelection.name}</h3></div>
+              <p className="mt-1 text-xs text-white/55">⌖ {mapIntel?.district ?? "Sri Lanka"} District</p>
+              <p className="mt-2 text-xs font-bold text-[#ffd05e]">★ 4.9 <span className="font-normal text-white/60">traveller rating</span></p>
+              <p className="mt-3 text-xs leading-5 text-white/75 lg:text-[10px] lg:leading-4 xl:text-xs xl:leading-5">{mapGuide.intro}</p>
+              <div className="mt-3 grid grid-cols-2 gap-1"><span className="rounded-lg border border-white/15 bg-white/[.04] px-2 py-2 text-center text-[9px] font-bold">{getCategory(mapSelection)}</span><span className="rounded-lg border border-white/15 bg-white/[.04] px-2 py-2 text-center text-[9px] font-bold">{mapIntel?.bestFor ?? mapSelection.tag}</span></div>
+              <button type="button" onClick={openSmartDestination} className="mt-4 w-full rounded-full bg-gradient-to-r from-[#ffad19] to-[#f23f6d] px-4 py-3 text-xs font-black text-white shadow-lg">Explore {mapSelection.name} →</button>
+            </article> : <div className="self-end rounded-2xl border border-white/20 bg-[#032139]/80 p-4 shadow-xl backdrop-blur-xl lg:absolute lg:right-[1.5%] lg:top-[10%] lg:w-[18rem]"><p className="text-[9px] font-black uppercase tracking-[.2em] text-[#60bdf3]">Interactive map</p><p className="mt-2 text-sm leading-6 text-white/75">Choose a destination from the list or tap its original map marker to open details.</p></div>}
+
+            <div data-map-ui className="pointer-events-none absolute bottom-4 left-1/2 hidden -translate-x-1/2 items-center gap-2 rounded-full border border-white/20 bg-[#031b2d]/80 px-4 py-2 text-[10px] font-bold uppercase tracking-[.16em] text-white/75 shadow-xl backdrop-blur lg:flex">
+              <span className="text-base text-[#60bdf3]">↔</span> Drag map to move
+            </div>
+
+            <div className="absolute bottom-4 right-4 hidden flex-col overflow-hidden rounded-xl border border-white/25 bg-[#031b2d]/90 shadow-xl backdrop-blur lg:flex">
+              <button type="button" onClick={resetTouristMap} className="grid h-10 w-10 place-items-center border-b border-white/15 text-xs hover:bg-white/10" aria-label="Show the full island map">⌂</button>
+              <button type="button" onClick={() => setTouristMapZoom((zoom) => Math.min(2, Number((zoom + .12).toFixed(2))))} className="grid h-10 w-10 place-items-center border-b border-white/15 text-lg hover:bg-white/10" aria-label="Zoom map in">+</button>
+              <button type="button" onClick={() => setTouristMapZoom((zoom) => { const nextZoom = Math.max(.82, Number((zoom - .12).toFixed(2))); if (nextZoom <= 1) setTouristMapDrag({ x: 0, y: 0 }); return nextZoom })} className="grid h-10 w-10 place-items-center text-lg hover:bg-white/10" aria-label="Zoom map out">−</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="key-destinations-guide" className="scroll-mt-20 bg-gradient-to-b from-white to-gray-50 px-4 py-20 sm:px-8 lg:px-12" aria-labelledby="key-destinations-guide-title">
+        <div className="mx-auto max-w-7xl">
+          <div className="mb-12 space-y-4 text-center">
+            <div className="inline-flex items-center gap-2 rounded-full border border-white/70 bg-white/75 px-6 py-2 shadow-[0_8px_32px_rgba(31,38,135,.12)] backdrop-blur-xl">
+              <span className="text-xl text-[#FFD700]">⌖</span><span className="text-sm uppercase tracking-wider text-[#0A2342]">Travel Destinations</span>
+            </div>
+            <h2 id="key-destinations-guide-title" className="bg-gradient-to-r from-[#0A2342] via-[#1a4a7a] to-[#0A2342] bg-clip-text text-4xl font-medium text-transparent md:text-6xl">
+              Find your next <em className="not-italic">unforgettable place.</em>
+            </h2>
+            <p className="mx-auto max-w-2xl text-base text-gray-600 md:text-xl">Key Destinations Guide · Explore the beautiful places of Sri Lanka</p>
+          </div>
+
+          <div className="grid gap-6 lg:grid-cols-3 lg:gap-8">
+            <aside className="lg:col-span-1">
+              <div className="rounded-2xl border-2 border-gray-200 bg-white p-4 shadow-xl md:p-6">
+                <h3 className="mb-4 flex items-center gap-2 text-lg font-medium text-[#0A2342] md:text-xl"><span className="text-[#FFD700]">✦</span>Select Destination</h3>
+                <div className="flex gap-3 overflow-x-auto pb-3 lg:block lg:max-h-[720px] lg:space-y-2 lg:overflow-y-auto lg:pr-2">
+                  {popularMapDestinations.map((destination,index)=>{
+                    const isActive=destination.name===mapSelection.name
+                    return <button type="button" key={destination.name} onClick={()=>setMapSelectionName(destination.name)} className={`w-[11rem] shrink-0 rounded-xl p-3 text-left transition duration-300 lg:w-full lg:p-4 ${isActive?"bg-gradient-to-br from-[#FFD700] to-[#FFA500] shadow-lg lg:scale-[1.02]":"bg-gray-50 hover:bg-gray-100"}`}>
+                      <div className="flex items-center gap-3"><span className="relative h-12 w-12 shrink-0 overflow-hidden rounded-xl"><img src={destination.img} alt="" className="h-full w-full object-cover"/></span><span className="min-w-0"><small className={`block text-[9px] font-bold uppercase tracking-wider ${isActive?"text-[#0A2342]/60":"text-gray-400"}`}>{String(index+1).padStart(2,"0")} · {getCategory(destination)}</small><strong className={`mt-1 block truncate text-sm ${isActive?"text-[#0A2342]":"text-gray-700"}`}>{destination.name}</strong><span className={`block truncate text-xs ${isActive?"text-[#0A2342]/70":"text-gray-500"}`}>{destination.tag}</span></span></div>
+                    </button>
+                  })}
+                </div>
+              </div>
+            </aside>
+
+            <article className="overflow-hidden rounded-2xl border-2 border-[#FFD700]/30 bg-white shadow-2xl lg:col-span-2">
+              <div className="group relative h-72 overflow-hidden md:h-96">
+                <img key={mapSelection.name} src={mapSelection.img} alt={mapSelection.name} className="h-full w-full object-cover transition duration-700 group-hover:scale-105"/>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent"/>
+                <div className="absolute inset-x-0 bottom-0 p-5 text-white md:p-8">
+                  <div className="mb-3 flex flex-wrap items-center gap-2"><span className="rounded-full bg-[#FFD700] px-3 py-1 text-xs font-bold text-[#0A2342]">{mapSelection.tag}</span><span className="rounded-full border border-white/25 bg-black/20 px-3 py-1 text-xs backdrop-blur-xl">{getCategory(mapSelection)}</span></div>
+                  <h3 className="text-4xl font-medium md:text-5xl">{mapSelection.name}</h3>
+                  <p className="mt-2 max-w-2xl text-sm leading-6 text-white/85 md:text-base">{mapGuide.intro}</p>
+                </div>
+              </div>
+
+              <div className="space-y-7 p-5 md:p-8">
+                <div className="grid gap-3 sm:grid-cols-3 md:gap-4">
+                  <div className="flex items-center gap-3 rounded-xl border border-blue-200 bg-gradient-to-br from-blue-50 to-white p-4"><span className="text-blue-600">◷</span><div><small className="block text-xs text-gray-500">Best Time</small><strong className="text-sm font-medium text-gray-900">{mapGuide.bestTime}</strong></div></div>
+                  <div className="flex items-center gap-3 rounded-xl border border-green-200 bg-gradient-to-br from-green-50 to-white p-4"><span className="text-green-600">◴</span><div><small className="block text-xs text-gray-500">Duration</small><strong className="text-sm font-medium text-gray-900">{mapGuide.stay}</strong></div></div>
+                  <div className="flex items-center gap-3 rounded-xl border border-amber-200 bg-gradient-to-br from-amber-50 to-white p-4"><span className="text-amber-600">⌖</span><div><small className="block text-xs text-gray-500">From Colombo</small><strong className="text-sm font-medium text-gray-900">{smartTrip.distance} · {smartTrip.drive}</strong></div></div>
+                </div>
+
+                <div className="grid gap-6 md:grid-cols-2">
+                  <div><h4 className="mb-3 flex items-center gap-2 text-lg font-medium text-[#0A2342]"><span className="text-[#FFD700]">★</span>Highlights</h4><div className="space-y-2">{mapGuide.highlights.map((highlight)=><div key={highlight} className="flex items-start gap-2 rounded-lg p-2 text-sm text-gray-700 transition hover:bg-gray-50"><span className="mt-2 h-2 w-2 shrink-0 rounded-full bg-[#FFD700]"/>{highlight}</div>)}</div></div>
+                  <div><h4 className="mb-3 flex items-center gap-2 text-lg font-medium text-[#0A2342]"><span className="text-[#FFD700]">◎</span>Nearby Places</h4><div className="flex flex-wrap gap-2">{(mapIntel?.nearby??[mapSelection.type,mapSelection.tag]).map((place)=><button type="button" key={place} onClick={()=>setNearbySelection({parent:mapSelection,place})} className="rounded-full bg-gradient-to-r from-blue-500 to-cyan-500 px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:-translate-y-0.5">{place}</button>)}</div></div>
+                </div>
+
+                <div className="rounded-xl border-2 border-green-200 bg-gradient-to-br from-green-50 to-white p-5"><h4 className="mb-2 flex items-center gap-2 text-lg font-medium text-green-800"><span>ⓘ</span>Travel Tip</h4><p className="text-sm leading-6 text-gray-700">{mapIntel?.routeNote??`Allow enough time to experience ${mapSelection.name} at a relaxed pace.`}</p></div>
+
+                <div className="overflow-hidden rounded-2xl border-2 border-[#FFD700]/30 bg-white shadow-xl">
+                  <div className="flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 bg-gradient-to-r from-[#0A2342] to-[#1a4a7a] px-5 py-4 text-white">
+                    <div><p className="text-[9px] font-bold uppercase tracking-[.2em] text-[#FFD700]">Satellite location map</p><h4 className="mt-1 text-xl font-medium">{mapSelection.name}, Sri Lanka</h4></div>
+                    <span className="rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-xs text-white/80">⌖ Live location</span>
+                  </div>
+                  <div className="relative h-72 bg-[#dce9e4] sm:h-[22rem]">
+                    <iframe key={`guide-map-${mapSelection.name}`} src={googleMapUrl} title={`Satellite map of ${mapSelection.name}, Sri Lanka`} className="absolute inset-0 h-full w-full border-0" loading="lazy" referrerPolicy="no-referrer-when-downgrade" allowFullScreen/>
+                    <div className="pointer-events-none absolute bottom-4 left-4 rounded-full border border-white/30 bg-[#041f1d]/75 px-4 py-2 text-[10px] font-bold uppercase tracking-[.16em] text-white shadow-lg backdrop-blur-xl">Satellite view · {mapSelection.name}</div>
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap items-center justify-between gap-4 border-t border-gray-100 pt-5"><p className="text-sm text-gray-500">Best for <strong className="text-gray-700">{mapIntel?.bestFor??smartTrip.mood}</strong></p><button type="button" onClick={openSmartDestination} className="rounded-lg bg-[#FFD700] px-6 py-3 font-semibold text-[#0A2342] shadow-lg transition hover:bg-[#FFA500]">Explore {mapSelection.name} →</button></div>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section className="living-map-section relative isolate hidden min-h-[calc(100svh-4rem)] scroll-mt-16 overflow-hidden bg-[#041d1b] text-white lg:h-[calc(100svh-4rem)] lg:min-h-0">
         <img
           key={`background-${mapSelection.name}`}
           src={mapSelection.img}

@@ -100,7 +100,18 @@ export default function ExperiencesPage({ onNavigate }: ExperiencesPageProps) {
 
       <section className="island-stories__intro">
         <p className="island-stories__eyebrow">The island, experienced</p>
-        <div><h2>Some places you see.<br />Sri Lanka is a place you <em>feel.</em></h2><p>The cool stone beneath your feet before sunrise. A train leaning into the mountains. Cinnamon and woodsmoke drifting from a kitchen. These are the moments that turn a trip into a story.</p></div>
+        <div>
+          <div className="island-stories__intro-copy">
+            <h2>Some places you see.<br />Sri Lanka is a place you <em>feel.</em></h2>
+            <p>The cool stone beneath your feet before sunrise. A train leaning into the mountains. Cinnamon and woodsmoke drifting from a kitchen. These are the moments that turn a trip into a story.</p>
+          </div>
+          <div className="island-stories__intro-vehicle" aria-label="Private Suzuki Every travel van">
+            <div className="island-stories__intro-vehicle-model">
+              <span aria-hidden="true" />
+              <img src="/suzuki-every-3d-cutout.png" alt="White Suzuki Every travel van" loading="lazy" />
+            </div>
+          </div>
+        </div>
       </section>
 
       <nav id="story-menu" className="island-stories__menu" aria-label="Explore experience stories">

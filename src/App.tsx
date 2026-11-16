@@ -1000,7 +1000,7 @@ export default function App() {
         fontFamily: "Inter, sans-serif",
       }}
     >
-      <ScrollVanStory hidden={page === "home" || page === "experiences" || page === "gallery"} fixedHero={page === "tours"} />
+      <ScrollVanStory hidden={page === "home" || page === "tours" || page === "experiences" || page === "gallery" || page === "reach-us"} />
       {/* ── Navigation ── */}
       <nav
         className="fixed top-0 left-0 right-0 z-50 transition-all duration-300"
@@ -1009,7 +1009,7 @@ export default function App() {
         }}
       >
         <div
-          className="w-full px-4 sm:px-6 lg:px-10 py-3 flex items-center justify-between transition-all duration-300"
+          className="w-full px-3 sm:px-6 lg:px-10 py-3 flex items-center justify-between gap-3 transition-all duration-300"
           style={{
             pointerEvents: "auto",
 
@@ -1029,7 +1029,7 @@ export default function App() {
           {/* Logo */}
           <button
             type="button"
-            className="flex items-center gap-2.5"
+            className="flex min-w-0 items-center gap-2 sm:gap-2.5"
             onClick={() => showHomeSection("home")}
             aria-label="Wonder Lanka home"
           >
@@ -1051,7 +1051,7 @@ export default function App() {
               style={{
                 fontFamily: "'Instrument Serif', serif",
 
-                fontSize: "1.875rem",
+                fontSize: "clamp(1.35rem, 7vw, 1.875rem)",
 
                 letterSpacing: "-0.02em",
 
