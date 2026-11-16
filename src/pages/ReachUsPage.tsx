@@ -24,7 +24,7 @@ export default function ReachUsPage({ onNavigate }: ReachUsPageProps) {
   }
 
   return (
-    <main className="min-h-screen bg-[#f4f7f2] pt-20 text-[#0a2f29]">
+    <main className="reach-us-page min-h-screen bg-[#f4f7f2] pt-20 text-[#0a2f29]">
       <section className="relative overflow-hidden px-5 pb-16 pt-10 sm:px-8 lg:px-12 lg:pb-24 lg:pt-14">
         <div className="pointer-events-none absolute -left-28 top-28 h-80 w-80 rounded-full bg-[#a8ead0]/45 blur-3xl" />
         <div className="pointer-events-none absolute -right-36 top-0 h-[32rem] w-[32rem] rounded-full bg-[#f4bd91]/35 blur-3xl" />

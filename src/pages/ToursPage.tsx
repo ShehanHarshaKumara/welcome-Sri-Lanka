@@ -46,15 +46,6 @@ const sampleRoute=[
   {day:"4",title:"Ella & Yala National Park",theme:"Nature & Wildlife",activities:[["08:00","Nine Arch Bridge"],["10:00","Little Adam’s Peak"],["12:30","Ella Lunch"],["14:00","Transfer to Yala"],["16:00","Jeep Safari"]],stay:"Yala · safari lodge"},
   {day:"5",title:"Mirissa & Return to Colombo",theme:"Beach & Whale Watching",activities:[["05:00","Optional Whale Watching"],["10:30","Mirissa Beach"],["12:30","Seafood Lunch"],["14:00","Galle Fort Visit"],["16:30","Return to Colombo"]],stay:"Departure or optional Colombo stay"},
 ]
-const faq=[
-  ["Can I customise a tour?","Yes. Every package is a starting point and can be changed around your dates, pace, hotels and interests."],
-  ["Are the tours private?","Yes. Our journeys include private transport and a dedicated English-speaking driver."],
-  ["What is normally included?","Your proposal lists accommodation, transport, agreed meals, guiding, entrance fees and activities clearly."],
-  ["How many days should I plan?","Seven days is suitable for two regions. Ten to fourteen days is ideal for culture, hills, wildlife and coast."],
-  ["When is the best time to visit?","Sri Lanka is a year-round destination when the route follows the seasonal weather on each coast."],
-  ["Do I need travel insurance?","Comprehensive travel insurance is strongly recommended for medical care, cancellation and planned activities."],
-]
-
 function categoryOf(tour:Tour){
   const value=`${tour.type} ${tour.title} ${tour.description}`.toLowerCase()
   if(/wild|safari|elephant|leopard/.test(value)) return "Wildlife"
@@ -66,7 +57,6 @@ function categoryOf(tour:Tour){
 export default function ToursPage({tours,onNavigate}:ToursPageProps){
   const [filter,setFilter]=useState("All tours")
   const [showAll,setShowAll]=useState(false)
-  const [openFaq,setOpenFaq]=useState(0)
   const [selectedMapPlace,setSelectedMapPlace]=useState<string|null>(null)
   const [mapZoom,setMapZoom]=useState(1)
   const filtered=useMemo(()=>filter==="All tours"?tours:tours.filter((tour)=>categoryOf(tour)===filter),[filter,tours])
@@ -79,7 +69,7 @@ export default function ToursPage({tours,onNavigate}:ToursPageProps){
     setMapZoom(1.45)
   }
 
-  return <main className="min-h-screen bg-gradient-to-b from-white to-gray-50 text-gray-800">
+  return <main className="tours-page-responsive min-h-screen bg-gradient-to-b from-white to-gray-50 text-gray-800">
     <section className="relative flex min-h-[34rem] items-center justify-center overflow-hidden px-1 pb-10 pt-28 text-center sm:h-96 sm:min-h-0 sm:pb-0 sm:pt-20">
       <img src={heroImage} alt="Sri Lanka tour packages" className="absolute inset-0 h-full w-full object-cover"/>
       <div className="absolute inset-0 bg-gradient-to-b from-[#0A2342]/75 to-[#0A2342]/55"/>
@@ -129,15 +119,17 @@ export default function ToursPage({tours,onNavigate}:ToursPageProps){
         {!showAll&&filtered.length>6&&<div className="mt-10 text-center"><button type="button" onClick={()=>setShowAll(true)} className="rounded-lg bg-[#0A2342] px-7 py-3 font-semibold text-white shadow-lg">Show All Tours</button></div>}
 
         <section className="relative left-1/2 my-20 w-screen -translate-x-1/2 overflow-hidden bg-[#021d31] text-white shadow-[0_35px_100px_rgba(3,29,50,.35)]" aria-labelledby="tour-route-map-title">
-          <div className="relative min-h-[62rem] overflow-hidden lg:aspect-[16/9] lg:min-h-0">
-            <div className="absolute inset-0 transition-transform duration-700 ease-[cubic-bezier(.2,.8,.2,1)]" style={{transform:`scale(${mapZoom})`,transformOrigin:`${activeMapPlace.x}% ${activeMapPlace.y}%`}}>
+          <div className="mobile-map-shell relative min-h-[62rem] overflow-hidden lg:aspect-[16/9] lg:min-h-0">
+            <div className="mobile-map-canvas absolute inset-0 transition-transform duration-700 ease-[cubic-bezier(.2,.8,.2,1)]" style={{transform:`scale(${mapZoom})`,transformOrigin:`${activeMapPlace.x}% ${activeMapPlace.y}%`}}>
               <img src={interactiveTourMap} alt="Illustrated Sri Lanka tourist map with major destinations" className="h-full w-full object-cover object-center" />
               <div className="absolute inset-0 bg-[#00182a]/5" />
               {mapPlaces.map((place)=><button type="button" key={place.name} onClick={()=>focusMapPlace(place.name)} aria-label={`Show ${place.name} details`} className="absolute z-10 hidden h-14 w-24 -translate-x-1/2 -translate-y-1/2 rounded-full bg-transparent outline-none focus-visible:ring-4 focus-visible:ring-white/70 lg:block" style={{left:`${place.x}%`,top:`${place.y}%`}}><span className="sr-only">{place.name}</span></button>)}
             </div>
 
+            <div className="mobile-map-swipe-hint" aria-hidden="true"><span>↔</span> Swipe to explore the full map</div>
+
             <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-[#021725]/95 to-transparent lg:hidden" />
-            <div className="relative z-30 grid min-h-[62rem] content-between gap-5 p-4 sm:p-6 lg:absolute lg:inset-0 lg:block lg:min-h-0 lg:p-0">
+            <div className="mobile-map-ui relative z-30 grid min-h-[62rem] content-between gap-5 p-4 sm:p-6 lg:absolute lg:inset-0 lg:block lg:min-h-0 lg:p-0">
               <aside className="rounded-2xl border border-white/20 bg-[#031c2f]/88 p-4 shadow-2xl backdrop-blur-xl lg:absolute lg:left-[1.4%] lg:top-[9%] lg:w-[18.5%] lg:p-3 xl:p-4">
                 <p className="text-xs font-semibold text-white/80 sm:text-sm">Explore Sri Lanka</p>
                 <h2 id="tour-route-map-title" className="mt-1 text-3xl font-black leading-none sm:text-4xl lg:text-[clamp(1.3rem,2.1vw,2.2rem)]">Tourist Map</h2>
@@ -186,11 +178,6 @@ export default function ToursPage({tours,onNavigate}:ToursPageProps){
         <section className="mb-20">
           <div className="mb-12 text-center"><span className="inline-block rounded-full border border-[#FFD700]/40 bg-white px-6 py-2 text-sm uppercase tracking-wider text-[#0A2342]">Day by Day</span><h2 className="mt-4 text-4xl font-medium text-[#0A2342] md:text-5xl">Sample 5-Day Journey</h2></div>
           <div className="space-y-8">{sampleRoute.map((day)=><article key={day.day} className="rounded-2xl border border-gray-200 bg-white p-4 shadow-xl sm:p-6 md:p-8"><div className="mb-7 flex flex-col gap-4 md:flex-row md:items-center"><div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#FFD700] to-[#FFA500] text-2xl font-semibold text-[#0A2342] shadow-lg">{day.day}</div><div><span className="inline-block rounded-full bg-gradient-to-r from-blue-500 to-cyan-500 px-3 py-1 text-xs font-semibold text-white">{day.theme}</span><h3 className="mt-2 text-2xl font-medium text-[#0A2342]">{day.title}</h3></div></div><div className="ml-2 space-y-3 border-l-4 border-[#FFD700]/30 pl-5 sm:ml-5 sm:pl-7">{day.activities.map(([time,activity])=><div key={time} className="relative rounded-xl border border-gray-200 bg-gradient-to-br from-white to-gray-50 p-3 sm:p-4"><span className="absolute -left-[35px] top-4 flex h-7 w-7 items-center justify-center rounded-full bg-[#FFD700] text-xs text-[#0A2342] sm:-left-[45px]">●</span><div className="flex flex-wrap items-center gap-3"><span className="rounded-md bg-[#0A2342] px-2.5 py-1 text-xs text-white">{time}</span><strong className="font-medium text-[#0A2342]">{activity}</strong></div></div>)}</div><div className="mt-6 rounded-xl border border-blue-100 bg-blue-50 p-4 text-sm text-gray-600"><strong className="text-[#0A2342]">Accommodation:</strong> {day.stay}</div></article>)}</div>
-        </section>
-
-        <section className="mb-20">
-          <div className="mb-10 text-center"><h2 className="text-4xl font-medium text-[#0A2342] md:text-5xl">Frequently Asked Questions</h2></div>
-          <div className="mx-auto max-w-4xl space-y-3">{faq.map(([question,answer],index)=><article key={question} className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm"><button type="button" onClick={()=>setOpenFaq(openFaq===index?-1:index)} className="flex w-full items-center justify-between gap-4 p-5 text-left font-semibold text-[#0A2342]"><span>{question}</span><b className="text-xl text-amber-500">{openFaq===index?"−":"+"}</b></button>{openFaq===index&&<p className="border-t border-gray-100 px-5 py-4 leading-7 text-gray-600">{answer}</p>}</article>)}</div>
         </section>
 
         <section className="overflow-hidden rounded-2xl bg-[#0A2342] p-5 text-center text-white shadow-2xl sm:p-8 md:p-12">

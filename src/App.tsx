@@ -795,6 +795,13 @@ export default function App() {
     return ["destinations", "tours", "experiences", "gallery", "reach-us"].includes(route) ? route : "home"
   }
   const [page, setPage] = useState<Page>(getPageFromPath)
+  const mobileNavItems: Array<{ label: string; icon: string; target: Page }> = [
+    { label: "Home", icon: "⌂", target: "home" },
+    { label: "Places", icon: "⌖", target: "destinations" },
+    { label: "Tours", icon: "◇", target: "tours" },
+    { label: "Gallery", icon: "▧", target: "gallery" },
+    { label: "Contact", icon: "✦", target: "reach-us" },
+  ]
   const [experienceSlide, setExperienceSlide] = useState(0)
   const [experiencePaused, setExperiencePaused] = useState(false)
   const [experienceInView, setExperienceInView] = useState(false)
@@ -802,6 +809,8 @@ export default function App() {
   const [toursInView, setToursInView] = useState(false)
   const [toursPaused, setToursPaused] = useState(false)
   const experienceDragStart = useRef<number | null>(null)
+  const experienceFinalEnteredAt = useRef(0)
+  const experienceExitRequested = useRef(false)
   const experiencesRef = useRef<HTMLElement | null>(null)
   const toursTrackRef = useRef<HTMLDivElement | null>(null)
   const toursSectionRef = useRef<HTMLElement | null>(null)
@@ -852,26 +861,50 @@ export default function App() {
 
     const observer = new IntersectionObserver(
       ([entry]) => setExperienceInView(entry.isIntersecting),
-      { threshold: 0.35 },
+      { threshold: 0.12 },
     )
 
     observer.observe(section)
     return () => observer.disconnect()
-  }, [])
+  }, [page])
 
   useEffect(() => {
-    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches
-    if (!experienceInView || experiencePaused || reducedMotion || experienceSlide === 2) return
+    if (page !== "home") return
+    const section = experiencesRef.current
+    if (!section) return
 
-    const timer = window.setTimeout(() => {
-      setExperienceSlide((current) => (current + 1) % 3)
-    }, 7000)
+    let frame = 0
+    const syncExperienceSlide = () => {
+      window.cancelAnimationFrame(frame)
+      frame = window.requestAnimationFrame(() => {
+        const stickyStage = section.querySelector<HTMLElement>(".experience-sticky-stage")
+        const sectionTop = window.scrollY + section.getBoundingClientRect().top
+        const stageHeight = stickyStage?.offsetHeight ?? window.innerHeight
+        const scrollDistance = Math.max(1, section.offsetHeight - stageHeight)
+        const progress = Math.max(0, Math.min(1, (window.scrollY - sectionTop) / scrollDistance))
+        const nextSlide = Math.min(2, Math.floor(progress * 3))
+        setExperienceSlide((current) => current === nextSlide ? current : nextSlide)
+      })
+    }
 
-    return () => window.clearTimeout(timer)
-  }, [experienceInView, experiencePaused, experienceSlide])
+    syncExperienceSlide()
+    window.addEventListener("scroll", syncExperienceSlide, { passive: true })
+    window.addEventListener("resize", syncExperienceSlide)
+    return () => {
+      window.cancelAnimationFrame(frame)
+      window.removeEventListener("scroll", syncExperienceSlide)
+      window.removeEventListener("resize", syncExperienceSlide)
+    }
+  }, [page])
 
   useEffect(() => {
-    if (experienceSlide === 2) setDestinationFocus(0)
+    if (experienceSlide === 2) {
+      setDestinationFocus(0)
+      experienceFinalEnteredAt.current = performance.now()
+      experienceExitRequested.current = false
+      return
+    }
+    experienceExitRequested.current = false
   }, [experienceSlide])
 
   useEffect(() => {
@@ -881,8 +914,7 @@ export default function App() {
     const timer = window.setTimeout(() => {
       setDestinationFocus((current) => {
         if (current === DESTINATIONS.length - 1) {
-          setExperienceSlide(0)
-          return 0
+          return current
         }
         return current + 1
       })
@@ -902,22 +934,46 @@ export default function App() {
 
     observer.observe(section)
     return () => observer.disconnect()
-  }, [])
+  }, [page])
 
   useEffect(() => {
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches
     if (!toursInView || toursPaused || reducedMotion) return
 
-    const timer = window.setInterval(() => {
-      const track = toursTrackRef.current
-      if (!track) return
-      track.scrollBy({
-        left: track.clientWidth,
-        behavior: "smooth",
-      })
-    }, 4500)
+    const track = toursTrackRef.current
+    if (!track) return
+    const slides = Array.from(track.querySelectorAll<HTMLElement>("[data-tour-slide]"))
+    const firstSlide = slides[0]
+    const firstMiddleSlide = slides[TOURS.length]
+    if (!firstSlide || !firstMiddleSlide) return
 
-    return () => window.clearInterval(timer)
+    let frame = 0
+    let previousTime = 0
+    track.dataset.autoplay = "true"
+
+    const moveContinuously = (time: number) => {
+      if (!previousTime) previousTime = time
+      const elapsed = Math.min(64, time - previousTime)
+      previousTime = time
+
+      if (document.visibilityState === "visible") {
+        const loopWidth = firstMiddleSlide.offsetLeft - firstSlide.offsetLeft
+        track.scrollLeft += 34 * (elapsed / 1000)
+        if (loopWidth > 0 && track.scrollLeft >= loopWidth * 1.85) {
+          track.style.scrollBehavior = "auto"
+          track.scrollLeft -= loopWidth
+        }
+      }
+
+      frame = window.requestAnimationFrame(moveContinuously)
+    }
+
+    frame = window.requestAnimationFrame(moveContinuously)
+    return () => {
+      window.cancelAnimationFrame(frame)
+      delete track.dataset.autoplay
+      track.style.removeProperty("scroll-behavior")
+    }
   }, [toursInView, toursPaused])
 
   useLayoutEffect(() => {
@@ -929,7 +985,7 @@ export default function App() {
     const firstSlide = slides[0]
     if (!firstSlide || !firstMiddleSlide) return
 
-    const loopWidth = firstMiddleSlide.offsetLeft - firstSlide.offsetLeft
+    let loopWidth = firstMiddleSlide.offsetLeft - firstSlide.offsetLeft
     track.scrollLeft = loopWidth
 
     let settleTimer = 0
@@ -939,22 +995,51 @@ export default function App() {
         const current = track.scrollLeft
         let wrapped = current
 
-        if (current < loopWidth * 0.5) wrapped = current + loopWidth
-        if (current > loopWidth * 1.5) wrapped = current - loopWidth
+        while (wrapped < loopWidth * 0.85) wrapped += loopWidth
+        while (wrapped > loopWidth * 1.85) wrapped -= loopWidth
         if (wrapped === current) return
 
         track.style.scrollBehavior = "auto"
         track.scrollLeft = wrapped
         window.requestAnimationFrame(() => track.style.removeProperty("scroll-behavior"))
-      }, 140)
+      }, 220)
+    }
+
+    const keepLoopAligned = () => {
+      const previousLoopWidth = loopWidth
+      const updatedSlides = Array.from(track.querySelectorAll<HTMLElement>("[data-tour-slide]"))
+      const updatedMiddleSlide = updatedSlides[TOURS.length]
+      const updatedFirstSlide = updatedSlides[0]
+      if (!updatedMiddleSlide || !updatedFirstSlide) return
+      loopWidth = updatedMiddleSlide.offsetLeft - updatedFirstSlide.offsetLeft
+      if (!previousLoopWidth || !loopWidth) return
+      const relativePosition = (track.scrollLeft - previousLoopWidth) / previousLoopWidth
+      track.style.scrollBehavior = "auto"
+      track.scrollLeft = loopWidth + relativePosition * loopWidth
+      window.requestAnimationFrame(() => track.style.removeProperty("scroll-behavior"))
     }
 
     track.addEventListener("scroll", wrapLoop, { passive: true })
+    window.addEventListener("resize", keepLoopAligned)
     return () => {
       window.clearTimeout(settleTimer)
       track.removeEventListener("scroll", wrapLoop)
+      window.removeEventListener("resize", keepLoopAligned)
     }
-  }, [])
+  }, [page])
+
+  const goToExperienceSlide = (target: number) => {
+    const nextSlide = Math.max(0, Math.min(2, target))
+    setExperienceSlide(nextSlide)
+    const section = experiencesRef.current
+    const stickyStage = section?.querySelector<HTMLElement>(".experience-sticky-stage")
+    if (!section || !stickyStage) return
+
+    const sectionTop = window.scrollY + section.getBoundingClientRect().top
+    const scrollDistance = Math.max(1, section.offsetHeight - stickyStage.offsetHeight)
+    const slideProgress = (nextSlide + .5) / 3
+    window.scrollTo({ top: sectionTop + scrollDistance * slideProgress, behavior: "smooth" })
+  }
 
   const showHomeSection = (target: string) => {
     setMenuOpen(false)
@@ -993,9 +1078,9 @@ export default function App() {
 
   return (
     <div
-      className="motion-prompt-shell"
+      className="motion-prompt-shell app-shell"
       style={{
-        background: "#e7e3fb",
+        background: "#f4f9fb",
         minHeight: "100vh",
         fontFamily: "Inter, sans-serif",
       }}
@@ -1003,13 +1088,10 @@ export default function App() {
       <ScrollVanStory hidden={page === "home" || page === "tours" || page === "experiences" || page === "gallery" || page === "reach-us"} />
       {/* ── Navigation ── */}
       <nav
-        className="fixed top-0 left-0 right-0 z-50 transition-all duration-300"
-        style={{
-          pointerEvents: "none",
-        }}
+        className="site-header fixed top-0 left-0 right-0 z-50 transition-all duration-300"
       >
         <div
-          className="w-full px-3 sm:px-6 lg:px-10 py-3 flex items-center justify-between gap-3 transition-all duration-300"
+          className="site-header-bar w-full px-3 sm:px-6 lg:px-10 py-3 flex items-center justify-between gap-3 transition-all duration-300"
           style={{
             pointerEvents: "auto",
 
@@ -1202,7 +1284,7 @@ export default function App() {
         {menuOpen && (
           <div
             id="mobile-navigation"
-            className="md:hidden px-5 py-3"
+            className="mobile-navigation md:hidden px-5 py-3"
             style={{
               background: "rgba(8,18,15,0.98)",
               backdropFilter: "blur(18px)",
@@ -1254,8 +1336,8 @@ export default function App() {
       {/* ── Hero ── */}
       <section
         id="home"
-        className="relative w-full overflow-hidden"
-        style={{ minHeight: "100vh" }}
+        className="home-hero relative w-full overflow-hidden"
+        style={{ minHeight: "100svh" }}
       >
         {/* Video background */}
         <video
@@ -1289,26 +1371,6 @@ export default function App() {
           <source src="/assets/videos/sri-lanka-hero.mp4" type="video/mp4" />
         </video>
 
-        <iframe
-          src="https://www.youtube.com/embed/IPpiw_LWDBA?autoplay=1&mute=1&loop=1&playlist=IPpiw_LWDBA&controls=0&modestbranding=1&playsinline=1&rel=0&vq=hd2160&iv_load_policy=3&fs=0&disablekb=1"
-          title="Cinematic Sri Lanka travel film"
-          allow="autoplay; encrypted-media; picture-in-picture"
-          referrerPolicy="strict-origin-when-cross-origin"
-          tabIndex={-1}
-          aria-hidden="true"
-          style={{
-            position: "absolute",
-            top: "50%",
-            left: "50%",
-            width: "max(100%, 177.78vh)",
-            height: "max(100%, 56.25vw)",
-            transform: "translate(-50%, -50%)",
-            border: 0,
-            pointerEvents: "none",
-            zIndex: 0,
-          }}
-        />
-
         {/* Gradient overlays */}
         <div
           className="absolute inset-0"
@@ -1322,7 +1384,7 @@ export default function App() {
 
         {/* Hero content */}
         <div
-          className="relative flex flex-col items-center justify-center text-center px-6"
+          className="home-hero-content relative flex flex-col items-center justify-center text-center px-6"
           style={{ paddingTop: "6rem", paddingBottom: "10rem", zIndex: 10 }}
         >
           {/* Pill badge */}
@@ -1382,7 +1444,7 @@ export default function App() {
           </p>
 
           {/* Stats */}
-          <div className="animate-fade-rise-delay-3 mt-16 flex flex-wrap justify-center gap-12">
+          <div className="home-hero-stats animate-fade-rise-delay-3 mt-16 flex flex-wrap justify-center gap-12">
             {STATS.map((s) => (
               <div key={s.label} className="text-center">
                 <div
@@ -1513,8 +1575,14 @@ export default function App() {
         aria-roledescription="carousel"
         aria-label="Extraordinary experiences"
         tabIndex={0}
-        onMouseEnter={() => setExperiencePaused(true)}
-        onMouseLeave={() => setExperiencePaused(false)}
+        onWheel={(event) => {
+          if (experienceSlide !== 2 || event.deltaY < 24 || experienceExitRequested.current) return
+          if (performance.now() - experienceFinalEnteredAt.current < 650) return
+          const nextSection = toursSectionRef.current
+          if (!nextSection) return
+          experienceExitRequested.current = true
+          nextSection.scrollIntoView({ behavior: "smooth", block: "start" })
+        }}
         onFocusCapture={() => setExperiencePaused(true)}
         onBlurCapture={(event) => {
           if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
@@ -1523,13 +1591,14 @@ export default function App() {
         }}
         onKeyDown={(event) => {
           if (event.key === "ArrowRight") {
-            setExperienceSlide((current) => (current + 1) % 3)
+            goToExperienceSlide((experienceSlide + 1) % 3)
           }
           if (event.key === "ArrowLeft") {
-            setExperienceSlide((current) => (current + 2) % 3)
+            goToExperienceSlide((experienceSlide + 2) % 3)
           }
         }}
       >
+        <div className="experience-sticky-stage">
         <div className="experience-grain" aria-hidden="true" />
 
         <div
@@ -1544,9 +1613,9 @@ export default function App() {
             if (experienceDragStart.current === null) return
             const distance = event.clientX - experienceDragStart.current
             if (distance < -55) {
-              setExperienceSlide((current) => (current + 1) % 3)
+              goToExperienceSlide((experienceSlide + 1) % 3)
             } else if (distance > 55) {
-              setExperienceSlide((current) => (current + 2) % 3)
+              goToExperienceSlide((experienceSlide + 2) % 3)
             }
             experienceDragStart.current = null
             setExperiencePaused(false)
@@ -1584,7 +1653,7 @@ export default function App() {
           <button
             type="button"
             className="experience-cover-pill"
-            onClick={() => setExperienceSlide(1)}
+            onClick={() => goToExperienceSlide(1)}
           >
             Enter the story <span aria-hidden="true">→</span>
           </button>
@@ -1748,7 +1817,7 @@ export default function App() {
           <button
             type="button"
             className="experience-slider-arrow"
-            onClick={() => setExperienceSlide((current) => (current + 2) % 3)}
+            onClick={() => goToExperienceSlide((experienceSlide + 2) % 3)}
             aria-label="Previous experience slide"
           >
             ←
@@ -1759,7 +1828,7 @@ export default function App() {
                 type="button"
                 key={label}
                 className={experienceSlide === index ? "is-active" : ""}
-                onClick={() => setExperienceSlide(index)}
+                onClick={() => goToExperienceSlide(index)}
                 aria-label={`Show ${label}`}
                 aria-current={experienceSlide === index ? "true" : undefined}
               />
@@ -1771,11 +1840,12 @@ export default function App() {
           <button
             type="button"
             className="experience-slider-arrow"
-            onClick={() => setExperienceSlide((current) => (current + 1) % 3)}
+            onClick={() => goToExperienceSlide((experienceSlide + 1) % 3)}
             aria-label="Next experience slide"
           >
             →
           </button>
+        </div>
         </div>
       </section>
 
@@ -1784,8 +1854,6 @@ export default function App() {
         ref={toursSectionRef}
         id="tours"
         className="py-24 w-full overflow-hidden scroll-mt-20"
-        onMouseEnter={() => setToursPaused(true)}
-        onMouseLeave={() => setToursPaused(false)}
         onFocusCapture={() => setToursPaused(true)}
         onBlurCapture={(event) => {
           if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
@@ -1827,21 +1895,27 @@ export default function App() {
                 <button
                   type="button"
                   aria-label="Previous journeys"
-                  onClick={() => toursTrackRef.current?.scrollBy({
-                    left: -toursTrackRef.current.clientWidth,
-                    behavior: "smooth",
-                  })}
+                  onClick={() => {
+                    const track = toursTrackRef.current
+                    if (!track) return
+                    const slides = Array.from(track.querySelectorAll<HTMLElement>("[data-tour-slide]"))
+                    const slideStep = slides[1] && slides[0] ? slides[1].offsetLeft - slides[0].offsetLeft : track.clientWidth
+                    track.scrollBy({ left: -slideStep, behavior: "smooth" })
+                  }}
                 >
                   ←
                 </button>
-                <span>Swipe to explore</span>
+                <span>Auto · swipe to explore</span>
                 <button
                   type="button"
                   aria-label="Next journeys"
-                  onClick={() => toursTrackRef.current?.scrollBy({
-                    left: toursTrackRef.current.clientWidth,
-                    behavior: "smooth",
-                  })}
+                  onClick={() => {
+                    const track = toursTrackRef.current
+                    if (!track) return
+                    const slides = Array.from(track.querySelectorAll<HTMLElement>("[data-tour-slide]"))
+                    const slideStep = slides[1] && slides[0] ? slides[1].offsetLeft - slides[0].offsetLeft : track.clientWidth
+                    track.scrollBy({ left: slideStep, behavior: "smooth" })
+                  }}
                 >
                   →
                 </button>
@@ -1854,9 +1928,11 @@ export default function App() {
           ref={toursTrackRef}
           className="tour-carousel-track"
           aria-label="Curated journey packages"
-          onPointerDown={() => setToursPaused(true)}
-          onPointerUp={() => setToursPaused(false)}
-          onPointerCancel={() => setToursPaused(false)}
+          onMouseEnter={() => setToursPaused(true)}
+          onMouseLeave={() => setToursPaused(false)}
+          onTouchStart={() => setToursPaused(true)}
+          onTouchEnd={() => setToursPaused(false)}
+          onTouchCancel={() => setToursPaused(false)}
         >
           {[0, 1, 2].flatMap((loop) => TOURS.map((tour) => (
             <div
@@ -2168,6 +2244,24 @@ export default function App() {
           </div>
         </div>
       </footer>
+
+      <nav className="mobile-app-nav" aria-label="Mobile app navigation">
+        {mobileNavItems.map((item) => {
+          const isActive = page === item.target
+          return (
+            <button
+              type="button"
+              key={item.target}
+              className={isActive ? "is-active" : ""}
+              aria-current={isActive ? "page" : undefined}
+              onClick={() => showPage(item.target)}
+            >
+              <span aria-hidden="true">{item.icon}</span>
+              <small>{item.label}</small>
+            </button>
+          )
+        })}
+      </nav>
     </div>
   )
 }

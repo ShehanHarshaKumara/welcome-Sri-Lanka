@@ -1,36 +1,48 @@
 :root {
-  --background: #ffffff;
-  --foreground: #000000;
-  --card: #f9f9f9;
-  --card-foreground: #000000;
-  --primary: #000000;
+  color-scheme: light;
+  --background: #f4f9fb;
+  --foreground: #06283a;
+  --card: #ffffff;
+  --card-foreground: #06283a;
+  --primary: #0b6fa4;
   --primary-foreground: #ffffff;
-  --secondary: #f5f5f5;
-  --secondary-foreground: #000000;
-  --muted: #f0f0f0;
-  --muted-foreground: #6f6f6f;
-  --accent: #c8a96e;
-  --accent-foreground: #000000;
-  --border: rgba(0, 0, 0, 0.1);
-  --ring: rgba(0, 0, 0, 0.2);
-  --radius: 0.5rem;
+  --secondary: #e5f5f0;
+  --secondary-foreground: #075b4b;
+  --muted: #eaf3f7;
+  --muted-foreground: #54717d;
+  --accent: #0f8b6d;
+  --accent-foreground: #ffffff;
+  --border: rgba(8, 79, 105, 0.14);
+  --ring: rgba(11, 111, 164, 0.28);
+  --theme-navy: #041e2d;
+  --theme-navy-soft: #082f44;
+  --theme-blue: #0b6fa4;
+  --theme-blue-bright: #38bdf8;
+  --theme-green: #0f8b6d;
+  --theme-green-bright: #5ee0b5;
+  --theme-white: #ffffff;
+  --theme-surface: #f4f9fb;
+  --theme-surface-blue: #eaf5fa;
+  --theme-surface-green: #e8f6f1;
+  --radius: 0.85rem;
 }
 
 .dark {
-  --background: #0a0a0a;
-  --foreground: #ffffff;
-  --card: #111111;
-  --card-foreground: #ffffff;
-  --primary: #ffffff;
-  --primary-foreground: #000000;
-  --secondary: #1a1a1a;
-  --secondary-foreground: #ffffff;
-  --muted: #1a1a1a;
-  --muted-foreground: #888888;
-  --accent: #c8a96e;
-  --accent-foreground: #000000;
-  --border: rgba(255, 255, 255, 0.1);
-  --ring: rgba(255, 255, 255, 0.2);
+  color-scheme: dark;
+  --background: #041e2d;
+  --foreground: #f4fbff;
+  --card: #082f44;
+  --card-foreground: #f4fbff;
+  --primary: #38bdf8;
+  --primary-foreground: #041e2d;
+  --secondary: #0a463f;
+  --secondary-foreground: #d9fff1;
+  --muted: #0b3548;
+  --muted-foreground: #9ab8c5;
+  --accent: #5ee0b5;
+  --accent-foreground: #03251e;
+  --border: rgba(255, 255, 255, 0.13);
+  --ring: rgba(56, 189, 248, 0.38);
 }
 
 @theme inline {

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from "react"
+import { useEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react"
 import destinationAdventureMap from "../assets/sri-lanka-destination-adventure-map.png"
 
 export type Destination = {
@@ -332,7 +332,7 @@ const SMART_TRIP_FACTS: Record<string, { distance: string; drive: string; mood: 
   Colombo: { distance: "0 km", drive: "Ready now", mood: "City energy" },
 }
 
-function getCategory(destination: Destination): Filter {
+function getCategory(destination: Destination): Exclude<Filter, "All"> {
   const words = `${destination.type} ${destination.tag}`.toLowerCase()
   if (/wildlife|elephant|safari|national park|dolphin/.test(words)) return "Wildlife"
   if (/beach|coast|surf|sea|harbour|lagoon|kite|ocean/.test(words)) return "Coast"
@@ -453,9 +453,35 @@ export default function DestinationsPage({ destinations, onBack }: DestinationsP
   const [mapSelectionName, setMapSelectionName] = useState(destinations[0]?.name ?? "Sri Lanka")
   const [touristMapOpen, setTouristMapOpen] = useState(false)
   const [touristMapZoom, setTouristMapZoom] = useState(1)
+  const [mobileMapZoom, setMobileMapZoom] = useState(1)
   const [touristMapDrag, setTouristMapDrag] = useState({ x: 0, y: 0 })
   const [isTouristMapDragging, setIsTouristMapDragging] = useState(false)
   const touristMapDragRef = useRef({ active: false, startX: 0, startY: 0, startPanX: 0, startPanY: 0 })
+  const touristMapCanvasRef = useRef<HTMLDivElement | null>(null)
+
+  useEffect(() => {
+    const focusMobileMap = () => {
+      const canvas = touristMapCanvasRef.current
+      if (!canvas || !window.matchMedia("(max-width: 767px)").matches) return
+      const point = touristMapOpen
+        ? DESTINATION_TOURIST_MAP_POINTS.find((item) => item.destination === mapSelectionName)
+        : null
+      const x = point?.x ?? 50
+      const y = point?.y ?? 50
+      canvas.scrollTo({
+        left: Math.max(0, (canvas.scrollWidth * x) / 100 - canvas.clientWidth / 2),
+        top: Math.max(0, (canvas.scrollHeight * y) / 100 - canvas.clientHeight / 2),
+        behavior: "smooth",
+      })
+    }
+
+    const frame = window.requestAnimationFrame(focusMobileMap)
+    window.addEventListener("resize", focusMobileMap)
+    return () => {
+      window.cancelAnimationFrame(frame)
+      window.removeEventListener("resize", focusMobileMap)
+    }
+  }, [mapSelectionName, mobileMapZoom, touristMapOpen])
 
   useEffect(() => {
     if (!selected) return
@@ -546,16 +572,19 @@ export default function DestinationsPage({ destinations, onBack }: DestinationsP
     setTouristMapDrag({ x: 0, y: 0 })
     setMapSelectionName(destinationName)
     setTouristMapOpen(true)
-    setTouristMapZoom(1.65)
+    setTouristMapZoom(1.4)
+    setMobileMapZoom((zoom) => Math.max(1.5, zoom))
   }
 
   const resetTouristMap = () => {
     setTouristMapDrag({ x: 0, y: 0 })
     setTouristMapOpen(false)
     setTouristMapZoom(1)
+    setMobileMapZoom(1)
   }
 
   const beginTouristMapDrag = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (window.matchMedia("(max-width: 767px)").matches) return
     if (touristMapZoom <= 1) return
     if (event.pointerType === "mouse" && event.button !== 0) return
     if ((event.target as HTMLElement).closest("button, aside, article, [data-map-ui]")) return
@@ -599,21 +628,18 @@ export default function DestinationsPage({ destinations, onBack }: DestinationsP
   }
 
   return (
-    <main className="min-h-screen bg-[#e7e3fb] text-[#0d0b1a]">
+    <main className="destinations-page min-h-screen bg-[#e7e3fb] text-[#0d0b1a]">
       <section className="destination-hero-v2 relative isolate min-h-screen overflow-hidden pt-20 text-white">
-        <img src={hero.img} alt="Sigiriya rock fortress rising above Sri Lanka's forest" className="absolute inset-0 -z-30 h-full w-full scale-105 object-cover" />
-        <div className="absolute inset-0 -z-20 bg-[linear-gradient(90deg,rgba(3,25,22,.94)_0%,rgba(3,31,26,.76)_47%,rgba(3,31,26,.2)_78%),linear-gradient(0deg,rgba(3,25,22,.82)_0%,transparent_48%)]" />
-        <div className="destination-hero-mesh absolute inset-0 -z-10 opacity-25" />
-        <div className="destination-hero-orbit absolute -right-36 top-24 -z-10 h-[34rem] w-[34rem] rounded-full border border-white/15" />
-        <div className="absolute right-[12%] top-[18%] -z-10 h-40 w-40 rounded-full bg-[#b9ffd5]/20 blur-3xl" />
+        <img src={hero.img} alt="Sigiriya rock fortress rising above Sri Lanka's forest" className="absolute inset-0 -z-30 h-full w-full object-cover" />
+        <div className="absolute inset-0 -z-20 bg-[#031f1b]/65" />
 
-        <div className="relative mx-auto grid min-h-[calc(100svh-5rem)] max-w-7xl grid-cols-1 px-5 pb-8 pt-6 sm:px-8 sm:pt-8 lg:grid-cols-[1.08fr_.92fr] lg:px-12">
-          <div className="flex min-w-0 flex-col justify-between">
+        <div className="destination-hero-layout relative mx-auto grid min-h-[calc(100svh-5rem)] max-w-7xl grid-cols-1 px-5 pb-8 pt-6 sm:px-8 sm:pt-8 lg:grid-cols-[1.08fr_.92fr] lg:px-12">
+          <div className="destination-hero-main flex min-w-0 flex-col justify-between">
             <button type="button" onClick={onBack} className="group flex w-fit items-center gap-3 rounded-full border border-white/20 bg-black/15 px-4 py-2 text-xs font-medium text-white backdrop-blur-xl transition hover:bg-white hover:text-[#064e3b]">
               <span className="transition-transform group-hover:-translate-x-1">←</span> Back to home
             </button>
 
-            <div className="max-w-[48rem] py-9 sm:py-12 lg:py-8">
+            <div className="destination-hero-copy max-w-[48rem] py-9 sm:py-12 lg:py-8">
               <div className="mb-5 flex items-center gap-3 text-[10px] font-bold uppercase tracking-[0.3em] text-[#b9ffd5]">
                 <span className="relative flex h-2 w-2"><span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#8ff1ba] opacity-60" /><span className="relative h-2 w-2 rounded-full bg-[#8ff1ba]" /></span>
                 Your Sri Lanka begins here
@@ -624,6 +650,17 @@ export default function DestinationsPage({ destinations, onBack }: DestinationsP
               <p className="mt-6 max-w-xl text-sm leading-6 text-white/72 sm:mt-8 sm:text-lg sm:leading-7">
                 Wake above ancient kingdoms, follow elephants through golden grass, and end the day barefoot beside the Indian Ocean. This is not a list of places—it is the trip you will still talk about years from now.
               </p>
+
+              <figure className="destination-mobile-vehicle" aria-label="Private Suzuki Every island travel vehicle">
+                <div className="destination-mobile-vehicle__topline"><span>✦ Private island rides</span><small>Ready in Colombo</small></div>
+                <div className="destination-mobile-vehicle__stage">
+                  <img className="destination-mobile-vehicle__scenery" src="/assets/destination-mobile-road-art.png" alt="" aria-hidden="true" />
+                  <span className="destination-mobile-vehicle__route">Colombo <i /> Anywhere</span>
+                  <img className="destination-mobile-vehicle__model" src="/suzuki-every-3d-cutout.png" alt="Suzuki Every travel van" />
+                  <span className="destination-mobile-vehicle__shadow" aria-hidden="true" />
+                </div>
+                <figcaption><strong>Your route. Your pace.</strong><span>Air-conditioned · Local driver · Flexible stops</span></figcaption>
+              </figure>
 
               <div className="mt-8">
                 <p className="mb-3 text-[9px] font-bold uppercase tracking-[.22em] text-white/45">Start with the feeling you want</p>
@@ -671,21 +708,32 @@ export default function DestinationsPage({ destinations, onBack }: DestinationsP
 
       <section id="destination-tourist-map" className="relative w-full scroll-mt-20 overflow-hidden bg-[#021d31] text-white shadow-[0_35px_100px_rgba(3,29,50,.35)]" aria-labelledby="destination-tourist-map-title">
         <div
-          className={`relative min-h-[62rem] touch-pan-y overflow-hidden lg:aspect-[16/9] lg:min-h-0 ${touristMapZoom > 1 ? (isTouristMapDragging ? "cursor-grabbing" : "cursor-grab") : "cursor-default"}`}
+          className={`mobile-map-shell destination-map-desktop relative min-h-[62rem] touch-pan-y overflow-hidden ${touristMapZoom > 1 ? (isTouristMapDragging ? "cursor-grabbing" : "cursor-grab") : "cursor-default"}`}
+          style={{ "--mobile-map-width": `${50 * mobileMapZoom}rem` } as CSSProperties}
           onPointerDown={beginTouristMapDrag}
           onPointerMove={moveTouristMapDrag}
           onPointerUp={endTouristMapDrag}
           onPointerCancel={endTouristMapDrag}
         >
-          <div className={`absolute inset-0 ${isTouristMapDragging ? "transition-none" : "transition-transform duration-700 ease-[cubic-bezier(.2,.8,.2,1)]"}`} style={{ transform: `translate3d(${touristMapTranslateX}%, ${touristMapTranslateY}%, 0) scale(${touristMapZoom})`, transformOrigin: "50% 50%" }}>
-            <img src={destinationAdventureMap} alt="Detailed illustrated Sri Lanka adventure map with destinations across the island" className="h-full w-full object-contain object-center" />
-            <div className="absolute inset-0 bg-[#00182a]/5" />
-            {DESTINATION_TOURIST_MAP_POINTS.map((point) => <button type="button" key={point.label} onClick={() => focusTouristMapPlace(point.destination)} aria-label={`Show ${point.label} details`} className="absolute z-10 hidden h-14 w-24 -translate-x-1/2 -translate-y-1/2 rounded-full bg-transparent outline-none focus-visible:ring-4 focus-visible:ring-white/70 lg:block" style={{ left: `${point.x}%`, top: `${point.y}%` }}><span className="sr-only">{point.label}</span></button>)}
+          <div ref={touristMapCanvasRef} className={`mobile-map-canvas absolute inset-0 ${isTouristMapDragging ? "transition-none" : "transition-transform duration-700 ease-[cubic-bezier(.2,.8,.2,1)]"}`} style={{ transform: `translate3d(${touristMapTranslateX}%, ${touristMapTranslateY}%, 0) scale(${touristMapZoom})`, transformOrigin: "50% 50%" }}>
+            <div className="mobile-map-image-stage">
+              <img src={destinationAdventureMap} alt="Detailed illustrated Sri Lanka adventure map with destinations across the island" className="h-full w-full object-contain object-center" />
+              <div className="absolute inset-0 bg-[#00182a]/5" />
+              {DESTINATION_TOURIST_MAP_POINTS.map((point) => <button type="button" key={point.label} onClick={() => focusTouristMapPlace(point.destination)} aria-label={`Zoom to ${point.label} and show details`} className="map-hotspot absolute z-10 h-14 w-24 -translate-x-1/2 -translate-y-1/2 rounded-full bg-transparent outline-none focus-visible:ring-4 focus-visible:ring-white/70" style={{ left: `${point.x}%`, top: `${point.y}%` }}><span className="sr-only">{point.label}</span></button>)}
+            </div>
           </div>
 
+          <div className="mobile-map-swipe-hint" aria-hidden="true"><span>↔</span> Swipe to explore the full map</div>
+
           <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-[#021725]/95 to-transparent lg:hidden" />
-          <div className="relative z-30 grid min-h-[62rem] content-between gap-5 p-4 sm:p-6 lg:absolute lg:inset-0 lg:block lg:min-h-0 lg:p-0">
-            <aside className="rounded-2xl border border-white/20 bg-[#031c2f]/88 p-4 shadow-2xl backdrop-blur-xl lg:absolute lg:left-[1.4%] lg:top-[9%] lg:w-[18.5%] lg:p-3 xl:p-4">
+          <div className="mobile-map-ui relative z-30 grid min-h-[62rem] content-between gap-5 p-4 sm:p-6 lg:absolute lg:inset-0 lg:block lg:min-h-0 lg:p-0">
+            <div className="mobile-map-controls" data-map-ui aria-label="Map zoom controls">
+              <button type="button" onClick={() => setMobileMapZoom((zoom) => Math.max(1, Number((zoom - .25).toFixed(2))))} disabled={mobileMapZoom <= 1} aria-label="Zoom map out">−</button>
+              <output aria-live="polite">{Math.round(mobileMapZoom * 100)}%</output>
+              <button type="button" onClick={() => setMobileMapZoom((zoom) => Math.min(2, Number((zoom + .25).toFixed(2))))} disabled={mobileMapZoom >= 2} aria-label="Zoom map in">+</button>
+              <button type="button" onClick={() => { setMobileMapZoom(1); setTouristMapOpen(false) }} aria-label="Fit the complete map on screen">Fit</button>
+            </div>
+            <aside className="destination-map-menu rounded-2xl border border-white/20 bg-[#031c2f]/88 p-4 shadow-2xl backdrop-blur-xl lg:absolute lg:p-4">
               <p className="text-xs font-semibold text-white/80 sm:text-sm">Explore Sri Lanka</p>
               <h2 id="destination-tourist-map-title" className="mt-1 text-3xl font-black leading-none sm:text-4xl lg:text-[clamp(1.3rem,2.1vw,2.2rem)]">Tourist Map</h2>
               <p className="mt-2 text-xs leading-5 text-white/65 lg:text-[10px] lg:leading-4 xl:text-xs xl:leading-5">Choose a destination to zoom into the island and reveal its travel details.</p>
@@ -700,7 +748,7 @@ export default function DestinationsPage({ destinations, onBack }: DestinationsP
               </div>
             </aside>
 
-            {touristMapOpen ? <article className="relative self-end overflow-hidden rounded-2xl border border-white/25 bg-[#04243a]/94 p-3 shadow-2xl backdrop-blur-xl lg:absolute lg:right-[1.2%] lg:top-[9%] lg:w-[21.5%] lg:p-3 xl:p-4" aria-live="polite">
+            {touristMapOpen ? <article className="destination-map-details relative self-end overflow-hidden rounded-2xl border border-white/25 bg-[#04243a]/94 p-3 shadow-2xl backdrop-blur-xl lg:absolute lg:p-4" aria-live="polite">
               <button type="button" onClick={resetTouristMap} className="absolute right-5 top-5 z-10 grid h-8 w-8 place-items-center rounded-full border border-white/25 bg-[#021827]/75 text-sm text-white backdrop-blur hover:bg-white hover:text-[#06223a]" aria-label="Close destination details">×</button>
               <img key={mapSelection.img} src={mapSelection.img} alt={mapSelection.name} className="h-40 w-full rounded-xl object-cover lg:h-[clamp(6.5rem,11vw,10rem)]" />
               <div className="mt-3 flex items-center gap-2"><span className="text-xl text-[#ffbf4a]">⌖</span><h3 className="min-w-0 truncate text-2xl font-black lg:text-[clamp(1.1rem,1.7vw,1.8rem)]">{mapSelection.name}</h3></div>
@@ -709,16 +757,17 @@ export default function DestinationsPage({ destinations, onBack }: DestinationsP
               <p className="mt-3 text-xs leading-5 text-white/75 lg:text-[10px] lg:leading-4 xl:text-xs xl:leading-5">{mapGuide.intro}</p>
               <div className="mt-3 grid grid-cols-2 gap-1"><span className="rounded-lg border border-white/15 bg-white/[.04] px-2 py-2 text-center text-[9px] font-bold">{getCategory(mapSelection)}</span><span className="rounded-lg border border-white/15 bg-white/[.04] px-2 py-2 text-center text-[9px] font-bold">{mapIntel?.bestFor ?? mapSelection.tag}</span></div>
               <button type="button" onClick={openSmartDestination} className="mt-4 w-full rounded-full bg-gradient-to-r from-[#ffad19] to-[#f23f6d] px-4 py-3 text-xs font-black text-white shadow-lg">Explore {mapSelection.name} →</button>
-            </article> : <div className="self-end rounded-2xl border border-white/20 bg-[#032139]/80 p-4 shadow-xl backdrop-blur-xl lg:absolute lg:right-[1.5%] lg:top-[10%] lg:w-[18rem]"><p className="text-[9px] font-black uppercase tracking-[.2em] text-[#60bdf3]">Interactive map</p><p className="mt-2 text-sm leading-6 text-white/75">Choose a destination from the list or tap its original map marker to open details.</p></div>}
+            </article> : <div className="destination-map-welcome self-end rounded-2xl border border-white/20 bg-[#032139]/80 p-4 shadow-xl backdrop-blur-xl lg:absolute"><p className="text-[9px] font-black uppercase tracking-[.2em] text-[#60bdf3]">Interactive map</p><p className="mt-2 text-sm leading-6 text-white/75">Choose a destination from the list or select a marker on the island to see its travel details.</p></div>}
 
-            <div data-map-ui className="pointer-events-none absolute bottom-4 left-1/2 hidden -translate-x-1/2 items-center gap-2 rounded-full border border-white/20 bg-[#031b2d]/80 px-4 py-2 text-[10px] font-bold uppercase tracking-[.16em] text-white/75 shadow-xl backdrop-blur lg:flex">
+            <div data-map-ui className="destination-map-help pointer-events-none absolute hidden items-center gap-2 rounded-full border border-white/20 bg-[#031b2d]/80 px-4 py-2 text-[10px] font-bold uppercase tracking-[.16em] text-white/75 shadow-xl backdrop-blur lg:flex">
               <span className="text-base text-[#60bdf3]">↔</span> Drag map to move
             </div>
 
-            <div className="absolute bottom-4 right-4 hidden flex-col overflow-hidden rounded-xl border border-white/25 bg-[#031b2d]/90 shadow-xl backdrop-blur lg:flex">
-              <button type="button" onClick={resetTouristMap} className="grid h-10 w-10 place-items-center border-b border-white/15 text-xs hover:bg-white/10" aria-label="Show the full island map">⌂</button>
-              <button type="button" onClick={() => setTouristMapZoom((zoom) => Math.min(2, Number((zoom + .12).toFixed(2))))} className="grid h-10 w-10 place-items-center border-b border-white/15 text-lg hover:bg-white/10" aria-label="Zoom map in">+</button>
-              <button type="button" onClick={() => setTouristMapZoom((zoom) => { const nextZoom = Math.max(.82, Number((zoom - .12).toFixed(2))); if (nextZoom <= 1) setTouristMapDrag({ x: 0, y: 0 }); return nextZoom })} className="grid h-10 w-10 place-items-center text-lg hover:bg-white/10" aria-label="Zoom map out">−</button>
+            <div className="destination-map-zoom absolute hidden overflow-hidden rounded-xl border border-white/25 bg-[#031b2d]/90 shadow-xl backdrop-blur lg:flex">
+              <button type="button" onClick={resetTouristMap} className="map-fit-button" aria-label="Fit the complete island map on screen"><span aria-hidden="true">⌖</span> Fit map</button>
+              <button type="button" onClick={() => setTouristMapZoom((zoom) => Math.max(.82, Number((zoom - .12).toFixed(2))))} aria-label="Zoom map out">−</button>
+              <output aria-live="polite" aria-label="Current map zoom">{Math.round(touristMapZoom * 100)}%</output>
+              <button type="button" onClick={() => setTouristMapZoom((zoom) => Math.min(2, Number((zoom + .12).toFixed(2))))} aria-label="Zoom map in">+</button>
             </div>
           </div>
         </div>
