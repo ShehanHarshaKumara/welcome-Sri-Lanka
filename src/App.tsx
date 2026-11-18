@@ -5,6 +5,7 @@ import GalleryPage from "./pages/GalleryPage"
 import ReachUsPage from "./pages/ReachUsPage"
 import ToursPage from "./pages/ToursPage"
 import ScrollVanStory from "./components/ScrollVanStory"
+import SectionNavigator from "./components/SectionNavigator"
 
 // ─── Data ────────────────────────────────────────────────────────────────────
 
@@ -1113,7 +1114,7 @@ export default function App() {
             type="button"
             className="flex min-w-0 items-center gap-2 sm:gap-2.5"
             onClick={() => showHomeSection("home")}
-            aria-label="Wonder Lanka home"
+            aria-label="Lanka Ravana Tours home"
           >
             <span
               className="grid place-items-center w-8 h-8 rounded-lg text-[1.35rem]"
@@ -1144,8 +1145,7 @@ export default function App() {
                 fontWeight: 400,
               }}
             >
-              Wonder Lanka
-              <sup style={{ fontSize: "0.5em", verticalAlign: "super" }}>®</sup>
+              Lanka Ravana Tours
             </span>
           </button>
 
@@ -1317,6 +1317,8 @@ export default function App() {
           </div>
         )}
       </nav>
+
+      <SectionNavigator page={page} />
 
       {page === "destinations" ? (
         <DestinationsPage
@@ -2150,9 +2152,9 @@ export default function App() {
                 type="button"
                 className="site-footer-wordmark"
                 onClick={() => showHomeSection("home")}
-                aria-label="Wonder Lanka home"
+                aria-label="Lanka Ravana Tours home"
               >
-                Wonder<br />Lanka<sup>®</sup>
+                Lanka Ravana<br />Tours
               </button>
               <p>
                 Thoughtful journeys through an island of ancient stories,
@@ -2187,7 +2189,7 @@ export default function App() {
                   ],
                 },
                 {
-                  heading: "Wonder Lanka",
+                  heading: "Lanka Ravana Tours",
                   links: [
                     { label: "Our story" },
                     { label: "Travel journal" },
@@ -2221,7 +2223,7 @@ export default function App() {
           </div>
 
           <div className="site-footer-bottom">
-            <p>© 2026 Wonder Lanka. Made with care for curious travellers.</p>
+            <p>© 2026 Lanka Ravana Tours. Made with care for curious travellers.</p>
             <div className="site-footer-legal" aria-label="Legal information">
               <span>Privacy</span>
               <span>Terms</span>

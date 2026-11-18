@@ -54,7 +54,7 @@ export default function ScrollVanStory({ hidden = false, fixedHero = false }: { 
         <span className="scroll-van-speed scroll-van-speed-two" />
         <img src="/suzuki-every-3d-cutout.png" alt="" />
       </div>
-      {!hidden && <div className="motion-maker-badge" aria-hidden="true"><span>✦</span> Island motion by <b>Wonder Lanka</b></div>}
+      {!hidden && <div className="motion-maker-badge" aria-hidden="true"><span>✦</span> Island motion by <b>Lanka Ravana Tours</b></div>}
     </>
   )
 }

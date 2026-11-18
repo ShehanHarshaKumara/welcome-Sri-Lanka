@@ -1,4 +1,4 @@
-import type { CSSProperties } from "react"
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react"
 import type { Destination } from "./DestinationsPage"
 
 type ExperiencesPageProps = {
@@ -6,154 +6,195 @@ type ExperiencesPageProps = {
   onNavigate: (page: "home" | "tours" | "gallery" | "reach-us") => void
 }
 
-const STORIES = [
-  {
-    id: "heritage",
-    number: "01",
-    kicker: "Heritage · Sigiriya",
-    title: "Wake before the kings.",
-    lead: "Climb through water gardens and painted caves while the jungle is still blue with morning.",
-    copy: "Sigiriya is more than the view from the top. It is the quiet approach through ancient gardens, the first warm light on the rock face, and the moment the plains open in every direction. Go early, take your time, and let a local guide reveal the stories hidden in the stone.",
-    image: "/assets/pidurangala-main.png",
-    detailImage: "/assets/dambulla-cave-temple-main.png",
-    mood: "Ancient · Quiet · Awe-inspiring",
-    best: "Best at sunrise",
-    time: "4–5 hours",
-    accent: "#d9693f",
-  },
-  {
-    id: "wild",
-    number: "02",
-    kicker: "Wildlife · Minneriya",
-    title: "Stand quietly. The wild comes closer.",
-    lead: "Watch elephants move across open grassland as the dry-zone sky turns gold.",
-    copy: "The most powerful wildlife moments are often the least hurried. In Minneriya, a naturalist helps you read tracks, bird calls and changing light before the elephants appear. Keep your distance, lower your voice and experience the park on its own terms.",
-    image: "/assets/minneriya-national-park-main.png",
-    detailImage: "/assets/ritigala-monastery-main.png",
-    mood: "Untamed · Spacious · Humbling",
-    best: "Best May–September",
-    time: "Half day",
-    accent: "#9aaa61",
-  },
-  {
-    id: "highlands",
-    number: "03",
-    kicker: "Highlands · Ella",
-    title: "Take the long way through the clouds.",
-    lead: "Open the train window and watch tea country unfold one green curve at a time.",
-    copy: "The hill-country railway is not simply transport—it is the experience. Waterfalls flash between trees, tea pickers work bright slopes, and small stations arrive with hot milk tea and mountain air. The best plan is to leave room for the journey to surprise you.",
-    image: "/assets/nine-arch-bridge-main.png",
-    detailImage: "/assets/ravana-falls-main.png",
-    mood: "Slow · Cinematic · Refreshing",
-    best: "Best December–April",
-    time: "Half or full day",
-    accent: "#5d8f83",
-  },
-  {
-    id: "coast",
-    number: "04",
-    kicker: "Coast · Weligama",
-    title: "Let the Indian Ocean set the pace.",
-    lead: "Learn your first wave, follow the coast and stay until the sky turns coral.",
-    copy: "Sri Lanka's south is made for unhurried days. Begin with a warm-water surf lesson in Weligama, stop for a king coconut, then follow the road towards Mirissa. The coast is at its best when you mix movement with long, delicious pauses.",
-    image: "/assets/weligama-bay-main.png",
-    detailImage: "/assets/coconut-tree-hill-main.png",
-    mood: "Salty · Playful · Unhurried",
-    best: "Best November–April",
-    time: "A full easy day",
-    accent: "#e6a64c",
-  },
-  {
-    id: "flavours",
-    number: "05",
-    kicker: "Flavours · Island kitchens",
-    title: "Taste the story behind the spice.",
-    lead: "Meet the island through market baskets, family recipes and food made to be shared.",
-    copy: "The best Sri Lankan meals begin before the table. Walk through a local market, learn how roasted curry powder changes from region to region, and cook alongside a host who measures by memory. Come hungry—the conversation matters as much as the food.",
-    image: "/assets/local-flavours-mirissa-main.png",
-    detailImage: "/assets/local-flavours-ella-main.png",
-    mood: "Generous · Fragrant · Social",
-    best: "Wonderful year-round",
-    time: "3–4 hours",
-    accent: "#c9573c",
-  },
+type Experience = {
+  id: string
+  number: string
+  title: string
+  short: string
+  description: string
+  category: "Nature" | "Culture" | "Coast" | "Lifestyle"
+  image: string
+  places: string[]
+  duration: string
+  season: string
+  icon: string
+  accent: string
+  activities: string[]
+  tip: string
+}
+
+const EXPERIENCES: Experience[] = [
+  { id: "wildlife", number: "01", title: "Wildlife & Safari", short: "Meet the island on its own terms.", description: "Follow expert naturalists through protected landscapes where elephants, leopards, crocodiles and extraordinary birdlife roam.", category: "Nature", image: "/assets/minneriya-national-park-main.png", places: ["Yala", "Udawalawe", "Minneriya"], duration: "Half or full day", season: "Year-round", icon: "◌", accent: "#90a955", activities: ["Jeep safari", "Leopard tracking", "Birdwatching"], tip: "Choose sunrise or late afternoon, keep a respectful distance and remember that sightings are never guaranteed." },
+  { id: "beaches", number: "02", title: "Beach & Coastal", short: "Follow the sun around the island.", description: "Swim, surf, linger over sunset dinners and find a coast for every mood—from lively southern bays to the calm east.", category: "Coast", image: "/assets/weligama-bay-main.png", places: ["Mirissa", "Unawatuna", "Pasikudah"], duration: "2–4 days", season: "Dec–Apr · South", icon: "≈", accent: "#2c9aad", activities: ["Beach time", "Sunset dining", "Coastal stays"], tip: "Sea conditions change by beach and day. Follow local safety advice before swimming." },
+  { id: "heritage", number: "03", title: "Heritage & History", short: "Walk through two thousand years.", description: "Climb rock fortresses, enter painted cave temples and trace ancient kingdoms through sacred cities and colonial streets.", category: "Culture", image: "/assets/sigiriya-03.jpg", places: ["Sigiriya", "Anuradhapura", "Galle Fort"], duration: "3–5 days", season: "Jan–Sep", icon: "◇", accent: "#c46a42", activities: ["Ancient cities", "Sacred sites", "Local guides"], tip: "Arrive early for outdoor sites and dress respectfully at temples—shoulders and knees covered." },
+  { id: "adventure", number: "04", title: "Adventure & Hiking", short: "Go where the road narrows.", description: "Trek tea-country ridges, raft rainforest rivers and climb into cloud forest on routes for every confidence level.", category: "Nature", image: "/assets/horton-plains-national-park-04.jpg", places: ["Ella", "Kitulgala", "Knuckles"], duration: "2 hours–2 days", season: "Dec–Apr", icon: "△", accent: "#557f69", activities: ["Mountain hiking", "Rafting", "Waterfalls"], tip: "Use a qualified guide for remote trails and check rainfall before river or mountain activities." },
+  { id: "tea", number: "05", title: "Tea & Hill Country", short: "Take the slow train into the clouds.", description: "Ride one of Asia’s most scenic railways, walk emerald estates and taste tea at its source in the cool central highlands.", category: "Lifestyle", image: "/assets/nine-arch-bridge-main.png", places: ["Ella", "Nuwara Eliya", "Haputale"], duration: "2–4 days", season: "Jan–Apr", icon: "⌁", accent: "#4e8b79", activities: ["Scenic train", "Tea tasting", "Estate walks"], tip: "Reserve popular train seats early, but leave room for mist, station snacks and unplanned stops." },
+  { id: "surf", number: "06", title: "Surf & Water Sports", short: "Find your wave, reef or lagoon.", description: "Learn on warm-water breaks, snorkel coral gardens, dive shipwrecks or cross a lagoon under kite and sail.", category: "Coast", image: "/assets/arugam-bay-03.jpg", places: ["Weligama", "Arugam Bay", "Kalpitiya"], duration: "2 hours–5 days", season: "Coast dependent", icon: "∿", accent: "#087f8c", activities: ["Surf lessons", "Diving", "Kitesurfing"], tip: "Choose licensed operators, match conditions to your ability and avoid touching reef or wildlife." },
+  { id: "food", number: "07", title: "Food & Culinary", short: "Taste the story behind the spice.", description: "Shop a morning market, cook from a family recipe and discover how coconut, lime and spice change across the island.", category: "Lifestyle", image: "/assets/local-flavours-mirissa-main.png", places: ["Colombo", "Galle", "Jaffna"], duration: "3–5 hours", season: "Year-round", icon: "✦", accent: "#d15c3c", activities: ["Market walk", "Cooking class", "Street food"], tip: "Ask about spice levels and dietary needs; the best meals are often shared slowly." },
+  { id: "culture", number: "08", title: "Culture & Festivals", short: "Feel the island in rhythm and ritual.", description: "Experience Kandyan dance, village ceremonies, music and colourful festivals shaped by many faiths and communities.", category: "Culture", image: "/assets/dambulla-cave-temple-view-2.png", places: ["Kandy", "Colombo", "Jaffna"], duration: "2 hours–2 days", season: "Festival dates vary", icon: "✺", accent: "#a94836", activities: ["Dance", "Festivals", "Living traditions"], tip: "Observe respectfully, ask before photographing people and allow processions plenty of space." },
+  { id: "wellness", number: "09", title: "Ayurveda & Wellness", short: "Let the island reset your pace.", description: "Slow down with traditional Ayurveda, yoga, meditation and restorative stays surrounded by garden, forest or sea.", category: "Lifestyle", image: "/assets/boutique-stays-sigiriya-main.png", places: ["Bentota", "Kandy", "Sigiriya"], duration: "Half day–7 nights", season: "Year-round", icon: "☼", accent: "#839c4a", activities: ["Ayurveda", "Yoga", "Meditation"], tip: "For therapeutic treatments, choose a reputable centre with a qualified Ayurveda doctor." },
+  { id: "village", number: "10", title: "Village & Rural Life", short: "Meet the people behind the landscape.", description: "Cycle quiet lanes, cross a lake, learn traditional farming and share a meal made with ingredients grown nearby.", category: "Culture", image: "/assets/local-flavours-sigiriya-main.png", places: ["Habarana", "Sigiriya", "Jaffna"], duration: "Half day", season: "Year-round", icon: "⌂", accent: "#a77c42", activities: ["Village walk", "Farm visit", "Home cooking"], tip: "Choose community-led experiences that pay hosts fairly and avoid staged wildlife encounters." },
+  { id: "marine", number: "11", title: "Marine Wildlife", short: "Look beyond the horizon.", description: "Search for blue whales and dolphins, visit turtle conservation projects and explore Sri Lanka’s living coastline responsibly.", category: "Nature", image: "/assets/coconut-tree-hill-main.png", places: ["Mirissa", "Trincomalee", "Kalpitiya"], duration: "3–5 hours", season: "Coast dependent", icon: "◡", accent: "#167b9a", activities: ["Whale watching", "Dolphins", "Turtle care"], tip: "Use ethical operators who keep distance, limit pursuit and never promise a sighting." },
+  { id: "luxury", number: "12", title: "Luxury & Romance", short: "Stay somewhere worth remembering.", description: "Pair private villas, wild glamping and small design hotels with beautifully paced days made for two.", category: "Lifestyle", image: "/assets/boutique-stays-mirissa-main.png", places: ["Tangalle", "Yala", "Tea Country"], duration: "3–7 nights", season: "Year-round", icon: "✧", accent: "#9a6b54", activities: ["Boutique stays", "Private dining", "Slow travel"], tip: "Mix celebrated stays with one quieter inland stop for a richer view of the island." },
+  { id: "city", number: "13", title: "City & Nightlife", short: "See the island after dark.", description: "Explore contemporary Colombo through rooftop restaurants, design shops, galleries, markets and late-night local flavour.", category: "Lifestyle", image: "/assets/galle-fort-08.jpg", places: ["Colombo", "Galle", "Negombo"], duration: "1–2 days", season: "Year-round", icon: "▦", accent: "#6a657f", activities: ["City walks", "Dining", "Shopping"], tip: "Use a trusted ride service after dark and keep dress codes in mind for upscale venues." },
+  { id: "family", number: "14", title: "Family Experiences", short: "Big wonder for smaller travellers.", description: "Combine gentle safaris, interactive museums, easy beaches and short nature adventures with time to rest.", category: "Lifestyle", image: "/assets/minneriya-national-park-view-3.png", places: ["Udawalawe", "Bentota", "Colombo"], duration: "4–10 days", season: "Year-round", icon: "☺", accent: "#e19b3d", activities: ["Gentle safari", "Museums", "Easy beaches"], tip: "Keep travel legs short, carry sun and mosquito protection, and build in a quiet afternoon." },
+  { id: "eco", number: "15", title: "Eco & Nature", short: "Step lightly into the green.", description: "Walk rainforest, watch endemic birds and stay close to nature with guides who understand fragile ecosystems.", category: "Nature", image: "/assets/sinharaja-rainforest-04.jpg", places: ["Sinharaja", "Knuckles", "Horton Plains"], duration: "Half day–3 days", season: "Jan–Apr", icon: "❋", accent: "#3e7c59", activities: ["Rainforest", "Birding", "Eco stays"], tip: "Bring reusable water, stay on marked trails and never remove plants, stones or wildlife." },
+  { id: "spiritual", number: "16", title: "Spiritual Journeys", short: "Travel with intention.", description: "Visit sacred mountains, ancient monasteries and living temples where ritual and daily life continue side by side.", category: "Culture", image: "/assets/dambulla-cave-temple-main.png", places: ["Kandy", "Anuradhapura", "Adam’s Peak"], duration: "Half day–3 days", season: "Dec–May for pilgrimage", icon: "○", accent: "#b56e3d", activities: ["Pilgrimage", "Temples", "Meditation"], tip: "Dress modestly, remove shoes where required and never pose with your back to a Buddha image." },
+  { id: "crafts", number: "17", title: "Arts, Crafts & Markets", short: "Take home a piece of the making.", description: "Meet batik artists, mask carvers, weavers and gem specialists, then browse markets with a better eye for provenance.", category: "Culture", image: "/assets/sigiriya-market-cafe-main.png", places: ["Ambalangoda", "Kandy", "Colombo"], duration: "2–5 hours", season: "Year-round", icon: "✣", accent: "#b14f55", activities: ["Batik", "Wood carving", "Markets"], tip: "Buy directly from makers when possible and request certification for valuable gems." },
+  { id: "unique", number: "18", title: "Only-in-Sri-Lanka", short: "Make room for the unexpected.", description: "Float above the Cultural Triangle, photograph the night sky or follow a scenic route far beyond the familiar highlights.", category: "Nature", image: "/assets/sigiriya-06.jpg", places: ["Dambulla", "Kalpitiya", "Hill Country"], duration: "2 hours–2 days", season: "Weather dependent", icon: "↗", accent: "#d78d2b", activities: ["Ballooning", "Stargazing", "Scenic flights"], tip: "Book weather-sensitive activities early in your trip so there is room to reschedule." },
 ]
 
+const FILTERS = ["All", "Nature", "Culture", "Coast", "Lifestyle"] as const
+
 export default function ExperiencesPage({ onNavigate }: ExperiencesPageProps) {
+  const [filter, setFilter] = useState<(typeof FILTERS)[number]>("All")
+  const [selected, setSelected] = useState<Experience | null>(null)
+  const heroRef = useRef<HTMLElement | null>(null)
+  const visible = useMemo(() => filter === "All" ? EXPERIENCES : EXPERIENCES.filter((item) => item.category === filter), [filter])
+
+  useEffect(() => {
+    const hero = heroRef.current
+    if (!hero) return
+
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)")
+    const stage = hero.querySelector<HTMLElement>(".experience-atlas__hero-stage")
+    let frame = 0
+    let pointerFrame = 0
+
+    const updateScrollDepth = () => {
+      window.cancelAnimationFrame(frame)
+      frame = window.requestAnimationFrame(() => {
+        const rect = hero.getBoundingClientRect()
+        const travel = Math.max(1, hero.offsetHeight - window.innerHeight)
+        const progress = Math.min(1, Math.max(0, -rect.top / travel))
+        hero.style.setProperty("--hero-scroll", progress.toFixed(3))
+      })
+    }
+
+    const updatePointerDepth = (event: PointerEvent) => {
+      if (reducedMotion.matches || event.pointerType === "touch") return
+      const rect = stage?.getBoundingClientRect() ?? hero.getBoundingClientRect()
+      const x = ((event.clientX - rect.left) / rect.width - .5) * 2
+      const y = ((event.clientY - rect.top) / rect.height - .5) * 2
+      const nextX = Math.min(1, Math.max(-1, x)).toFixed(3)
+      const nextY = Math.min(1, Math.max(-1, y)).toFixed(3)
+
+      window.cancelAnimationFrame(pointerFrame)
+      pointerFrame = window.requestAnimationFrame(() => {
+        hero.style.setProperty("--hero-x", nextX)
+        hero.style.setProperty("--hero-y", nextY)
+      })
+    }
+
+    const resetPointerDepth = () => {
+      hero.style.setProperty("--hero-x", "0")
+      hero.style.setProperty("--hero-y", "0")
+    }
+
+    updateScrollDepth()
+    window.addEventListener("scroll", updateScrollDepth, { passive: true })
+    window.addEventListener("resize", updateScrollDepth)
+    hero.addEventListener("pointermove", updatePointerDepth)
+    hero.addEventListener("pointerleave", resetPointerDepth)
+
+    return () => {
+      window.cancelAnimationFrame(frame)
+      window.cancelAnimationFrame(pointerFrame)
+      window.removeEventListener("scroll", updateScrollDepth)
+      window.removeEventListener("resize", updateScrollDepth)
+      hero.removeEventListener("pointermove", updatePointerDepth)
+      hero.removeEventListener("pointerleave", resetPointerDepth)
+    }
+  }, [])
+
   return (
-    <main className="island-stories">
-      <section className="island-stories__hero">
-        <video autoPlay muted loop playsInline poster="/assets/nine-arch-bridge-main.png" aria-label="Scenes from a journey through Sri Lanka">
-          <source src="/assets/videos/sri-lanka-hero.mp4" type="video/mp4" />
-        </video>
-        <div className="island-stories__hero-shade" />
-        <div className="island-stories__hero-copy">
-          <p><span /> Experiences worth travelling for</p>
-          <h1>Don’t just visit.<br /><em>Feel Sri Lanka.</em></h1>
-          <div className="island-stories__hero-bottom">
-            <p>Five ways to meet the island—through ancient places, wild landscapes, mountain journeys, ocean days and generous tables.</p>
-            <button type="button" onClick={() => document.getElementById("story-menu")?.scrollIntoView({ behavior: "smooth" })}>Begin the journey <span>↓</span></button>
+    <main className="experience-atlas">
+      <section ref={heroRef} className="experience-atlas__hero" aria-labelledby="experience-hero-title">
+        <div className="experience-atlas__hero-stage">
+          <div className="experience-atlas__hero-scene">
+            <img className="experience-atlas__hero-image experience-atlas__hero-image--base" src="/assets/experiences-hero-sri-lanka.png" alt="Sri Lanka landscape with Sigiriya, a hill-country train, tea fields, an elephant and tropical coast" width="1672" height="941" decoding="async" fetchPriority="high" draggable={false} />
+            <div className="experience-atlas__hero-light" aria-hidden="true" />
           </div>
-        </div>
-        <div className="island-stories__hero-note"><span>06° 56′ N</span><span>79° 51′ E</span><span>Indian Ocean</span></div>
-      </section>
-
-      <section className="island-stories__intro">
-        <p className="island-stories__eyebrow">The island, experienced</p>
-        <div>
-          <div className="island-stories__intro-copy">
-            <h2>Some places you see.<br />Sri Lanka is a place you <em>feel.</em></h2>
-            <p>The cool stone beneath your feet before sunrise. A train leaning into the mountains. Cinnamon and woodsmoke drifting from a kitchen. These are the moments that turn a trip into a story.</p>
-          </div>
-          <div className="island-stories__intro-vehicle" aria-label="Private Suzuki Every travel van">
-            <div className="island-stories__intro-vehicle-model">
-              <span aria-hidden="true" />
-              <img src="/suzuki-every-3d-cutout.png" alt="White Suzuki Every travel van" loading="lazy" />
+          <div className="experience-atlas__hero-overlay" />
+          <div className="experience-atlas__navline"><span>06° 56′ N · 79° 51′ E</span><span>Move to look · scroll to enter ↓</span></div>
+          <div className="experience-atlas__hero-copy">
+            <p className="experience-atlas__kicker"><span /> The island, experienced</p>
+            <h1 id="experience-hero-title"><span>Discover the</span><em>Magic of Sri Lanka</em></h1>
+            <div className="experience-atlas__hero-bottom">
+              <p>From first-light safaris to last-light swims, discover 18 ways to experience one unforgettable island.</p>
+              <button type="button" onClick={() => document.getElementById("experience-finder")?.scrollIntoView({ behavior: "smooth" })}>Explore experiences <span>↘</span></button>
             </div>
           </div>
+          <div className="experience-atlas__hero-stamp"><strong>18</strong><span>curated<br />experiences</span></div>
+          <div className="experience-atlas__hero-scroll" aria-hidden="true"><span /><b>Scroll into the island</b></div>
         </div>
       </section>
 
-      <nav id="story-menu" className="island-stories__menu" aria-label="Explore experience stories">
-        <span>Choose a feeling</span>
-        <div>{STORIES.map((story) => <a key={story.id} href={`#${story.id}`}><b>{story.number}</b>{story.id}<span>↘</span></a>)}</div>
-      </nav>
-
-      <section className="island-stories__chapters">
-        {STORIES.map((story, index) => (
-          <article id={story.id} className={`island-story island-story--${index % 2 ? "reverse" : "forward"}`} key={story.id} style={{ "--story-accent": story.accent } as CSSProperties}>
-            <div className="island-story__visual">
-              <img className="island-story__main-image" src={story.image} alt={`${story.kicker} experience in Sri Lanka`} loading={index < 2 ? "eager" : "lazy"} />
-              <div className="island-story__number">{story.number}</div>
-              <figure><img src={story.detailImage} alt="Another view from this Sri Lankan experience" loading="lazy" /><figcaption>{story.mood}</figcaption></figure>
-            </div>
-            <div className="island-story__copy">
-              <p className="island-stories__eyebrow">{story.kicker}</p>
-              <h2>{story.title}</h2>
-              <p className="island-story__lead">{story.lead}</p>
-              <p className="island-story__body">{story.copy}</p>
-              <dl><div><dt>When to go</dt><dd>{story.best}</dd></div><div><dt>Make time for</dt><dd>{story.time}</dd></div></dl>
-              <button type="button" onClick={() => onNavigate("reach-us")}>Add this to my journey <span>↗</span></button>
-            </div>
-          </article>
-        ))}
+      <section className="experience-atlas__manifesto">
+        <div><p className="experience-atlas__kicker"><span /> More than a destination</p><h2>Come for the view.<br /><em>Leave with a story.</em></h2></div>
+        <div><p>Sri Lanka fits astonishing variety into one small island: cloud forests and coral bays, ancient capitals and living kitchens, quiet rituals and wild encounters.</p><p>This guide turns that variety into an easy starting point. Choose a feeling, see where it leads, then shape the pace around you.</p></div>
+        <div className="experience-atlas__manifesto-image"><img src="/assets/minneriya-national-park-main.png" alt="Elephants crossing the grassland at Minneriya" /><span>Wild encounters · Minneriya</span></div>
       </section>
 
-      <section className="island-stories__day">
-        <div className="island-stories__day-heading"><p className="island-stories__eyebrow">One unforgettable day</p><h2>From first light<br />to firelight.</h2></div>
-        <ol>
-          <li><time>05:30</time><span>Climb before sunrise</span><p>Cool air, quiet paths and the first light over the plains.</p></li>
-          <li><time>10:00</time><span>Meet a village kitchen</span><p>Fresh hoppers, sambols and stories shared around the table.</p></li>
-          <li><time>15:30</time><span>Follow the wild</span><p>A slow safari as elephants emerge into the evening light.</p></li>
-          <li><time>19:30</time><span>Dinner under the stars</span><p>Local flavours, night sounds and nowhere else to be.</p></li>
-        </ol>
+      <section id="experience-finder" className="experience-finder scroll-mt-24">
+        <div className="experience-finder__starfield" aria-hidden="true">
+          <span className="experience-finder__stars experience-finder__stars--small" />
+          <span className="experience-finder__stars experience-finder__stars--medium" />
+          <span className="experience-finder__stars experience-finder__stars--large" />
+          <span className="experience-finder__meteor experience-finder__meteor--one" />
+          <span className="experience-finder__meteor experience-finder__meteor--two" />
+          <span className="experience-finder__meteor experience-finder__meteor--three" />
+          <span className="experience-finder__moon" />
+        </div>
+        <header>
+          <div><p className="experience-atlas__kicker"><span /> Your experience atlas</p><h2>Choose what<br />moves you.</h2></div>
+          <p>Filter by the kind of day you want. Open any card for the best places, ideal timing and a few thoughtful travel notes.</p>
+        </header>
+        <div className="experience-finder__filters" role="group" aria-label="Filter experiences by type">
+          {FILTERS.map((item) => <button type="button" key={item} className={filter === item ? "is-active" : ""} onClick={() => setFilter(item)}><span>{item}</span><b>{item === "All" ? EXPERIENCES.length : EXPERIENCES.filter((exp) => exp.category === item).length}</b></button>)}
+        </div>
+        <div className="experience-finder__grid">
+          {visible.map((experience, index) => (
+            <article className={`atlas-card ${index === 0 ? "atlas-card--wide" : ""}`} key={experience.id} style={{ "--experience-accent": experience.accent } as CSSProperties}>
+              <button type="button" onClick={() => setSelected(experience)} aria-label={`Explore ${experience.title}`}>
+                <img src={experience.image} alt={`${experience.title} in Sri Lanka`} loading={index < 3 ? "eager" : "lazy"} />
+                <div className="atlas-card__shade" />
+                <div className="atlas-card__top"><span>{experience.number}</span><i>{experience.icon}</i></div>
+                <div className="atlas-card__copy"><p>{experience.category} · {experience.places[0]}</p><h3>{experience.title}</h3><span>{experience.short}</span></div>
+                <div className="atlas-card__foot"><span>{experience.duration}</span><b>Explore ↗</b></div>
+              </button>
+            </article>
+          ))}
+        </div>
       </section>
 
-      <section className="island-stories__closing">
-        <img src="/assets/boutique-stays-mirissa-main.png" alt="A peaceful Sri Lankan coastal stay" loading="lazy" />
-        <div className="island-stories__closing-shade" />
-        <div><p className="island-stories__eyebrow">Your Sri Lanka can feel different</p><h2>What do you want<br />to remember?</h2><p>Tell us what draws you in. We’ll shape a journey with the right places, pace and people.</p><div><button type="button" onClick={() => onNavigate("reach-us")}>Create my journey <span>↗</span></button><button type="button" onClick={() => onNavigate("tours")}>Explore curated tours</button></div></div>
+      <section className="experience-season">
+        <div className="experience-season__intro"><p className="experience-atlas__kicker"><span /> Follow the good weather</p><h2>There is always<br />a coast in season.</h2><p>Sri Lanka’s two monsoon patterns mean the best beach, surf and wildlife conditions move around the island through the year.</p></div>
+        <div className="experience-season__board">
+          <article><span>DEC — APR</span><h3>South & west</h3><p>Beach days in Mirissa and Galle, hill-country trains, whale watching and dry-season trails.</p><div><b>28°C</b><small>Coast average</small></div></article>
+          <article><span>MAY — SEP</span><h3>East & north</h3><p>Arugam Bay surf, calm Trincomalee water, Pasikudah beaches and Cultural Triangle journeys.</p><div><b>30°C</b><small>Coast average</small></div></article>
+          <article><span>ALL YEAR</span><h3>Culture & flavour</h3><p>Temples, markets, craft, cuisine and city discoveries remain rewarding in every season.</p><div><b>365</b><small>Days to explore</small></div></article>
+        </div>
       </section>
+
+      <section className="experience-day">
+        <div className="experience-day__image"><img src="/assets/local-flavours-ella-main.png" alt="A Sri Lankan table filled with local dishes" /><span>One island · a thousand stories</span></div>
+        <div className="experience-day__content"><p className="experience-atlas__kicker"><span /> A day worth travelling for</p><h2>First light<br />to firelight.</h2><ol><li><time>05:30</time><div><strong>Climb before sunrise</strong><p>Cool air, quiet paths and gold arriving over the plains.</p></div></li><li><time>10:30</time><div><strong>Cook with a local host</strong><p>Market vegetables, fresh hoppers and recipes told by memory.</p></div></li><li><time>15:30</time><div><strong>Follow the wild</strong><p>A slow safari as elephants emerge into evening light.</p></div></li><li><time>19:30</time><div><strong>Dinner under the stars</strong><p>Night sounds, warm spice and nowhere else to be.</p></div></li></ol></div>
+      </section>
+
+      <section className="experience-atlas__closing">
+        <img src="/assets/coconut-tree-hill-main.png" alt="The tropical coast at Coconut Tree Hill in Mirissa" />
+        <div className="experience-atlas__closing-overlay" />
+        <div><p className="experience-atlas__kicker"><span /> Your journey, your rhythm</p><h2>What will you<br /><em>remember?</em></h2><p>Tell us what draws you in. We’ll connect the right places, pace and experiences into one effortless island journey.</p><div><button type="button" onClick={() => onNavigate("reach-us")}>Create my journey <span>↗</span></button><button type="button" onClick={() => onNavigate("tours")}>Explore curated tours</button></div></div>
+      </section>
+
+      {selected && <div className="experience-modal" role="dialog" aria-modal="true" aria-labelledby="experience-modal-title" onMouseDown={(event) => { if (event.currentTarget === event.target) setSelected(null) }}>
+        <div className="experience-modal__panel">
+          <button className="experience-modal__close" type="button" onClick={() => setSelected(null)} aria-label="Close experience details">×</button>
+          <div className="experience-modal__visual"><img src={selected.image} alt={`${selected.title} in Sri Lanka`} /><div><span>{selected.number}</span><p>{selected.category}</p></div></div>
+          <div className="experience-modal__content"><p className="experience-atlas__kicker"><span /> {selected.short}</p><h2 id="experience-modal-title">{selected.title}</h2><p className="experience-modal__lead">{selected.description}</p><div className="experience-modal__facts"><div><span>Best places</span><strong>{selected.places.join(" · ")}</strong></div><div><span>Make time for</span><strong>{selected.duration}</strong></div><div><span>Best season</span><strong>{selected.season}</strong></div></div><div className="experience-modal__activities">{selected.activities.map((activity) => <span key={activity}>{activity}</span>)}</div><aside><b>Travel well</b><p>{selected.tip}</p></aside><button className="experience-modal__cta" type="button" onClick={() => { setSelected(null); onNavigate("reach-us") }}>Add to my journey <span>↗</span></button></div>
+        </div>
+      </div>}
     </main>
   )
 }

@@ -25,7 +25,7 @@ export default function ReachUsPage({ onNavigate }: ReachUsPageProps) {
 
   return (
     <main className="reach-us-page min-h-screen bg-[#f4f7f2] pt-20 text-[#0a2f29]">
-      <section className="relative overflow-hidden px-5 pb-16 pt-10 sm:px-8 lg:px-12 lg:pb-24 lg:pt-14">
+      <section id="reach-enquiry" className="relative scroll-mt-20 overflow-hidden px-5 pb-16 pt-10 sm:px-8 lg:px-12 lg:pb-24 lg:pt-14">
         <div className="pointer-events-none absolute -left-28 top-28 h-80 w-80 rounded-full bg-[#a8ead0]/45 blur-3xl" />
         <div className="pointer-events-none absolute -right-36 top-0 h-[32rem] w-[32rem] rounded-full bg-[#f4bd91]/35 blur-3xl" />
 
@@ -53,7 +53,7 @@ export default function ReachUsPage({ onNavigate }: ReachUsPageProps) {
               </div>
 
               <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                <a href="mailto:hello@wonderlanka.travel" className="rounded-2xl border border-[#0a2f29]/10 bg-white/80 p-4 transition hover:-translate-y-1 hover:bg-white hover:shadow-lg"><small className="block text-[8px] font-black uppercase tracking-[.2em] text-[#789089]">Write to us</small><strong className="mt-1 block text-xs">hello@wonderlanka.travel</strong></a>
+                <a href="mailto:hello@lankaravanatours.com" className="rounded-2xl border border-[#0a2f29]/10 bg-white/80 p-4 transition hover:-translate-y-1 hover:bg-white hover:shadow-lg"><small className="block text-[8px] font-black uppercase tracking-[.2em] text-[#789089]">Write to us</small><strong className="mt-1 block text-xs">hello@lankaravanatours.com</strong></a>
                 <a href="tel:+94112345678" className="rounded-2xl border border-[#0a2f29]/10 bg-white/80 p-4 transition hover:-translate-y-1 hover:bg-white hover:shadow-lg"><small className="block text-[8px] font-black uppercase tracking-[.2em] text-[#789089]">Call Colombo</small><strong className="mt-1 block text-xs">+94 11 234 5678</strong></a>
               </div>
             </div>
@@ -91,7 +91,7 @@ export default function ReachUsPage({ onNavigate }: ReachUsPageProps) {
         </div>
       </section>
 
-      <section className="bg-[#e4f2e9] px-5 py-12 sm:px-8 lg:px-12">
+      <section id="reach-island-desk" className="scroll-mt-20 bg-[#e4f2e9] px-5 py-12 sm:px-8 lg:px-12">
         <div className="mx-auto grid max-w-7xl gap-8 md:grid-cols-[1fr_auto] md:items-center">
           <div><p className="text-[9px] font-black uppercase tracking-[.24em] text-[#14856d]">Our island desk</p><h2 className="mt-2 font-['Instrument_Serif'] text-4xl font-normal">Colombo · GMT +5:30</h2><p className="mt-2 text-sm text-[#617a74]">Monday–Saturday, 9:00–18:00 Sri Lanka time.</p></div>
           <button type="button" onClick={() => onNavigate("tours")} className="w-fit rounded-full bg-[#14856d] px-6 py-3 text-xs font-black text-white transition hover:bg-[#0a2f29]">Browse while you wait →</button>

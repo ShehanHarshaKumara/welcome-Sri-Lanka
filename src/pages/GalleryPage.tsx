@@ -382,13 +382,13 @@ export default function GalleryPage({ onNavigate }: GalleryPageProps) {
 
   return (
     <main className="island-gallery">
-      <section className="island-gallery__hero">
+      <section id="gallery-overview" className="island-gallery__hero scroll-mt-20">
         <div className="island-gallery__hero-collage" aria-hidden="true">
           {collections.slice(0, 6).map((collection) => <img key={collection.id} src={collection.images[0].src} alt="" />)}
         </div>
         <div className="island-gallery__hero-shade" />
         <div className="island-gallery__hero-content">
-          <p><span /> Wonder Lanka image library</p>
+          <p><span /> Lanka Ravana Tours image library</p>
           <h1>See the island.<br /><em>One frame at a time.</em></h1>
           <div className="island-gallery__hero-bottom">
             <span>Choose a destination, move through every view, and open any image full screen.</span>
@@ -472,7 +472,7 @@ export default function GalleryPage({ onNavigate }: GalleryPageProps) {
         </div>
       </section>
 
-      <section className="island-gallery__index" aria-labelledby="gallery-index-title">
+      <section id="gallery-index" className="island-gallery__index scroll-mt-20" aria-labelledby="gallery-index-title">
         <div className="island-gallery__index-heading"><div><p>Complete visual index</p><h2 id="gallery-index-title">Every collection,<br />ready to explore.</h2></div><span>{filteredCollections.length} places currently shown</span></div>
         <div className="island-gallery__index-grid">
           {filteredCollections.map((collection, index) => (
@@ -483,7 +483,7 @@ export default function GalleryPage({ onNavigate }: GalleryPageProps) {
         </div>
       </section>
 
-      <section className="island-gallery__cta"><div><p>Found your next place?</p><h2>Turn the view into a journey.</h2></div><div><button type="button" onClick={() => onNavigate("destinations")}>Explore destination guides</button><button type="button" onClick={() => onNavigate("reach-us")}>Plan my journey ↗</button></div></section>
+      <section id="gallery-journey" className="island-gallery__cta scroll-mt-20"><div><p>Found your next place?</p><h2>Turn the view into a journey.</h2></div><div><button type="button" onClick={() => onNavigate("destinations")}>Explore destination guides</button><button type="button" onClick={() => onNavigate("reach-us")}>Plan my journey ↗</button></div></section>
 
       {expanded && (
         <div className="island-gallery__lightbox" role="dialog" aria-modal="true" aria-label={`${activeCollection.name} full-screen image viewer`} onClick={() => setExpanded(false)}>

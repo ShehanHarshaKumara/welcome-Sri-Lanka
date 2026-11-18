@@ -629,7 +629,7 @@ export default function DestinationsPage({ destinations, onBack }: DestinationsP
 
   return (
     <main className="destinations-page min-h-screen bg-[#e7e3fb] text-[#0d0b1a]">
-      <section className="destination-hero-v2 relative isolate min-h-screen overflow-hidden pt-20 text-white">
+      <section id="destination-overview" className="destination-hero-v2 relative isolate min-h-screen scroll-mt-20 overflow-hidden pt-20 text-white">
         <img src={hero.img} alt="Sigiriya rock fortress rising above Sri Lanka's forest" className="absolute inset-0 -z-30 h-full w-full object-cover" />
         <div className="absolute inset-0 -z-20 bg-[#031f1b]/65" />
 
@@ -970,7 +970,7 @@ export default function DestinationsPage({ destinations, onBack }: DestinationsP
         </div>
       </section>
 
-      <section className="transport-showcase is-visible destination-smart-ride" aria-labelledby="destination-smart-ride-title">
+      <section id="destination-smart-ride" className="transport-showcase is-visible destination-smart-ride scroll-mt-20" aria-labelledby="destination-smart-ride-title">
         <div
           className="transport-showcase-canvas"
           onPointerMove={(event) => {
@@ -1149,7 +1149,7 @@ export default function DestinationsPage({ destinations, onBack }: DestinationsP
         )}
       </section>
 
-      <section className="mx-auto max-w-7xl px-5 pb-24 sm:px-8 lg:px-12">
+      <section id="destination-discovery" className="mx-auto max-w-7xl scroll-mt-20 px-5 pb-24 sm:px-8 lg:px-12">
         <div className="relative overflow-hidden rounded-[2rem] bg-[#063e34] px-6 py-14 text-white sm:px-10 lg:px-16 lg:py-20">
           <div className="absolute -right-24 -top-24 h-80 w-80 rounded-full bg-[#69d790]/20 blur-3xl" />
           <div className="relative grid gap-10 lg:grid-cols-[1fr_auto] lg:items-end">
