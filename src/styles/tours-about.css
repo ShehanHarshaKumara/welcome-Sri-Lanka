@@ -1,0 +1,218 @@
+.tour-about-stage {
+  border: 1px solid #e1e1d1;
+  background:
+    radial-gradient(ellipse at 19% 15%, #fff8d8 0, transparent 57%),
+    radial-gradient(ellipse at 92% 86%, #d8eadd 0, transparent 56%),
+    #f5f3e8;
+  box-shadow: 0 1rem 3rem #213d3520;
+}
+
+.tour-about-tab {
+  display: flex;
+  min-height: 3.5rem;
+  align-items: center;
+  gap: .65rem;
+  padding: .5rem .75rem;
+  border: 1px solid #244b381c;
+  border-radius: 1rem;
+  background: #fffffff5;
+  color: #24463e;
+  font-size: .875rem;
+  font-weight: 650;
+  line-height: 1.2;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 180ms ease, border-color 180ms ease, color 180ms ease;
+}
+
+.tour-about-tab:hover {
+  border-color: #548678;
+}
+
+.tour-about-tab[aria-selected="true"] {
+  border-color: #103e37;
+  background: #103e37;
+  color: white;
+}
+
+.tour-about-tab:focus-visible,
+.tour-about-watch__panel:focus-visible {
+  outline: 2px solid #087a67;
+  outline-offset: 3px;
+}
+
+.tour-about-tab__icon {
+  display: grid;
+  width: 1.9rem;
+  height: 1.9rem;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: .65rem;
+  background: #f6ecd1;
+  color: #51411d;
+  font-size: 1.05rem;
+}
+
+.tour-about-watch {
+  position: relative;
+  isolation: isolate;
+  width: min(100% - 1rem, 21rem);
+  margin: 2rem auto;
+}
+
+.tour-about-watch::before,
+.tour-about-watch::after {
+  position: absolute;
+  z-index: -1;
+  inset-inline: 25%;
+  height: 4.25rem;
+  border: 1px solid #a3a498;
+  border-radius: .85rem;
+  background:
+    repeating-linear-gradient(0deg, #273c3218 0 1px, transparent 1px 5px),
+    linear-gradient(90deg, #bbbdb2, #e9eadf 48%, #b8bbae);
+  box-shadow: inset 0 0 1rem #1923211a;
+  content: "";
+}
+
+.tour-about-watch::before { top: -2.25rem; }
+.tour-about-watch::after { bottom: -2.25rem; }
+
+.tour-about-watch__case {
+  position: relative;
+  padding: .58rem;
+  border: 1px solid #aaada4;
+  border-radius: 3.25rem;
+  background: linear-gradient(140deg, #fcfcf3 10%, #c5c9bd 55%, #a1a69d 100%);
+  box-shadow: inset 0 1px 2px #ffffffed, inset 0 -2px 4px #202b2440, 0 1.4rem 2.5rem #1e372c38;
+}
+
+.tour-about-watch__crown,
+.tour-about-watch__button {
+  position: absolute;
+  top: 24%;
+  width: .65rem;
+  height: 2.15rem;
+  border-radius: .25rem;
+}
+
+.tour-about-watch__crown {
+  right: -.56rem;
+  border: 1px solid #9bada1;
+  background: repeating-linear-gradient(0deg, #909f98 0 1px, transparent 1px 3px), linear-gradient(90deg, #a3aaa2, #fafbf1 48%, #a8b2ac);
+  box-shadow: .2rem .15rem .4rem #12392d33;
+}
+
+.tour-about-watch__button {
+  top: 38%;
+  left: -.48rem;
+  width: .5rem;
+  border: 1px solid #315b50;
+  background: linear-gradient(90deg, #3a7164, #7b9d89);
+}
+
+.tour-about-watch__screen {
+  position: relative;
+  display: grid;
+  min-height: 21rem;
+  grid-template-rows: 1fr auto;
+  overflow: hidden;
+  border: .26rem solid #182c28;
+  border-radius: 2.7rem;
+  background: linear-gradient(145deg, #fffef4, #f4f7ee);
+}
+
+.tour-about-watch__screen::after {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(133deg, #fff9 0, transparent 27%, transparent 80%, #fff5 100%);
+  pointer-events: none;
+  content: "";
+}
+
+.tour-about-watch__panel {
+  display: flex;
+  grid-area: 1 / 1;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: .65rem;
+  padding: 1.35rem clamp(.85rem, 4vw, 1.6rem) .65rem;
+  color: #163d34;
+  text-align: center;
+}
+
+.tour-about-watch__panel[aria-hidden="true"] {
+  visibility: hidden;
+}
+
+.tour-about-watch__panel[aria-hidden="false"] {
+  animation: tour-about-face-in 380ms cubic-bezier(.2, .8, .2, 1);
+}
+
+.tour-about-watch__panel:focus-visible {
+  outline-offset: -.4rem;
+  border-radius: 2rem;
+}
+
+.tour-about-watch__icon {
+  display: grid;
+  width: 2.65rem;
+  height: 2.65rem;
+  place-items: center;
+  border-radius: .85rem;
+  background: #e7efe1;
+  color: #164f42;
+  font-size: 1.3rem;
+}
+
+.tour-about-watch__panel h3 {
+  font-family: 'Instrument Serif', Georgia, serif;
+  font-size: clamp(1.85rem, 5vw, 2.4rem);
+  line-height: .98;
+}
+
+.tour-about-watch__panel p {
+  color: #3d514a;
+  font-size: .875rem;
+  line-height: 1.6;
+}
+
+.tour-about-watch__dots {
+  display: flex;
+  grid-row: 2;
+  justify-content: center;
+  gap: .42rem;
+  padding: .6rem 0 1.15rem;
+}
+
+.tour-about-watch__dots span {
+  width: .38rem;
+  height: .38rem;
+  border-radius: 1rem;
+  background: #b9c7bb;
+  transition: width 250ms ease, background-color 250ms ease;
+}
+
+.tour-about-watch__dots .is-active {
+  width: 1.15rem;
+  background: #16604f;
+}
+
+@keyframes tour-about-face-in {
+  from { opacity: 0; transform: translateX(.75rem); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@media (max-width: 390px) {
+  .tour-about-tab {
+    gap: .4rem;
+    padding: .4rem;
+    font-size: .8rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tour-about-watch__panel[aria-hidden="false"] { animation: none; }
+  .tour-about-tab, .tour-about-watch__dots span { transition: none; }
+}

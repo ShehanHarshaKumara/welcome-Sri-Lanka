@@ -6,6 +6,9 @@ import ReachUsPage from "./pages/ReachUsPage"
 import ToursPage from "./pages/ToursPage"
 import ScrollVanStory from "./components/ScrollVanStory"
 import SectionNavigator from "./components/SectionNavigator"
+import FooterClock from "./components/FooterClock"
+import FooterContact from "./components/FooterContact"
+import footerLogo from "./assets/lanka-ravana-tours-logo.jpg"
 
 // ─── Data ────────────────────────────────────────────────────────────────────
 
@@ -78,7 +81,7 @@ const DESTINATIONS = [
     name: "Galle",
     type: "Colonial Fort",
 
-    img: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&h=1000&fit=crop&auto=format",
+    img: `${import.meta.env.BASE_URL}assets/galle-fort-02.jpg`,
     tag: "Dutch Heritage",
   },
   {
@@ -615,6 +618,52 @@ function t(lang: string, key: string): string {
   return TRANSLATIONS[lang]?.[key] ?? TRANSLATIONS["en"][key] ?? key
 }
 
+const WILDLIFE_PHOTOS = {
+  cover: {
+    src: "https://d2ol7oe51mr4n9.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/934f4b51-d05b-4498-9c4a-8262f044da66.jpg",
+    fallback: "minneriya-national-park-main.png",
+  },
+  background: {
+    src: "https://images.unsplash.com/photo-1516426122078-c23e76319801?w=1800&h=1100&fit=crop&auto=format",
+    fallback: "minneriya-national-park-view-4.png",
+  },
+  open: {
+    src: "https://d2ol7oe51mr4n9.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/a6ea3433-41c4-46b8-aac3-faefa9ad7558.jpg",
+    fallback: "minneriya-national-park-view-2.png",
+  },
+  sunset: {
+    src: "https://d2ol7oe51mr4n9.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/9152c213-6763-4147-83f3-b985e6c65a00.jpg",
+    fallback: "minneriya-national-park-view-4.png",
+  },
+}
+
+function WildlifePhoto({ photo, alt, fallbackAlt = alt, className }: {
+  photo: { src: string; fallback: string }
+  alt: string
+  fallbackAlt?: string
+  className?: string
+}) {
+  const [failed, setFailed] = useState(false)
+
+  return (
+    <img
+      className={className}
+      src={failed ? `${import.meta.env.BASE_URL}assets/${photo.fallback}` : photo.src}
+      alt={failed ? fallbackAlt : alt}
+      draggable={false}
+      onError={failed ? undefined : () => setFailed(true)}
+    />
+  )
+}
+
+function getExperienceScrollRange(section: HTMLElement, stage: HTMLElement) {
+  const stickyOffset = Number.parseFloat(window.getComputedStyle(stage).top)
+  return {
+    start: window.scrollY + section.getBoundingClientRect().top - stickyOffset,
+    distance: Math.max(1, section.offsetHeight - stage.offsetHeight),
+  }
+}
+
 function LetterReveal({ text }: { text: string }) {
   return (
     <span className="editorial-letters" aria-label={text}>
@@ -810,9 +859,8 @@ export default function App() {
   const [toursInView, setToursInView] = useState(false)
   const [toursPaused, setToursPaused] = useState(false)
   const experienceDragStart = useRef<number | null>(null)
-  const experienceFinalEnteredAt = useRef(0)
-  const experienceExitRequested = useRef(false)
   const experiencesRef = useRef<HTMLElement | null>(null)
+  const experienceStageRef = useRef<HTMLDivElement | null>(null)
   const toursTrackRef = useRef<HTMLDivElement | null>(null)
   const toursSectionRef = useRef<HTMLElement | null>(null)
 
@@ -839,7 +887,10 @@ export default function App() {
   }, [])
 
   useEffect(() => {
-    const reveals = document.querySelectorAll<HTMLElement>(".experience-reveal")
+    const section = experiencesRef.current
+    if (!section) return
+
+    const reveals = section.querySelectorAll<HTMLElement>(".experience-reveal")
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -854,35 +905,36 @@ export default function App() {
 
     reveals.forEach((element) => observer.observe(element))
     return () => observer.disconnect()
-  }, [])
+  }, [page])
 
   useEffect(() => {
-    const section = experiencesRef.current
-    if (!section) return
+    const stage = experienceStageRef.current
+    if (!stage) {
+      setExperienceInView(false)
+      setExperiencePaused(false)
+      return
+    }
 
     const observer = new IntersectionObserver(
       ([entry]) => setExperienceInView(entry.isIntersecting),
       { threshold: 0.12 },
     )
 
-    observer.observe(section)
+    observer.observe(stage)
     return () => observer.disconnect()
   }, [page])
 
   useEffect(() => {
-    if (page !== "home") return
     const section = experiencesRef.current
-    if (!section) return
+    const stage = experienceStageRef.current
+    if (!section || !stage) return
 
     let frame = 0
     const syncExperienceSlide = () => {
       window.cancelAnimationFrame(frame)
       frame = window.requestAnimationFrame(() => {
-        const stickyStage = section.querySelector<HTMLElement>(".experience-sticky-stage")
-        const sectionTop = window.scrollY + section.getBoundingClientRect().top
-        const stageHeight = stickyStage?.offsetHeight ?? window.innerHeight
-        const scrollDistance = Math.max(1, section.offsetHeight - stageHeight)
-        const progress = Math.max(0, Math.min(1, (window.scrollY - sectionTop) / scrollDistance))
+        const { start, distance } = getExperienceScrollRange(section, stage)
+        const progress = Math.max(0, Math.min(1, (window.scrollY - start) / distance))
         const nextSlide = Math.min(2, Math.floor(progress * 3))
         setExperienceSlide((current) => current === nextSlide ? current : nextSlide)
       })
@@ -901,11 +953,7 @@ export default function App() {
   useEffect(() => {
     if (experienceSlide === 2) {
       setDestinationFocus(0)
-      experienceFinalEnteredAt.current = performance.now()
-      experienceExitRequested.current = false
-      return
     }
-    experienceExitRequested.current = false
   }, [experienceSlide])
 
   useEffect(() => {
@@ -1031,15 +1079,18 @@ export default function App() {
 
   const goToExperienceSlide = (target: number) => {
     const nextSlide = Math.max(0, Math.min(2, target))
-    setExperienceSlide(nextSlide)
     const section = experiencesRef.current
-    const stickyStage = section?.querySelector<HTMLElement>(".experience-sticky-stage")
+    const stickyStage = experienceStageRef.current
     if (!section || !stickyStage) return
 
-    const sectionTop = window.scrollY + section.getBoundingClientRect().top
-    const scrollDistance = Math.max(1, section.offsetHeight - stickyStage.offsetHeight)
+    if (nextSlide !== experienceSlide && section.querySelector(".experience-reveal:focus-within")) {
+      section.focus({ preventScroll: true })
+    }
+
+    const { start, distance } = getExperienceScrollRange(section, stickyStage)
     const slideProgress = (nextSlide + .5) / 3
-    window.scrollTo({ top: sectionTop + scrollDistance * slideProgress, behavior: "smooth" })
+    window.scrollTo({ top: start + distance * slideProgress, behavior: "instant" })
+    setExperienceSlide(nextSlide)
   }
 
   const showHomeSection = (target: string) => {
@@ -1089,7 +1140,8 @@ export default function App() {
       <ScrollVanStory hidden={page === "home" || page === "tours" || page === "experiences" || page === "gallery" || page === "reach-us"} />
       {/* ── Navigation ── */}
       <nav
-        className="site-header fixed top-0 left-0 right-0 z-50 transition-all duration-300"
+        aria-label="Main navigation"
+        className={`site-header fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${page === "reach-us" ? "site-header--glass" : ""}`}
       >
         <div
           className="site-header-bar w-full px-3 sm:px-6 lg:px-10 py-3 flex items-center justify-between gap-3 transition-all duration-300"
@@ -1577,14 +1629,6 @@ export default function App() {
         aria-roledescription="carousel"
         aria-label="Extraordinary experiences"
         tabIndex={0}
-        onWheel={(event) => {
-          if (experienceSlide !== 2 || event.deltaY < 24 || experienceExitRequested.current) return
-          if (performance.now() - experienceFinalEnteredAt.current < 650) return
-          const nextSection = toursSectionRef.current
-          if (!nextSection) return
-          experienceExitRequested.current = true
-          nextSection.scrollIntoView({ behavior: "smooth", block: "start" })
-        }}
         onFocusCapture={() => setExperiencePaused(true)}
         onBlurCapture={(event) => {
           if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
@@ -1593,14 +1637,16 @@ export default function App() {
         }}
         onKeyDown={(event) => {
           if (event.key === "ArrowRight") {
+            event.preventDefault()
             goToExperienceSlide((experienceSlide + 1) % 3)
           }
           if (event.key === "ArrowLeft") {
+            event.preventDefault()
             goToExperienceSlide((experienceSlide + 2) % 3)
           }
         }}
       >
-        <div className="experience-sticky-stage">
+        <div ref={experienceStageRef} className="experience-sticky-stage">
         <div className="experience-grain" aria-hidden="true" />
 
         <div
@@ -1637,11 +1683,11 @@ export default function App() {
           aria-hidden={experienceSlide !== 0}
           inert={experienceSlide !== 0}
         >
-          <img
+          <WildlifePhoto
             className="experience-cover-photo"
-            src="https://d2ol7oe51mr4n9.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/934f4b51-d05b-4498-9c4a-8262f044da66.jpg"
+            photo={WILDLIFE_PHOTOS.cover}
             alt="Elephant crossing golden grassland"
-            draggable={false}
+            fallbackAlt="Elephants crossing open grassland beside the water"
           />
           <div className="experience-cover-title">
             <p>{t(lang, "activities_heading")}</p>
@@ -1668,11 +1714,10 @@ export default function App() {
           aria-hidden={experienceSlide !== 1}
           inert={experienceSlide !== 1}
         >
-          <img
+          <WildlifePhoto
             className="experience-statement-background"
-            src="https://images.unsplash.com/photo-1516426122078-c23e76319801?w=1800&h=1100&fit=crop&auto=format"
-            alt="Safari landscape at golden hour"
-            draggable={false}
+            photo={WILDLIFE_PHOTOS.background}
+            alt=""
           />
           <div className="experience-statement-shade" aria-hidden="true" />
 
@@ -1682,22 +1727,14 @@ export default function App() {
               <div><LetterReveal text="THE WILD" /></div>
               <div>
                 <span className="experience-photo-pill">
-                  <img
-                    src="https://d2ol7oe51mr4n9.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/a6ea3433-41c4-46b8-aac3-faefa9ad7558.jpg"
-                    alt="Elephant beneath acacia trees"
-                    draggable={false}
-                  />
+                  <WildlifePhoto photo={WILDLIFE_PHOTOS.open} alt="" />
                 </span>
                 <LetterReveal text="IS NOT" />
               </div>
               <div>
                 <LetterReveal text="WATCHED" />
                 <span className="experience-photo-pill">
-                  <img
-                    src="https://d2ol7oe51mr4n9.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/9152c213-6763-4147-83f3-b985e6c65a00.jpg"
-                    alt="Elephants at sunset"
-                    draggable={false}
-                  />
+                  <WildlifePhoto photo={WILDLIFE_PHOTOS.sunset} alt="" />
                 </span>
               </div>
               <div><LetterReveal text="IT IS FELT" /></div>
@@ -1707,19 +1744,19 @@ export default function App() {
 
           <div className="experience-statement-gallery" aria-label="Wildlife moments">
             <figure className="experience-statement-photo experience-statement-photo-main">
-              <img
-                src="https://d2ol7oe51mr4n9.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/9152c213-6763-4147-83f3-b985e6c65a00.jpg"
+              <WildlifePhoto
+                photo={WILDLIFE_PHOTOS.sunset}
                 alt="Mother elephant and calf at sunset"
-                draggable={false}
+                fallbackAlt="A herd of elephants passing a safari jeep"
               />
               <figcaption><span>01</span> Golden-hour encounters</figcaption>
             </figure>
             <figure className="experience-statement-photo experience-statement-photo-small">
-                <img
-                  src="https://d2ol7oe51mr4n9.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/a6ea3433-41c4-46b8-aac3-faefa9ad7558.jpg"
-                  alt="Elephant in a wide savanna"
-                  draggable={false}
-                />
+              <WildlifePhoto
+                photo={WILDLIFE_PHOTOS.open}
+                alt="Elephant in a wide savanna"
+                fallbackAlt="Elephants splashing in the shallows"
+              />
               <figcaption><span>02</span> Into the open</figcaption>
             </figure>
             <div className="experience-statement-note">
@@ -2130,7 +2167,17 @@ export default function App() {
 
       {/* ── Footer ── */}
       <footer id="reach-us" className="site-footer">
-        <div className="site-footer-glow" />
+        <svg className="site-footer-crest" viewBox="0 0 1440 112" preserveAspectRatio="none" aria-hidden="true">
+          <path fill="#4fa8ae" fillOpacity=".55" d="M0 44C200 7 331 1 497 29S795 96 1033 52s321-47 407-41v101H0Z" />
+          <path fill="#247984" d="M0 62C182 20 309 15 473 40c173 26 310 55 532 28s294-55 435-45v89H0Z" />
+          <path fill="var(--footer-surface)" d="M0 76C180 37 310 33 475 57c188 28 325 49 531 27 201-21 300-51 434-46v74H0Z" />
+        </svg>
+        <svg className="site-footer-swell" viewBox="0 0 1440 300" preserveAspectRatio="none" aria-hidden="true">
+          <path fill="#3fb6b2" fillOpacity=".08" d="M0 164c158 36 341 58 518 33 226-32 321-124 552-142 153-12 282 22 370 56v189H0Z" />
+          <path fill="#53c3c0" fillOpacity=".07" d="M0 231c178 36 363 28 538-8 182-38 350-128 554-135 137-5 252 16 348 61v151H0Z" />
+          <path fill="none" stroke="#7bdad2" strokeOpacity=".21" vectorEffect="non-scaling-stroke" d="M0 192c200 51 372 60 561 24 200-39 326-123 532-128 140-3 248 18 347 62" />
+          <path fill="none" stroke="#7bdad2" strokeOpacity=".14" vectorEffect="non-scaling-stroke" d="M0 223c200 51 372 60 561 24 200-39 326-123 532-128 140-3 248 18 347 62" />
+        </svg>
         <div className="site-footer-inner">
           <div className="site-footer-topline">
             <span className="site-footer-kicker">
@@ -2139,7 +2186,10 @@ export default function App() {
             <button
               type="button"
               className="site-footer-top-button"
-              onClick={() => showHomeSection("home")}
+              onClick={() => window.scrollTo({
+                top: 0,
+                behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth",
+              })}
               aria-label="Back to the top"
             >
               Back to top <span aria-hidden="true">↑</span>
@@ -2147,6 +2197,10 @@ export default function App() {
           </div>
 
           <div className="site-footer-main">
+            <div className="site-footer-clock">
+              <FooterClock onOpenGallery={() => showPage("gallery")} />
+            </div>
+
             <div className="site-footer-brand">
               <button
                 type="button"
@@ -2154,20 +2208,16 @@ export default function App() {
                 onClick={() => showHomeSection("home")}
                 aria-label="Lanka Ravana Tours home"
               >
-                Lanka Ravana<br />Tours
+                <img src={footerLogo} alt="" width={384} height={384} loading="lazy" className="aspect-square h-auto w-[clamp(7rem,11vw,9.5rem)] max-w-full shrink-0 rounded-full object-cover ring-1 ring-amber-200/55" />
+                <span>Lanka Ravana<br />Tours</span>
               </button>
               <p>
                 Thoughtful journeys through an island of ancient stories,
                 wild landscapes, and generous welcomes.
               </p>
-              <div className="site-footer-signal">
-                <span aria-hidden="true" />
-                <div>
-                  <strong>Sri Lanka time · GMT+5:30</strong>
-                  <small>Colombo, Sri Lanka</small>
-                </div>
-              </div>
             </div>
+
+            <FooterContact />
 
             <nav className="site-footer-nav" aria-label="Footer navigation">
               {[
@@ -2247,7 +2297,7 @@ export default function App() {
         </div>
       </footer>
 
-      <nav className="mobile-app-nav" aria-label="Mobile app navigation">
+      <nav className={`mobile-app-nav ${page === "reach-us" ? "mobile-app-nav--glass" : ""}`} aria-label="Mobile app navigation">
         {mobileNavItems.map((item) => {
           const isActive = page === item.target
           return (

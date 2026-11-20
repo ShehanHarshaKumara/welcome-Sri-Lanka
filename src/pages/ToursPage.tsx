@@ -1,15 +1,17 @@
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react"
 import interactiveTourMap from "../assets/sri-lanka-interactive-tour-map.png"
+import toursHeroImage from "../assets/tours-hero-tea-country.jpg"
+import "../styles/tours-about.css"
 
 type Tour = { title:string; days:string; price:string; type:string; img:string; highlights:string[]; description:string; bestFor:string; rating:string; reviews:number }
 type ToursPageProps = { tours:Tour[]; onNavigate:(page:"home"|"experiences"|"gallery"|"reach-us")=>void }
 
 const filters=["All tours","Culture","Coast","Wildlife","Adventure"]
 const aboutCards=[
-  ["◉","History & Culture","Sri Lanka boasts over 2,500 years of history, with Buddhist cultural heritage and ancient kingdom ruins across the island. Sigiriya Fortress, Dambulla Cave Temple and Kandy’s Temple of the Tooth are essential landmarks."],
-  ["☀","Climate","Sri Lanka has a warm tropical climate throughout the year. Coastal areas stay warm, while the central highlands offer cooler air. Two monsoons make route planning important."],
-  ["♨","Food","Sri Lankan cuisine is famous for richly spiced curries. Coconut, rice and fresh seafood are key ingredients, while Ceylon tea is considered among the world’s finest."],
-  ["⌖","Location","Sri Lanka is an island nation in the Indian Ocean, south of India. Its area is approximately 65,610 km², making culture, wildlife, mountains and coast easy to combine."],
+  { id: "history", icon: "◉", title: "History & Culture", copy: "Sri Lanka boasts over 2,500 years of history, with Buddhist cultural heritage and ancient kingdom ruins across the island. Sigiriya Fortress, Dambulla Cave Temple and Kandy’s Temple of the Tooth are essential landmarks." },
+  { id: "climate", icon: "☀", title: "Climate", copy: "Sri Lanka has a warm tropical climate throughout the year. Coastal areas stay warm, while the central highlands offer cooler air. Two monsoons make route planning important." },
+  { id: "food", icon: "♨", title: "Food", copy: "Sri Lankan cuisine is famous for richly spiced curries. Coconut, rice and fresh seafood are key ingredients, while Ceylon tea is considered among the world’s finest." },
+  { id: "location", icon: "⌖", title: "Location", copy: "Sri Lanka is an island nation in the Indian Ocean, south of India. Its area is approximately 65,610 km², making culture, wildlife, mountains and coast easy to combine." },
 ]
 const destinations=[
   {icon:"🏙️",name:"Colombo",note:"Capital, casino and shopping",highlights:["Galle Face Green","Gangaramaya Temple","Pettah Market"]},
@@ -62,6 +64,96 @@ function categoryOf(tour:Tour){
   return "Culture"
 }
 
+function AboutSriLanka() {
+  const [activeTopic, setActiveTopic] = useState(0)
+  const tabRefs = useRef<Array<HTMLButtonElement | null>>([])
+
+  const handleTabKey = (event: KeyboardEvent<HTMLButtonElement>, index: number) => {
+    const last = aboutCards.length - 1
+    let next: number
+    switch (event.key) {
+      case "ArrowLeft":
+      case "ArrowUp":
+        next = (index + last) % aboutCards.length
+        break
+      case "ArrowRight":
+      case "ArrowDown":
+        next = (index + 1) % aboutCards.length
+        break
+      case "Home":
+        next = 0
+        break
+      case "End":
+        next = last
+        break
+      default:
+        return
+    }
+    event.preventDefault()
+    setActiveTopic(next)
+    tabRefs.current[next]?.focus()
+  }
+
+  return (
+    <section id="tour-overview" className="mb-20 scroll-mt-28" aria-labelledby="tour-overview-title">
+      <header className="mb-8 text-center sm:mb-12">
+        <h2 id="tour-overview-title" className="mb-4 text-4xl font-medium text-[#0A2342] md:text-5xl">About Sri Lanka</h2>
+        <p className="mx-auto max-w-3xl text-lg text-gray-600">Discover the history, climate, food and location that make this compact island an extraordinary place to tour.</p>
+      </header>
+
+      <div className="tour-about-stage mx-auto grid max-w-5xl items-center gap-8 rounded-[1.75rem] px-4 py-6 sm:gap-12 sm:px-8 sm:py-10 md:grid-cols-[minmax(0,18rem)_minmax(0,22rem)] md:justify-center md:px-10">
+        <div role="tablist" aria-label="About Sri Lanka topics" className="tour-about-topics mx-auto grid w-full max-w-md grid-cols-2 gap-2 md:grid-cols-1 md:gap-3">
+          {aboutCards.map(({ id, icon, title }, index) => (
+            <button
+              key={id}
+              ref={(element) => { tabRefs.current[index] = element }}
+              type="button"
+              role="tab"
+              id={`tour-about-tab-${id}`}
+              aria-controls={`tour-about-panel-${id}`}
+              aria-selected={index === activeTopic}
+              tabIndex={index === activeTopic ? 0 : -1}
+              className="tour-about-tab"
+              onClick={() => setActiveTopic(index)}
+              onKeyDown={(event) => handleTabKey(event, index)}
+            >
+              <span className="tour-about-tab__icon" aria-hidden="true">{icon}</span>
+              <span>{title}</span>
+            </button>
+          ))}
+        </div>
+
+        <div className="tour-about-watch">
+          <div className="tour-about-watch__case">
+            <span className="tour-about-watch__crown" aria-hidden="true" />
+            <span className="tour-about-watch__button" aria-hidden="true" />
+            <div className="tour-about-watch__screen">
+              {aboutCards.map(({ id, icon, title, copy }, index) => (
+                <div
+                  key={id}
+                  id={`tour-about-panel-${id}`}
+                  role="tabpanel"
+                  aria-labelledby={`tour-about-tab-${id}`}
+                  aria-hidden={index !== activeTopic}
+                  tabIndex={index === activeTopic ? 0 : -1}
+                  className="tour-about-watch__panel"
+                >
+                  <span className="tour-about-watch__icon" aria-hidden="true">{icon}</span>
+                  <h3>{title}</h3>
+                  <p>{copy}</p>
+                </div>
+              ))}
+              <div className="tour-about-watch__dots" aria-hidden="true">
+                {aboutCards.map(({ id }, index) => <span key={id} className={index === activeTopic ? "is-active" : ""} />)}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
 export default function ToursPage({tours,onNavigate}:ToursPageProps){
   const [filter,setFilter]=useState("All tours")
   const [showAll,setShowAll]=useState(false)
@@ -71,7 +163,6 @@ export default function ToursPage({tours,onNavigate}:ToursPageProps){
   const fleetVideoRef=useRef<HTMLVideoElement>(null)
   const filtered=useMemo(()=>filter==="All tours"?tours:tours.filter((tour)=>categoryOf(tour)===filter),[filter,tours])
   const visible=showAll?filtered:filtered.slice(0,6)
-  const heroImage=tours[2]?.img||tours[0]?.img
   const activeMapPlace=mapPlaces.find((place)=>place.name===selectedMapPlace)??mapPlaces[0]
   const activeVehicle=vehicleFleet[selectedVehicle]
 
@@ -91,9 +182,9 @@ export default function ToursPage({tours,onNavigate}:ToursPageProps){
   },[])
 
   return <main className="tours-page-responsive min-h-screen bg-gradient-to-b from-white to-gray-50 text-gray-800">
-    <section className="relative flex min-h-[34rem] items-center justify-center overflow-hidden px-1 pb-10 pt-28 text-center sm:h-96 sm:min-h-0 sm:pb-0 sm:pt-20">
-      <img src={heroImage} alt="Sri Lanka tour packages" className="absolute inset-0 h-full w-full object-cover"/>
-      <div className="absolute inset-0 bg-gradient-to-b from-[#0A2342]/75 to-[#0A2342]/55"/>
+    <section className="relative isolate flex min-h-[34rem] items-center justify-center overflow-hidden bg-[#071b2c] px-1 pb-10 pt-28 text-center sm:min-h-[28rem] sm:pb-8 sm:pt-24 md:h-[clamp(30rem,42vw,42rem)]">
+      <img src={toursHeroImage} alt="" fetchPriority="high" className="absolute inset-0 h-full! w-full object-cover object-[64%_center] md:object-[center_12%]"/>
+      <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-b from-[#071b2c]/40 via-[#071b2c]/60 to-[#071b2c]/30"/>
       <div className="relative z-10 mx-auto max-w-3xl px-4 text-white">
         <h1 className="mb-4 text-4xl font-medium leading-tight sm:text-5xl md:text-6xl">Sri Lanka Tour Packages</h1>
         <p className="mx-auto max-w-2xl text-base leading-7 text-white/90 sm:text-lg md:text-xl">Sri Lanka, known as the Pearl of the Indian Ocean, is a beautiful island where rich history, diverse culture and stunning natural landscapes come together.</p>
@@ -107,17 +198,7 @@ export default function ToursPage({tours,onNavigate}:ToursPageProps){
 
     <section className="py-12 sm:py-20">
       <div className="container mx-auto max-w-7xl px-4">
-        <div id="tour-overview" className="mb-12 scroll-mt-28 text-center">
-          <h2 className="mb-4 text-4xl font-medium text-[#0A2342] md:text-5xl">About Sri Lanka</h2>
-          <p className="mx-auto max-w-3xl text-lg text-gray-600">Discover the history, climate, food and location that make this compact island an extraordinary place to tour.</p>
-        </div>
-
-        <div className="mb-20 grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-          {aboutCards.map(([icon,title,copy])=><article key={title} className="rounded-xl border border-gray-200 bg-white p-6 text-center shadow-sm transition hover:-translate-y-1 hover:shadow-lg">
-            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-[#FFD700] to-[#FFA500] text-2xl text-[#0A2342]">{icon}</div>
-            <h3 className="mb-2 text-xl font-medium text-[#0A2342]">{title}</h3><p className="text-sm leading-6 text-gray-600">{copy}</p>
-          </article>)}
-        </div>
+        <AboutSriLanka />
 
         <div id="tour-options" className="mb-10 scroll-mt-28 text-center"><h2 className="mb-4 text-4xl font-medium text-[#0A2342] md:text-5xl">Choose Your Tour</h2><p className="text-lg text-gray-600">Our most-loved routes across the island</p></div>
         <div className="mb-8 flex flex-wrap justify-center gap-3">

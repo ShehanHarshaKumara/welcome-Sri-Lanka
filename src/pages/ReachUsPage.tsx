@@ -1,8 +1,32 @@
 import { useRef, useState } from "react"
+import colomboSkyline from "../assets/reach-us-colombo-skyline.jpg"
+import TravellerFeedback from "../components/TravellerFeedback"
+import { contactDetails } from "../contact"
+import { useSriLankaClock } from "../hooks/useSriLankaClock"
 
 type ReachUsPageProps = { onNavigate: (page: "home" | "tours") => void }
 
 const journeyStyles = ["Culture", "Wildlife", "Coast", "Wellness", "Adventure", "Slow travel"]
+
+function ColomboClockCard() {
+  const { date, time } = useSriLankaClock()
+  const [hour, minute] = time.split(":")
+
+  return (
+    <div className="relative isolate aspect-square w-full max-w-60 rounded-3xl bg-sky-500 p-2 shadow-[inset_0_2px_6px_#f0f9ff,0_18px_36px_-18px_#075985] before:absolute before:top-2/5 before:-right-2 before:-z-10 before:h-12 before:w-3 before:rounded-r-lg before:bg-sky-500 before:shadow-[inset_0_1px_3px_#f0f9ff]">
+      <div className="relative h-full rounded-[1.125rem] bg-neutral-900 p-2 shadow-[inset_0_0_4px_#f3f4f6]">
+        <div className="relative isolate flex h-full flex-col items-center justify-center gap-3 overflow-hidden rounded-2xl bg-neutral-900 text-gray-50 shadow-[inset_0_0_3px_#9ca3af]">
+          <div aria-hidden="true" className="pointer-events-none absolute top-1/2 left-1/2 -z-10 h-16 w-20 -translate-1/2 rounded-full bg-orange-800/80 blur-xl" />
+          <p className="text-sm font-medium text-gray-200">{date}</p>
+          <time dateTime={time} className="flex items-center gap-1 text-5xl leading-none font-semibold tracking-tight text-amber-500 tabular-nums [text-shadow:0_1px_0_#fff7ed] sm:text-6xl">
+            {hour}<span className="text-3xl text-gray-50 [text-shadow:none]">:</span>{minute}
+          </time>
+          <p className="text-[10px] font-bold tracking-[.2em] text-gray-300 uppercase">Local time</p>
+        </div>
+      </div>
+    </div>
+  )
+}
 
 export default function ReachUsPage({ onNavigate }: ReachUsPageProps) {
   const [sent, setSent] = useState(false)
@@ -32,7 +56,10 @@ export default function ReachUsPage({ onNavigate }: ReachUsPageProps) {
         <div className="relative mx-auto max-w-7xl">
           <div className="mb-10 flex items-center justify-between gap-4">
             <button type="button" onClick={() => onNavigate("home")} className="rounded-full border border-[#0a2f29]/10 bg-white/75 px-4 py-2 text-xs font-bold backdrop-blur transition hover:border-[#0a2f29] hover:bg-[#0a2f29] hover:text-white">← Back home</button>
-            <div className="hidden items-center gap-2 text-[10px] font-bold uppercase tracking-[.18em] text-[#527069] sm:flex"><span className="h-2 w-2 animate-pulse rounded-full bg-[#20a47d]" /> Sri Lanka team online</div>
+            <div className="flex items-center gap-4">
+              <div className="hidden items-center gap-2 text-[10px] font-bold uppercase tracking-[.18em] text-[#527069] sm:flex"><span className="h-2 w-2 animate-pulse rounded-full bg-[#20a47d]" /> Sri Lanka team online</div>
+              <a href="#reach-feedback" className="rounded-full border border-white/85 bg-white/50 px-4 py-2 text-xs font-bold shadow-sm backdrop-blur-lg transition-colors hover:bg-[#0a2f29] hover:text-white">Give feedback <span aria-hidden="true">↓</span></a>
+            </div>
           </div>
 
           <div className="grid items-start gap-10 lg:grid-cols-[.88fr_1.12fr] lg:gap-14 xl:gap-20">
@@ -53,8 +80,8 @@ export default function ReachUsPage({ onNavigate }: ReachUsPageProps) {
               </div>
 
               <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                <a href="mailto:hello@lankaravanatours.com" className="rounded-2xl border border-[#0a2f29]/10 bg-white/80 p-4 transition hover:-translate-y-1 hover:bg-white hover:shadow-lg"><small className="block text-[8px] font-black uppercase tracking-[.2em] text-[#789089]">Write to us</small><strong className="mt-1 block text-xs">hello@lankaravanatours.com</strong></a>
-                <a href="tel:+94112345678" className="rounded-2xl border border-[#0a2f29]/10 bg-white/80 p-4 transition hover:-translate-y-1 hover:bg-white hover:shadow-lg"><small className="block text-[8px] font-black uppercase tracking-[.2em] text-[#789089]">Call Colombo</small><strong className="mt-1 block text-xs">+94 11 234 5678</strong></a>
+                <a href={`mailto:${contactDetails.email}`} className="rounded-2xl border border-[#0a2f29]/10 bg-white/80 p-4 transition hover:-translate-y-1 hover:bg-white hover:shadow-lg"><small className="block text-[8px] font-black uppercase tracking-[.2em] text-[#789089]">Write to us</small><strong className="mt-1 block text-xs [overflow-wrap:anywhere]">{contactDetails.email}</strong></a>
+                <a href={contactDetails.phoneHref} className="rounded-2xl border border-[#0a2f29]/10 bg-white/80 p-4 transition hover:-translate-y-1 hover:bg-white hover:shadow-lg"><small className="block text-[8px] font-black uppercase tracking-[.2em] text-[#789089]">Call us</small><strong className="mt-1 block text-xs">{contactDetails.phone}</strong></a>
               </div>
             </div>
 
@@ -91,10 +118,21 @@ export default function ReachUsPage({ onNavigate }: ReachUsPageProps) {
         </div>
       </section>
 
-      <section id="reach-island-desk" className="scroll-mt-20 bg-[#e4f2e9] px-5 py-12 sm:px-8 lg:px-12">
-        <div className="mx-auto grid max-w-7xl gap-8 md:grid-cols-[1fr_auto] md:items-center">
-          <div><p className="text-[9px] font-black uppercase tracking-[.24em] text-[#14856d]">Our island desk</p><h2 className="mt-2 font-['Instrument_Serif'] text-4xl font-normal">Colombo · GMT +5:30</h2><p className="mt-2 text-sm text-[#617a74]">Monday–Saturday, 9:00–18:00 Sri Lanka time.</p></div>
-          <button type="button" onClick={() => onNavigate("tours")} className="w-fit rounded-full bg-[#14856d] px-6 py-3 text-xs font-black text-white transition hover:bg-[#0a2f29]">Browse while you wait →</button>
+      <TravellerFeedback />
+
+      <section id="reach-island-desk" aria-labelledby="reach-desk-title" className="relative isolate scroll-mt-20 overflow-hidden px-5 py-12 sm:px-8 lg:px-12">
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10 bg-[#071826]">
+          <img src={colomboSkyline} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover object-[65%_center] sm:object-[center_35%]" />
+          <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(4,19,33,.94),rgba(4,19,33,.79)_42%,rgba(4,19,33,.24)_72%,rgba(4,19,33,.56))] sm:bg-[linear-gradient(90deg,rgba(4,19,33,.98),rgba(4,19,33,.85)_32%,rgba(4,19,33,.24)_68%,rgba(4,19,33,.48))]" />
+        </div>
+        <div className="mx-auto grid max-w-7xl items-center justify-items-center gap-8 text-center text-white sm:grid-cols-[minmax(0,1fr)_15rem] sm:justify-items-start sm:text-left">
+          <div>
+            <p className="text-[9px] font-black uppercase tracking-[.24em] text-sky-200">Our island desk</p>
+            <h2 id="reach-desk-title" className="mt-2 font-['Instrument_Serif'] text-4xl font-normal">Colombo · GMT +5:30</h2>
+            <p className="mt-2 text-sm text-slate-100">Monday–Saturday, 9:00–18:00 Sri Lanka time.</p>
+            <button type="button" onClick={() => onNavigate("tours")} className="mt-5 rounded-full bg-[#08715c] px-6 py-3 text-xs font-black text-white transition hover:bg-[#0a2f29]">Browse while you wait →</button>
+          </div>
+          <ColomboClockCard />
         </div>
       </section>
     </main>

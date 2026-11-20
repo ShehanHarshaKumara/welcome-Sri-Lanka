@@ -382,19 +382,26 @@ export default function GalleryPage({ onNavigate }: GalleryPageProps) {
 
   return (
     <main className="island-gallery">
-      <section id="gallery-overview" className="island-gallery__hero scroll-mt-20">
-        <div className="island-gallery__hero-collage" aria-hidden="true">
-          {collections.slice(0, 6).map((collection) => <img key={collection.id} src={collection.images[0].src} alt="" />)}
-        </div>
-        <div className="island-gallery__hero-shade" />
+      <section id="gallery-overview" aria-labelledby="gallery-hero-title" className="island-gallery__hero scroll-mt-20">
+        <img
+          className="island-gallery__hero-image"
+          src={`${import.meta.env.BASE_URL}assets/sigiriya-01.jpg`}
+          alt="Aerial view of Sigiriya Rock Fortress rising above the forest"
+          width={1153}
+          height={1440}
+          fetchPriority="high"
+          decoding="async"
+        />
+        <div className="island-gallery__hero-shade" aria-hidden="true" />
         <div className="island-gallery__hero-content">
           <p><span /> Lanka Ravana Tours image library</p>
-          <h1>See the island.<br /><em>One frame at a time.</em></h1>
+          <h1 id="gallery-hero-title">See the island.<br /><em>One frame at a time.</em></h1>
           <div className="island-gallery__hero-bottom">
             <span>Choose a destination, move through every view, and open any image full screen.</span>
             <div><strong>{String(totalImages).padStart(3, "0")}</strong><small>island views</small></div>
             <div><strong>{String(collections.length).padStart(2, "0")}</strong><small>collections</small></div>
           </div>
+          <div className="island-gallery__hero-caption"><strong>Sigiriya Rock Fortress</strong><span>Central Province, Sri Lanka</span></div>
         </div>
       </section>
 

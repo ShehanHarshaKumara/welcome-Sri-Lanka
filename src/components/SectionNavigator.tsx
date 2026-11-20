@@ -30,7 +30,8 @@ const pageSections:Record<SitePage,SectionItem[]>={
   experiences:[
     {id:"experiences-overview",label:"Welcome",icon:"●"},
     {id:"experiences-intro",label:"Story",icon:"✦"},
-    {id:"experiences-chapters",label:"Experiences",icon:"◇"},
+    {id:"experience-finder",label:"Experiences",icon:"◇"},
+    {id:"experiences-seasons",label:"Seasons",icon:"◷"},
     {id:"experiences-day",label:"A day",icon:"☼"},
     {id:"experiences-closing",label:"Plan",icon:"➜"},
   ],
@@ -42,17 +43,20 @@ const pageSections:Record<SitePage,SectionItem[]>={
   ],
   "reach-us":[
     {id:"reach-enquiry",label:"Enquiry",icon:"✦"},
+    {id:"reach-feedback",label:"Feedback",icon:"★"},
     {id:"reach-island-desk",label:"Island desk",icon:"⌖"},
   ],
 }
 
 export default function SectionNavigator({page}:{page:SitePage}){
   const items=pageSections[page]
+  const alwaysVisible=page==="experiences"
   const [activeSection,setActiveSection]=useState(items[0].id)
   const [navigationReady,setNavigationReady]=useState(false)
   const [navigationVisible,setNavigationVisible]=useState(false)
   const hideTimer=useRef<number|null>(null)
   const activeIndex=Math.max(0,items.findIndex((item)=>item.id===activeSection))
+  const isVisible=alwaysVisible||(navigationReady&&navigationVisible)
 
   useEffect(()=>{
     setActiveSection(items[0].id)
@@ -70,6 +74,7 @@ export default function SectionNavigator({page}:{page:SitePage}){
           if(section&&window.scrollY+section.getBoundingClientRect().top<=readingLine) currentSection=item.id
         }
         setActiveSection(currentSection)
+        if(alwaysVisible) return
 
         const isReady=window.scrollY>360
         setNavigationReady(isReady)
@@ -92,7 +97,7 @@ export default function SectionNavigator({page}:{page:SitePage}){
       window.removeEventListener("scroll",syncNavigation)
       window.removeEventListener("resize",syncNavigation)
     }
-  },[items])
+  },[items,alwaysVisible])
 
   const keepOpen=()=>{
     if(!navigationReady) return
@@ -101,6 +106,7 @@ export default function SectionNavigator({page}:{page:SitePage}){
   }
 
   const release=()=>{
+    if(alwaysVisible) return
     if(hideTimer.current!==null) window.clearTimeout(hideTimer.current)
     hideTimer.current=window.setTimeout(()=>setNavigationVisible(false),800)
   }
@@ -109,7 +115,7 @@ export default function SectionNavigator({page}:{page:SitePage}){
     document.getElementById(id)?.scrollIntoView({behavior:"smooth",block:"start"})
   }
 
-  return <nav aria-label={`${page.replace("-"," ")} page sections`} aria-hidden={!navigationReady||!navigationVisible} onMouseEnter={keepOpen} onMouseLeave={release} onFocus={keepOpen} onBlur={release} className={`fixed right-3 top-1/2 z-40 hidden -translate-y-1/2 transition-all duration-500 lg:block ${navigationReady&&navigationVisible?"visible translate-x-0 opacity-100":"pointer-events-none invisible translate-x-10 opacity-0"}`}>
+  return <nav aria-label={`${page.replace("-"," ")} page sections`} aria-hidden={!isVisible} onMouseEnter={keepOpen} onMouseLeave={release} onFocus={keepOpen} onBlur={release} className={`fixed right-3 top-1/2 z-40 hidden -translate-y-1/2 transition-all duration-500 lg:block ${isVisible?"visible translate-x-0 opacity-100":"pointer-events-none invisible translate-x-10 opacity-0"}`}>
     <div className="relative flex flex-col items-center gap-3 rounded-full border border-white/75 bg-white/55 px-2.5 py-4 shadow-[0_22px_60px_rgba(8,47,73,.22),inset_0_1px_0_rgba(255,255,255,.9)] ring-1 ring-sky-200/60 backdrop-blur-2xl">
       <span className="absolute bottom-8 left-1/2 top-8 w-[3px] -translate-x-1/2 overflow-hidden rounded-full bg-white/75 shadow-inner" aria-hidden="true">
         <span className="block w-full rounded-full bg-gradient-to-b from-sky-300 to-cyan-500 transition-[height] duration-500" style={{height:`${items.length>1?(activeIndex/(items.length-1))*100:100}%`}} />

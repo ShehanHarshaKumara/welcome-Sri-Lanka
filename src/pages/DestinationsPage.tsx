@@ -15,6 +15,7 @@ type DestinationsPageProps = {
 
 const FILTERS = ["All", "Heritage", "Coast", "Highlands", "Wildlife", "Cities"] as const
 type Filter = (typeof FILTERS)[number]
+const HIDDEN_GALLERY_DESTINATIONS = new Set(["Dambulla", "Rumassala", "Unawatuna"])
 
 const DESTINATION_TOURIST_MAP_POINTS = [
   { label: "Jaffna", destination: "Jaffna", x: 28, y: 7, color: "#ef4444" },
@@ -43,7 +44,9 @@ const DESTINATION_TOURIST_MAP_POINTS = [
   { label: "Kithulgala", destination: "Kithulgala", x: 29, y: 49, color: "#ef4444" },
 ] as const
 
-const DESTINATION_GUIDES: Record<Exclude<Filter, "All">, { intro: string; bestTime: string; stay: string; highlights: string[] }> = {
+type DestinationGuide = { intro: string; bestTime: string; stay: string; highlights: string[] }
+
+const DESTINATION_GUIDES: Record<Exclude<Filter, "All">, DestinationGuide> = {
   Heritage: {
     intro: "Walk through centuries of living history, sacred architecture and stories carved into stone across Sri Lanka's cultural heartland.",
     bestTime: "Jan — Apr",
@@ -83,6 +86,177 @@ type PlaceIntelligence = {
   routeNote: string
 }
 
+const GUIDE_PHOTO_BASE = `${import.meta.env.BASE_URL}assets/`
+const RUMASSALA_ARTWORK = `${GUIDE_PHOTO_BASE}rumassala-discover.jpg`
+const GALLERY_ARTWORK_ALT: Partial<Record<string, string>> = {
+  [RUMASSALA_ARTWORK]: "Discover Rumassala, Sri Lanka, above the forested coast and Peace Pagoda",
+  [`${GUIDE_PHOTO_BASE}sri-maha-bodhi-sacred-tree-artwork.jpg`]: "Sri Maha Bodhi, Anuradhapura, with pilgrims approaching the sacred Bodhi tree",
+  [`${GUIDE_PHOTO_BASE}ruwanwelisaya-stupa-artwork.jpg`]: "Ruwanwelisaya, Anuradhapura, Sri Lanka, with lotus offerings in front of the stupa",
+}
+
+const DESTINATION_PHOTOS: Record<string, string> = {
+  Sigiriya: "sigiriya-01.jpg",
+  Kandy: "kandy-temple-of-the-tooth.png",
+  Ella: "nine-arch-bridge-main.png",
+  Mirissa: "mirissa-01.jpg",
+  Galle: "galle-fort-02.jpg",
+  "Nuwara Eliya": "nuwara-eliya-01.jpg",
+  Dambulla: "dambulla-01.jpg",
+  Hikkaduwa: "hikkaduwa-03.png",
+  Trincomalee: "trincomalee-01.jpg",
+  "Arugam Bay": "arugam-bay-01.jpg",
+  Jaffna: "jaffna-01.jpg",
+  Kalpitiya: "kalpitiya-01.jpg",
+  Minneriya: "minneriya-national-park-main.png",
+  Haputale: "haputale-01.jpg",
+  Kithulgala: "kitulgala-01.jpg",
+  Weligama: "destinations/weligama-island.png",
+  Negombo: "negombo-01.jpg",
+}
+
+const GUIDE_ADDITIONS: Record<string, Omit<Destination, "name"> & PlaceIntelligence & { guide: DestinationGuide }> = {
+  "Horton Plains": {
+    type: "National Park",
+    img: `${GUIDE_PHOTO_BASE}horton-plains-national-park-07.jpg`,
+    tag: "Cloud Forest",
+    district: "Nuwara Eliya",
+    nearby: ["Ohiya", "Pattipola", "Nuwara Eliya"],
+    bestFor: "Plateau hikes & wildlife",
+    routeNote: "Start early for the best chance of seeing the escarpment before the mist rolls in.",
+    guide: {
+      intro: "Follow a high plateau trail through cloud forest and tussock grass to the drop at World’s End.",
+      bestTime: "Early morning", stay: "Half day",
+      highlights: ["World’s End viewpoint", "Baker’s Falls", "Sambar deer in the grasslands"],
+    },
+  },
+  Batticaloa: {
+    type: "Lagoon City",
+    img: `${GUIDE_PHOTO_BASE}batticaloa-02.jpg`,
+    tag: "Eastern Lagoons",
+    district: "Batticaloa",
+    nearby: ["Kallady Beach", "Kallady Bridge", "Batticaloa Lighthouse"],
+    bestFor: "Lagoon walks & fort history",
+    routeNote: "Start at the Dutch Fort, then cross the lagoon to Kallady Beach.",
+    guide: {
+      intro: "Explore an east-coast city shaped by its lagoon, with waterfront walks, a stone fort and beaches just across the water.",
+      bestTime: "Late afternoon", stay: "1–2 days",
+      highlights: ["Batticaloa Dutch Fort", "Gandhi Park promenade", "Sunset on the lagoon"],
+    },
+  },
+  Yapahuwa: {
+    type: "Rock Fortress",
+    img: `${GUIDE_PHOTO_BASE}yapahuwa-04.jpg`,
+    tag: "Medieval Capital",
+    district: "Kurunegala",
+    nearby: ["Yapahuwa Raja Maha Viharaya", "Maho", "Kurunegala"],
+    bestFor: "Stone carvings & rock views",
+    routeNote: "Allow time to look closely at the carvings before heading up to the ruins above.",
+    guide: {
+      intro: "A sculpted stone stairway climbs the flank of Yapahuwa, a former royal capital that once housed the Sacred Tooth Relic.",
+      bestTime: "Early morning", stay: "Half day",
+      highlights: ["Ceremonial stairway", "Carved stone lions", "Views from the upper ruins"],
+    },
+  },
+  "Sinharaja Rainforest": {
+    type: "Rainforest Reserve",
+    img: `${GUIDE_PHOTO_BASE}sinharaja-rainforest-04.jpg`,
+    tag: "Endemic Wildlife",
+    district: "Ratnapura",
+    nearby: ["Kudawa", "Weddagala", "Kalawana"],
+    bestFor: "Guided forest walks & birdwatching",
+    routeNote: "Pick a forest entrance before booking your stay. Kudawa and Deniyaya approach the reserve from different sides.",
+    guide: {
+      intro: "Step into a lowland rainforest where dense canopy shelters birds, amphibians and plants found only in Sri Lanka.",
+      bestTime: "Early morning", stay: "1–2 days",
+      highlights: ["Kudawa forest trails", "Mixed-species bird flocks", "Rainforest canopy and streams"],
+    },
+  },
+  Riverston: {
+    type: "Mountain Pass",
+    img: `${GUIDE_PHOTO_BASE}riverston-03.jpg`,
+    tag: "Knuckles Ridges",
+    district: "Matale",
+    nearby: ["Pitawala Pathana", "Sera Ella", "Bambarakiri Ella"],
+    bestFor: "Open ridges & waterfall stops",
+    routeNote: "Pair the pass with Pitawala Pathana and leave enough daylight for the winding return drive.",
+    guide: {
+      intro: "A winding road above Matale opens onto windy grasslands, waterfalls and views across the Knuckles range.",
+      bestTime: "Clear mornings", stay: "1 day",
+      highlights: ["Riverston ridge", "Pitawala Pathana grasslands", "Thelgamu Oya valley views"],
+    },
+  },
+  "Dondra Head": {
+    type: "Coastal Lighthouse",
+    img: `${GUIDE_PHOTO_BASE}dondra-head-main.png`,
+    tag: "Southern Headland",
+    district: "Matara",
+    nearby: ["Devinuwara Vishnu Devalaya", "Matara Fort", "Polhena Beach"],
+    bestFor: "Lighthouse views & coastal walks",
+    routeNote: "Combine the headland with a temple visit in Devinuwara or a stop in Matara.",
+    guide: {
+      intro: "A white lighthouse stands among palms above the Indian Ocean at Sri Lanka’s southern tip.",
+      bestTime: "Late afternoon", stay: "Half day",
+      highlights: ["Dondra Head Lighthouse", "Palm-framed ocean views", "Devinuwara temple precinct"],
+    },
+  },
+  "Bomburu Ella": {
+    type: "Waterfall Trail",
+    img: `${GUIDE_PHOTO_BASE}bomburu-ella-06.jpg`,
+    tag: "Highland Cascades",
+    district: "Badulla",
+    nearby: ["Perawella", "Hakgala Botanical Garden", "Nuwara Eliya"],
+    bestFor: "Forest walks & waterfalls",
+    routeNote: "Approach from Perawella and choose a dry day for the walk along the forest trail.",
+    guide: {
+      intro: "Several streams spill over a wide rock face at this forest waterfall on the Badulla–Nuwara Eliya border.",
+      bestTime: "Dry mornings", stay: "Half day",
+      highlights: ["Perawella forest trail", "Broad waterfall curtain", "Mossy rock terraces"],
+    },
+  },
+  "Koneswaram Temple": {
+    type: "Clifftop Hindu Temple",
+    img: `${GUIDE_PHOTO_BASE}koneswaram-01.png`,
+    tag: "Sacred Headland",
+    district: "Trincomalee",
+    nearby: ["Fort Frederick", "Dutch Bay", "Trincomalee"],
+    bestFor: "Temple artistry & harbour views",
+    routeNote: "Walk through Fort Frederick to the temple and bring clothing that covers shoulders and knees.",
+    guide: {
+      intro: "On Swami Rock above Trincomalee, this Hindu temple dedicated to Shiva overlooks the harbour and Indian Ocean.",
+      bestTime: "Early morning", stay: "1–2 hours",
+      highlights: ["Colourful temple sculptures", "Swami Rock views", "Walk through Fort Frederick"],
+    },
+  },
+  Meemure: {
+    type: "Mountain Village",
+    img: `${GUIDE_PHOTO_BASE}meemure-08.jpg`,
+    tag: "Lakegala Views",
+    district: "Kandy",
+    nearby: ["Corbett’s Gap", "Lakegala", "Loolwatte"],
+    bestFor: "Village walks & mountain scenery",
+    routeNote: "Allow extra time for the slow approach road and ask a local guide about village trails.",
+    guide: {
+      intro: "Rice terraces, clear streams and the sharp profile of Lakegala frame this village deep in the Knuckles.",
+      bestTime: "Clear mornings", stay: "1–2 days",
+      highlights: ["Terraced paddy fields", "Lakegala views from the village", "Meemure Oya stream"],
+    },
+  },
+  Rumassala: {
+    type: "Forested Headland",
+    img: `${GUIDE_PHOTO_BASE}rumassala-01.jpg`,
+    tag: "Hidden Coast",
+    district: "Galle",
+    nearby: ["Japanese Peace Pagoda", "Jungle Beach", "Unawatuna"],
+    bestFor: "Shaded trails & views over Galle Bay",
+    routeNote: "Take the path to the Peace Pagoda for views across the bay before continuing to Jungle Beach.",
+    guide: {
+      intro: "A wooded headland near Unawatuna shelters a small cove and a white pagoda overlooking Galle Bay.",
+      bestTime: "Late afternoon", stay: "Half day",
+      highlights: ["Japanese Peace Pagoda", "Jungle Beach cove", "Galle Bay viewpoints"],
+    },
+  },
+}
+
 type NearbyPlaceSelection = {
   parent: Destination
   place: string
@@ -115,6 +289,7 @@ function getNearbyPlaceStory(place: string, parent: Destination): NearbyPlaceSto
 }
 
 const PLACE_INTELLIGENCE: Record<string, PlaceIntelligence> = {
+  ...GUIDE_ADDITIONS,
   Sigiriya: { district: "Matale", nearby: ["Pidurangala Rock", "Dambulla Cave Temple", "Ritigala Monastery", "Minneriya National Park"], bestFor: "History & sunrise", routeNote: "Anchor a two-day Cultural Triangle loop here." },
   Ella: { district: "Badulla", nearby: ["Nine Arch Bridge", "Little Adam's Peak", "Ravana Falls", "Demodara Loop"], bestFor: "Hikes & rail journeys", routeNote: "Pair the train journey with two slow mountain mornings." },
   Mirissa: { district: "Matara", nearby: ["Coconut Tree Hill", "Weligama Bay", "Dondra Head", "Polhena Beach"], bestFor: "Ocean & whale watching", routeNote: "Follow the south coast west to east over three days." },
@@ -143,6 +318,342 @@ const PLACE_INTELLIGENCE: Record<string, PlaceIntelligence> = {
 }
 
 export const PLACE_IMAGE_GALLERIES: Record<string, string[]> = {
+  "Lunuganga Estate": [
+    `${GUIDE_PHOTO_BASE}lunuganga-estate-house-under-frangipani.jpg`,
+    `${GUIDE_PHOTO_BASE}lunuganga-estate-lakeside-lawn.jpg`,
+    `${GUIDE_PHOTO_BASE}lunuganga-estate-lake-and-garden-statue.jpg`,
+    `${GUIDE_PHOTO_BASE}lunuganga-estate-lily-pond.jpg`,
+    `${GUIDE_PHOTO_BASE}lunuganga-estate-aerial-garden-view.jpg`,
+  ],
+  "Brief Garden": [
+    `${GUIDE_PHOTO_BASE}brief-garden-sculpted-garden-gateway.jpg`,
+    `${GUIDE_PHOTO_BASE}brief-garden-garden-fountain.jpg`,
+    `${GUIDE_PHOTO_BASE}brief-garden-courtyard-lily-pond.jpg`,
+    `${GUIDE_PHOTO_BASE}brief-garden-shaded-entrance-path.jpg`,
+    `${GUIDE_PHOTO_BASE}brief-garden-garden-collage.jpg`,
+  ],
+  "Madu River": [
+    `${GUIDE_PHOTO_BASE}madu-river-aerial-estuary-view.jpg`,
+    `${GUIDE_PHOTO_BASE}madu-river-boat-in-mangrove-tunnel.jpg`,
+    `${GUIDE_PHOTO_BASE}madu-river-boat-at-mangrove-edge.jpg`,
+    `${GUIDE_PHOTO_BASE}madu-river-river-safari.jpg`,
+    `${GUIDE_PHOTO_BASE}madu-river-waterside-temple.jpg`,
+  ],
+  "Kosgoda Turtle Coast": [
+    `${GUIDE_PHOTO_BASE}kosgoda-turtle-coast-hatchling-in-hand.jpg`,
+    `${GUIDE_PHOTO_BASE}kosgoda-turtle-coast-hatchlings-crossing-the-beach.jpg`,
+    `${GUIDE_PHOTO_BASE}kosgoda-turtle-coast-turtle-swimming.jpg`,
+    `${GUIDE_PHOTO_BASE}kosgoda-turtle-coast-hatchlings-emerging-from-sand.jpg`,
+    `${GUIDE_PHOTO_BASE}kosgoda-turtle-coast-hatchlings-at-the-waterline.jpg`,
+  ],
+  "Local flavours of Bentota": [
+    `${GUIDE_PHOTO_BASE}local-flavours-bentota-rice-and-curry-spread.jpg`,
+    `${GUIDE_PHOTO_BASE}local-flavours-bentota-crab-and-sides.jpg`,
+    `${GUIDE_PHOTO_BASE}local-flavours-bentota-egg-hopper-and-curries.jpg`,
+    `${GUIDE_PHOTO_BASE}local-flavours-bentota-clay-pot-curry.jpg`,
+    `${GUIDE_PHOTO_BASE}local-flavours-bentota-fruit-and-sweets.jpg`,
+  ],
+  "Bentota market & café trail": [
+    `${GUIDE_PHOTO_BASE}bentota-market-cafe-waterside-dining-deck.jpg`,
+    `${GUIDE_PHOTO_BASE}bentota-market-cafe-palm-lined-cafe-terrace.jpg`,
+    `${GUIDE_PHOTO_BASE}bentota-market-cafe-tea-and-breakfast.jpg`,
+    `${GUIDE_PHOTO_BASE}bentota-market-cafe-fresh-fruit-stall.jpg`,
+    `${GUIDE_PHOTO_BASE}bentota-market-cafe-market-storefront.jpg`,
+  ],
+  "Boutique stays near Bentota": [
+    `${GUIDE_PHOTO_BASE}boutique-stays-bentota-illuminated-villa-and-pool.jpg`,
+    `${GUIDE_PHOTO_BASE}boutique-stays-bentota-garden-view-suite.jpg`,
+    `${GUIDE_PHOTO_BASE}boutique-stays-bentota-tree-lined-pool.jpg`,
+    `${GUIDE_PHOTO_BASE}boutique-stays-bentota-villa-and-lawn.jpg`,
+    `${GUIDE_PHOTO_BASE}boutique-stays-bentota-ocean-view-pool.jpg`,
+  ],
+  "Bentota guesthouses & nature lodges": [
+    `${GUIDE_PHOTO_BASE}bentota-guesthouses-garden-guesthouse.jpg`,
+    `${GUIDE_PHOTO_BASE}bentota-guesthouses-tropical-garden-lodge.jpg`,
+    `${GUIDE_PHOTO_BASE}bentota-guesthouses-river-view-dining-balcony.jpg`,
+    `${GUIDE_PHOTO_BASE}bentota-guesthouses-canopy-bedroom.jpg`,
+    `${GUIDE_PHOTO_BASE}bentota-guesthouses-woodland-cottage.jpg`,
+  ],
+  "Temple of the Tooth": [
+    `${GUIDE_PHOTO_BASE}kandy-temple-lakeside-evening.png`,
+    `${GUIDE_PHOTO_BASE}kandy-temple-entrance-walkway.png`,
+    `${GUIDE_PHOTO_BASE}kandy-lake-promenade-in-rain.png`,
+    `${GUIDE_PHOTO_BASE}kandy-street-in-rain.png`,
+    `${GUIDE_PHOTO_BASE}${DESTINATION_PHOTOS.Kandy}`,
+  ],
+  "Peradeniya Gardens": [
+    `${GUIDE_PHOTO_BASE}peradeniya-gardens-palm-avenue.jpg`,
+    `${GUIDE_PHOTO_BASE}peradeniya-gardens-sunlit-path.jpg`,
+    `${GUIDE_PHOTO_BASE}peradeniya-gardens-flower-borders.jpg`,
+    `${GUIDE_PHOTO_BASE}peradeniya-gardens-palm-walk.jpg`,
+    `${GUIDE_PHOTO_BASE}peradeniya-gardens-formal-lawns.jpg`,
+  ],
+  Udawattakele: [
+    `${GUIDE_PHOTO_BASE}udawattakele-forest-canopy.jpg`,
+    `${GUIDE_PHOTO_BASE}udawattakele-wooded-trail.jpg`,
+    `${GUIDE_PHOTO_BASE}udawattakele-entrance.jpg`,
+    `${GUIDE_PHOTO_BASE}udawattakele-forest-bird.jpg`,
+    `${GUIDE_PHOTO_BASE}udawattakele-bamboo-path.jpg`,
+  ],
+  "Embekke Devalaya": [
+    `${GUIDE_PHOTO_BASE}embekke-devalaya-exterior.jpg`,
+    `${GUIDE_PHOTO_BASE}embekke-devalaya-pillared-hall.jpg`,
+    `${GUIDE_PHOTO_BASE}embekke-devalaya-figure-carving.jpg`,
+    `${GUIDE_PHOTO_BASE}embekke-devalaya-floral-panel.jpg`,
+    `${GUIDE_PHOTO_BASE}embekke-devalaya-rosette-carving.jpg`,
+  ],
+  "Local flavours of Kandy": [
+    `${GUIDE_PHOTO_BASE}local-flavours-kandy-food-spread.jpg`,
+    `${GUIDE_PHOTO_BASE}local-flavours-kandy-curry-pots.jpg`,
+    `${GUIDE_PHOTO_BASE}local-flavours-kandy-clay-bowls.jpg`,
+    `${GUIDE_PHOTO_BASE}local-flavours-kandy-rice-and-curry.jpg`,
+    `${GUIDE_PHOTO_BASE}local-flavours-kandy-banana-leaf-meal.jpg`,
+  ],
+  "Kandy market & café trail": [
+    `${GUIDE_PHOTO_BASE}kandy-market-cafe-night-market.jpg`,
+    `${GUIDE_PHOTO_BASE}kandy-market-cafe-kai-mews-seating.jpg`,
+    `${GUIDE_PHOTO_BASE}kandy-market-cafe-kai-mews-interior.jpg`,
+    `${GUIDE_PHOTO_BASE}kandy-market-cafe-dinner-with-a-view.jpg`,
+    `${GUIDE_PHOTO_BASE}kandy-market-cafe-six8one-exterior.jpg`,
+  ],
+  "Boutique stays near Kandy": [
+    `${GUIDE_PHOTO_BASE}boutique-stays-kandy-illuminated-exterior.jpg`,
+    `${GUIDE_PHOTO_BASE}boutique-stays-kandy-villa-at-dusk.jpg`,
+    `${GUIDE_PHOTO_BASE}boutique-stays-kandy-hilltop-terrace.jpg`,
+    `${GUIDE_PHOTO_BASE}boutique-stays-kandy-garden-veranda.jpg`,
+    `${GUIDE_PHOTO_BASE}boutique-stays-kandy-pool-and-valley.jpg`,
+  ],
+  "Kandy guesthouses & nature lodges": [
+    `${GUIDE_PHOTO_BASE}kandy-guesthouses-sunset-room.jpg`,
+    `${GUIDE_PHOTO_BASE}kandy-guesthouses-balcony-doors.jpg`,
+    `${GUIDE_PHOTO_BASE}kandy-guesthouses-valley-balcony.jpg`,
+    `${GUIDE_PHOTO_BASE}kandy-guesthouses-sunlit-bedroom.jpg`,
+    `${GUIDE_PHOTO_BASE}kandy-guesthouses-garden-pond.jpg`,
+  ],
+  Sithulpawwa: [
+    `${GUIDE_PHOTO_BASE}sithulpawwa-aerial.jpg`,
+    `${GUIDE_PHOTO_BASE}sithulpawwa-stupa.jpg`,
+    `${GUIDE_PHOTO_BASE}sithulpawwa-courtyard.jpg`,
+    `${GUIDE_PHOTO_BASE}sithulpawwa-rock-and-pond.jpg`,
+    `${GUIDE_PHOTO_BASE}sithulpawwa-forest-panorama.jpg`,
+  ],
+  Kataragama: [
+    `${GUIDE_PHOTO_BASE}kataragama-elephant-procession.jpg`,
+    `${GUIDE_PHOTO_BASE}kataragama-temple-ceremony.jpg`,
+    `${GUIDE_PHOTO_BASE}kataragama-masked-dancers.jpg`,
+    `${GUIDE_PHOTO_BASE}kataragama-devalaya-entrance.jpg`,
+    `${GUIDE_PHOTO_BASE}kataragama-white-stupa.jpg`,
+  ],
+  "Bundala National Park": [
+    `${GUIDE_PHOTO_BASE}bundala-lagoon-shore.jpg`,
+    `${GUIDE_PHOTO_BASE}bundala-coastal-scrub.jpg`,
+    `${GUIDE_PHOTO_BASE}bundala-safari-water-crossing.jpg`,
+    `${GUIDE_PHOTO_BASE}bundala-wetland-birds.jpg`,
+    `${GUIDE_PHOTO_BASE}bundala-marsh-and-reeds.jpg`,
+  ],
+  Kirinda: [
+    `${GUIDE_PHOTO_BASE}kirinda-coastal-stupa.jpg`,
+    `${GUIDE_PHOTO_BASE}kirinda-aerial-coast.jpg`,
+    `${GUIDE_PHOTO_BASE}kirinda-temple-collage.jpg`,
+    `${GUIDE_PHOTO_BASE}kirinda-golden-stupa.jpg`,
+    `${GUIDE_PHOTO_BASE}kirinda-seaside-shrine.jpg`,
+  ],
+  "Local flavours of Yala": [
+    `${GUIDE_PHOTO_BASE}local-flavours-yala-outdoor-dining.jpg`,
+    `${GUIDE_PHOTO_BASE}local-flavours-yala-milk-rice.jpg`,
+    `${GUIDE_PHOTO_BASE}local-flavours-yala-string-hoppers.jpg`,
+    `${GUIDE_PHOTO_BASE}local-flavours-yala-egg-hoppers.jpg`,
+    `${GUIDE_PHOTO_BASE}local-flavours-yala-egg-curry.jpg`,
+  ],
+  "Yala market & café trail": [
+    `${GUIDE_PHOTO_BASE}yala-market-cafe-craft-stall.jpg`,
+    `${GUIDE_PHOTO_BASE}yala-market-cafe-dining-room.jpg`,
+    `${GUIDE_PHOTO_BASE}yala-market-cafe-window-seating.jpg`,
+    `${GUIDE_PHOTO_BASE}yala-market-cafe-ayla-interior.jpg`,
+    `${GUIDE_PHOTO_BASE}yala-market-cafe-cheesecake.jpg`,
+  ],
+  "Boutique stays near Yala": [
+    `${GUIDE_PHOTO_BASE}boutique-stays-yala-terrace-at-dusk.jpg`,
+    `${GUIDE_PHOTO_BASE}boutique-stays-yala-lit-bungalow.jpg`,
+    `${GUIDE_PHOTO_BASE}boutique-stays-yala-coastal-aerial.jpg`,
+    `${GUIDE_PHOTO_BASE}boutique-stays-yala-cabin-veranda.jpg`,
+    `${GUIDE_PHOTO_BASE}boutique-stays-yala-canopy-bedroom.jpg`,
+  ],
+  "Yala guesthouses & nature lodges": [
+    `${GUIDE_PHOTO_BASE}yala-guesthouses-poolside-lodge.jpg`,
+    `${GUIDE_PHOTO_BASE}yala-guesthouses-coastal-cabins-at-night.jpg`,
+    `${GUIDE_PHOTO_BASE}yala-guesthouses-open-air-dining.jpg`,
+    `${GUIDE_PHOTO_BASE}yala-guesthouses-waterfront-veranda.jpg`,
+    `${GUIDE_PHOTO_BASE}yala-guesthouses-garden-cabin.jpg`,
+  ],
+  "Galle Fort": [
+    `${GUIDE_PHOTO_BASE}galle-fort-lighthouse-at-sunset.jpg`,
+    `${GUIDE_PHOTO_BASE}galle-fort-aerial-at-sunset.jpg`,
+    `${GUIDE_PHOTO_BASE}galle-fort-street-at-dusk.jpg`,
+    `${GUIDE_PHOTO_BASE}galle-fort-street-cafes.jpg`,
+    `${GUIDE_PHOTO_BASE}galle-fort-church-street.jpg`,
+  ],
+  Unawatuna: [
+    `${GUIDE_PHOTO_BASE}unawatuna-sheltered-bay.jpg`,
+    `${GUIDE_PHOTO_BASE}unawatuna-cove-at-sunset.jpg`,
+    `${GUIDE_PHOTO_BASE}unawatuna-pagoda-and-cove.jpg`,
+    `${GUIDE_PHOTO_BASE}unawatuna-wooded-shore.jpg`,
+    `${GUIDE_PHOTO_BASE}unawatuna-beach-from-above.jpg`,
+  ],
+  Rumassala: [
+    `${GUIDE_PHOTO_BASE}rumassala-01.jpg`,
+    RUMASSALA_ARTWORK,
+    `${GUIDE_PHOTO_BASE}rumassala-02.jpg`,
+    `${GUIDE_PHOTO_BASE}rumassala-03.jpg`,
+    `${GUIDE_PHOTO_BASE}rumassala-05.jpg`,
+  ],
+  "Koggala Lake": [
+    `${GUIDE_PHOTO_BASE}koggala-lake-palm-lined-shore.jpg`,
+    `${GUIDE_PHOTO_BASE}koggala-lake-mangrove-channel.jpg`,
+    `${GUIDE_PHOTO_BASE}koggala-lake-shoreline-reflections.jpg`,
+    `${GUIDE_PHOTO_BASE}koggala-lake-waterside-villa.jpg`,
+    `${GUIDE_PHOTO_BASE}koggala-lake-moored-boats.jpg`,
+  ],
+  "Local flavours of Galle": [
+    `${GUIDE_PHOTO_BASE}local-flavours-galle-seafood-and-rice.jpg`,
+    `${GUIDE_PHOTO_BASE}local-flavours-galle-fruit-and-short-eats.jpg`,
+    `${GUIDE_PHOTO_BASE}local-flavours-galle-tea-and-sweets.jpg`,
+    `${GUIDE_PHOTO_BASE}local-flavours-galle-kottu-and-hoppers.jpg`,
+    `${GUIDE_PHOTO_BASE}local-flavours-galle-spice-market.jpg`,
+  ],
+  "Galle market & café trail": [
+    `${GUIDE_PHOTO_BASE}galle-market-cafe-street-at-dusk.jpg`,
+    `${GUIDE_PHOTO_BASE}galle-market-cafe-fried-rice.jpg`,
+    `${GUIDE_PHOTO_BASE}galle-market-cafe-chocolate-lounge.jpg`,
+    `${GUIDE_PHOTO_BASE}galle-market-cafe-kottu-courtyard.jpg`,
+    `${GUIDE_PHOTO_BASE}galle-market-cafe-art-filled-dining-room.jpg`,
+  ],
+  "Boutique stays near Galle": [
+    `${GUIDE_PHOTO_BASE}boutique-stays-galle-poolside-villa-at-dusk.jpg`,
+    `${GUIDE_PHOTO_BASE}boutique-stays-galle-illuminated-garden-villa.jpg`,
+    `${GUIDE_PHOTO_BASE}boutique-stays-galle-villa-balconies.jpg`,
+    `${GUIDE_PHOTO_BASE}boutique-stays-galle-poolside-terrace.jpg`,
+    `${GUIDE_PHOTO_BASE}boutique-stays-galle-tropical-garden-pool.jpg`,
+  ],
+  "Galle guesthouses & nature lodges": [
+    `${GUIDE_PHOTO_BASE}galle-guesthouses-woodland-lodge.jpg`,
+    `${GUIDE_PHOTO_BASE}galle-guesthouses-pool-overlooking-fields.jpg`,
+    `${GUIDE_PHOTO_BASE}galle-guesthouses-cabins-at-night.jpg`,
+    `${GUIDE_PHOTO_BASE}galle-guesthouses-lodge-bathroom.jpg`,
+    `${GUIDE_PHOTO_BASE}galle-guesthouses-forest-pool.jpg`,
+  ],
+  "Horton Plains": [
+    `${GUIDE_PHOTO_BASE}horton-plains-misty-pond.jpg`,
+    `${GUIDE_PHOTO_BASE}horton-plains-deer-in-mist.jpg`,
+    `${GUIDE_PHOTO_BASE}horton-plains-grassland-cascade.jpg`,
+    `${GUIDE_PHOTO_BASE}horton-plains-hillside-stream.jpg`,
+    `${GUIDE_PHOTO_BASE}horton-plains-leopard-in-grass.jpg`,
+  ],
+  "Gregory Lake": [
+    `${GUIDE_PHOTO_BASE}gregory-lake-aerial-shoreline.jpg`,
+    `${GUIDE_PHOTO_BASE}gregory-lake-park-entrance.jpg`,
+    `${GUIDE_PHOTO_BASE}gregory-lake-waterfront-walk.jpg`,
+    `${GUIDE_PHOTO_BASE}gregory-lake-hillside-houses.jpg`,
+    `${GUIDE_PHOTO_BASE}gregory-lake-promenade-at-sunset.jpg`,
+  ],
+  "Hakgala Gardens": [
+    `${GUIDE_PHOTO_BASE}hakgala-gardens-misty-garden.jpg`,
+    `${GUIDE_PHOTO_BASE}hakgala-gardens-purple-flowers.jpg`,
+    `${GUIDE_PHOTO_BASE}hakgala-gardens-mountain-and-flowerbeds.jpg`,
+    `${GUIDE_PHOTO_BASE}hakgala-gardens-woodland-walk.jpg`,
+    `${GUIDE_PHOTO_BASE}hakgala-gardens-foggy-path.jpg`,
+  ],
+  "St. Clair's Falls": [
+    `${GUIDE_PHOTO_BASE}st-clairs-falls-misty-waterfall.jpg`,
+    `${GUIDE_PHOTO_BASE}st-clairs-falls-valley-aerial.jpg`,
+    `${GUIDE_PHOTO_BASE}st-clairs-falls-waterfall-tiers.jpg`,
+    `${GUIDE_PHOTO_BASE}st-clairs-falls-flowered-viewpoint.jpg`,
+    `${GUIDE_PHOTO_BASE}st-clairs-falls-mountain-backdrop.jpg`,
+  ],
+  "Local flavours of Nuwara Eliya": [
+    `${GUIDE_PHOTO_BASE}local-flavours-nuwara-eliya-yellow-rice-and-vegetables.jpg`,
+    `${GUIDE_PHOTO_BASE}local-flavours-nuwara-eliya-breakfast-and-juice.jpg`,
+    `${GUIDE_PHOTO_BASE}local-flavours-nuwara-eliya-chicken-and-sausages-on-the-grill.jpg`,
+    `${GUIDE_PHOTO_BASE}local-flavours-nuwara-eliya-peppers-and-onions.jpg`,
+    `${GUIDE_PHOTO_BASE}local-flavours-nuwara-eliya-toast-and-sambol.jpg`,
+  ],
+  "Nuwara Eliya market & café trail": [
+    `${GUIDE_PHOTO_BASE}nuwara-eliya-market-cafe-market-lane.jpg`,
+    `${GUIDE_PHOTO_BASE}nuwara-eliya-market-cafe-balcony-lunch.jpg`,
+    `${GUIDE_PHOTO_BASE}nuwara-eliya-market-cafe-wooden-cafe-interior.jpg`,
+    `${GUIDE_PHOTO_BASE}nuwara-eliya-market-cafe-breakfast-by-the-window.jpg`,
+    `${GUIDE_PHOTO_BASE}nuwara-eliya-market-cafe-breakfast-with-a-view.jpg`,
+  ],
+  "Boutique stays near Nuwara Eliya": [
+    `${GUIDE_PHOTO_BASE}boutique-stays-nuwara-eliya-illuminated-villa-at-sunset.jpg`,
+    `${GUIDE_PHOTO_BASE}boutique-stays-nuwara-eliya-garden-veranda-at-dusk.jpg`,
+    `${GUIDE_PHOTO_BASE}boutique-stays-nuwara-eliya-lake-view-balconies.jpg`,
+    `${GUIDE_PHOTO_BASE}boutique-stays-nuwara-eliya-white-villa-exterior.jpg`,
+    `${GUIDE_PHOTO_BASE}boutique-stays-nuwara-eliya-mountain-view-from-the-window.jpg`,
+  ],
+  "Nuwara Eliya guesthouses & nature lodges": [
+    `${GUIDE_PHOTO_BASE}nuwara-eliya-guesthouses-forest-cabins.jpg`,
+    `${GUIDE_PHOTO_BASE}nuwara-eliya-guesthouses-flowers-by-the-valley-window.jpg`,
+    `${GUIDE_PHOTO_BASE}nuwara-eliya-guesthouses-guest-room.jpg`,
+    `${GUIDE_PHOTO_BASE}nuwara-eliya-guesthouses-stone-cottages.jpg`,
+    `${GUIDE_PHOTO_BASE}nuwara-eliya-guesthouses-a-frame-cabin-at-night.jpg`,
+  ],
+  "Sri Maha Bodhi": [
+    `${GUIDE_PHOTO_BASE}sri-maha-bodhi-sunlit-bodhi-tree.jpg`,
+    `${GUIDE_PHOTO_BASE}sri-maha-bodhi-courtyard-at-sunset.jpg`,
+    `${GUIDE_PHOTO_BASE}sri-maha-bodhi-flower-offerings.jpg`,
+    `${GUIDE_PHOTO_BASE}sri-maha-bodhi-moonlit-courtyard.jpg`,
+    `${GUIDE_PHOTO_BASE}sri-maha-bodhi-sacred-tree-artwork.jpg`,
+  ],
+  "Ruwanwelisaya": [
+    `${GUIDE_PHOTO_BASE}ruwanwelisaya-stupa-at-sunset.jpg`,
+    `${GUIDE_PHOTO_BASE}ruwanwelisaya-night-reflection.jpg`,
+    `${GUIDE_PHOTO_BASE}ruwanwelisaya-stupa-artwork.jpg`,
+    `${GUIDE_PHOTO_BASE}ruwanwelisaya-golden-hour-courtyard.jpg`,
+    `${GUIDE_PHOTO_BASE}ruwanwelisaya-pilgrims-and-offerings.jpg`,
+  ],
+  "Mihintale": [
+    `${GUIDE_PHOTO_BASE}mihintale-hilltop-stupa.jpg`,
+    `${GUIDE_PHOTO_BASE}mihintale-stone-stairway.jpg`,
+    `${GUIDE_PHOTO_BASE}mihintale-rock-summit-steps.jpg`,
+    `${GUIDE_PHOTO_BASE}mihintale-stupa-and-stone-pillars.jpg`,
+    `${GUIDE_PHOTO_BASE}mihintale-hilltop-at-sunset.jpg`,
+  ],
+  "Isurumuniya": [
+    `${GUIDE_PHOTO_BASE}isurumuniya-temple-at-dusk.jpg`,
+    `${GUIDE_PHOTO_BASE}isurumuniya-temple-and-pond.jpg`,
+    `${GUIDE_PHOTO_BASE}isurumuniya-stone-stairway-and-shrine.jpg`,
+    `${GUIDE_PHOTO_BASE}isurumuniya-rock-carvings-beside-the-pond.jpg`,
+    `${GUIDE_PHOTO_BASE}isurumuniya-lotus-pond-and-temple.jpg`,
+  ],
+  "Local flavours of Anuradhapura": [
+    `${GUIDE_PHOTO_BASE}local-flavours-anuradhapura-rice-and-curry.jpg`,
+    `${GUIDE_PHOTO_BASE}local-flavours-anuradhapura-fruit-and-spice-stall.jpg`,
+    `${GUIDE_PHOTO_BASE}local-flavours-anuradhapura-wood-fired-kitchen.jpg`,
+    `${GUIDE_PHOTO_BASE}local-flavours-anuradhapura-string-hoppers-and-tea.jpg`,
+    `${GUIDE_PHOTO_BASE}local-flavours-anuradhapura-street-food-stall.jpg`,
+  ],
+  "Anuradhapura market & café trail": [
+    `${GUIDE_PHOTO_BASE}anuradhapura-market-cafe-flower-market.jpg`,
+    `${GUIDE_PHOTO_BASE}anuradhapura-market-cafe-cafe-window-seating.jpg`,
+    `${GUIDE_PHOTO_BASE}anuradhapura-market-cafe-fried-rice-and-kottu.jpg`,
+    `${GUIDE_PHOTO_BASE}anuradhapura-market-cafe-espresso-bar.jpg`,
+    `${GUIDE_PHOTO_BASE}anuradhapura-market-cafe-vegetable-stall.jpg`,
+  ],
+  "Boutique stays near Anuradhapura": [
+    `${GUIDE_PHOTO_BASE}boutique-stays-anuradhapura-poolside-suites-at-dusk.jpg`,
+    `${GUIDE_PHOTO_BASE}boutique-stays-anuradhapura-thatched-villa-and-pool.jpg`,
+    `${GUIDE_PHOTO_BASE}boutique-stays-anuradhapura-courtyard-pool.jpg`,
+    `${GUIDE_PHOTO_BASE}boutique-stays-anuradhapura-garden-view-bedroom.jpg`,
+    `${GUIDE_PHOTO_BASE}boutique-stays-anuradhapura-woodland-pool-deck.jpg`,
+  ],
+  "Anuradhapura guesthouses & nature lodges": [
+    `${GUIDE_PHOTO_BASE}anuradhapura-guesthouses-raised-garden-cabin.jpg`,
+    `${GUIDE_PHOTO_BASE}anuradhapura-guesthouses-thatched-garden-cottage.jpg`,
+    `${GUIDE_PHOTO_BASE}anuradhapura-guesthouses-guesthouse-with-balconies.jpg`,
+    `${GUIDE_PHOTO_BASE}anuradhapura-guesthouses-earthen-lodge-courtyard.jpg`,
+    `${GUIDE_PHOTO_BASE}anuradhapura-guesthouses-woodland-guest-rooms.jpg`,
+  ],
   "Coconut Tree Hill": [
     "/assets/coconut-tree-hill-main.png",
     "/assets/coconut-tree-hill-view-2.png",
@@ -306,10 +817,11 @@ export const PLACE_IMAGE_GALLERIES: Record<string, string[]> = {
   ],
 }
 
-const POPULAR_MAP_NAMES = [
+const GUIDE_DESTINATION_NAMES = [
   "Sigiriya",
   "Kandy",
   "Ella",
+  ...Object.keys(GUIDE_ADDITIONS),
   "Yala",
   "Galle",
   "Mirissa",
@@ -347,6 +859,37 @@ function SearchIcon() {
       <circle cx="11" cy="11" r="6.5" stroke="currentColor" strokeWidth="1.8" />
       <path d="m16 16 4 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
     </svg>
+  )
+}
+
+function DestinationPhoto({ src, alt = "", className, loading = "lazy" }: {
+  src: string
+  alt?: string
+  className: string
+  loading?: "lazy" | "eager"
+}) {
+  const [failedSource, setFailedSource] = useState<string>()
+
+  return (
+    failedSource === src ? (
+      <span role={alt ? "img" : undefined} aria-label={alt ? `${alt} — photo unavailable` : undefined} aria-hidden={!alt} className={`${className} grid place-items-center bg-gradient-to-br from-[#16483e] to-[#092d27] text-white/60`}>
+        <svg aria-hidden="true" viewBox="0 0 24 24" className="size-6" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="3" y="4" width="18" height="16" rx="2" />
+          <path d="m3 16 5-5 5 5 3-3 5 5" />
+          <circle cx="15.5" cy="8.5" r="1" />
+        </svg>
+      </span>
+    ) : (
+      <img key={src} src={src} alt={alt} className={className} loading={loading} decoding="async" onError={() => setFailedSource(src)} />
+    )
+  )
+}
+
+function GuidePhoto({ destination }: { destination: Destination }) {
+  return (
+    <div className="relative h-[clamp(16rem,78vw,24rem)] overflow-hidden bg-[#16483e] lg:h-[clamp(24rem,36vw,32rem)]">
+      <DestinationPhoto src={destination.img} alt={destination.name} className="absolute inset-0 h-full! w-full object-cover" />
+    </div>
   )
 }
 
@@ -426,11 +969,27 @@ function AroundPlacesPage({ destination, destinations, onBack }: { destination: 
               .slice(0, 4)
             return (
               <article key={place.name} className="grid overflow-hidden rounded-[2rem] border border-[#0a5b49]/10 bg-white shadow-[0_18px_55px_rgba(8,61,50,.08)] md:grid-cols-[12rem_minmax(0,1fr)_13rem] xl:grid-cols-[18rem_minmax(0,1fr)_17rem]">
-                <div className="relative min-h-64 overflow-hidden bg-[#123f35] md:min-h-[23rem]"><img src={place.image} alt={`Regional view for ${place.name}`} className="absolute inset-0 h-full w-full object-cover transition duration-700 hover:scale-105" /><div className="absolute inset-0 bg-gradient-to-t from-[#032a23]/80 via-transparent to-transparent" /><span className="absolute left-5 top-5 rounded-full border border-white/25 bg-black/20 px-3 py-1.5 text-[8px] font-bold uppercase tracking-[.15em] text-white backdrop-blur-xl">{place.category}</span><strong className="absolute bottom-5 right-5 font-['Instrument_Serif'] text-4xl font-normal text-white/80">{String(index + 1).padStart(2, "0")}</strong></div>
+                <div className="relative min-h-64 overflow-hidden bg-[#123f35] md:min-h-[23rem]"><DestinationPhoto src={place.image} alt={`Regional view for ${place.name}`} className="absolute inset-0 h-full! w-full object-cover" /><div className="absolute inset-0 bg-gradient-to-t from-[#032a23]/80 via-transparent to-transparent" /><span className="absolute left-5 top-5 rounded-full border border-white/25 bg-black/20 px-3 py-1.5 text-[8px] font-bold uppercase tracking-[.15em] text-white backdrop-blur-xl">{place.category}</span><strong className="absolute bottom-5 right-5 font-['Instrument_Serif'] text-4xl font-normal text-white/80">{String(index + 1).padStart(2, "0")}</strong></div>
                 <div className="flex flex-col justify-between p-6 sm:p-7 xl:p-10">
                   <div>
                     <p className="text-[9px] font-bold uppercase tracking-[.2em] text-[#07856f]">Around {destination.name}</p><h2 className="mt-3 font-['Instrument_Serif'] text-[clamp(2.7rem,4vw,4.8rem)] font-normal leading-[.86] tracking-[-.04em]">{place.name}</h2><p className="mt-5 max-w-2xl text-sm leading-7 text-[#5b746c]">{place.description}</p>
-                    <div className="mt-5"><div className="mb-2 flex items-center justify-between"><span className="text-[8px] font-bold uppercase tracking-[.16em] text-[#07856f]">More original views</span><span className="text-[8px] font-semibold text-[#80948d]">+4 images</span></div><div className="grid grid-cols-4 gap-1.5">{additionalImages.map((image, galleryIndex) => <figure key={`${place.name}-gallery-${galleryIndex}`} className="relative aspect-[4/3] overflow-hidden rounded-lg bg-[#dce8df]"><img src={image} alt={`${place.name} travel view ${galleryIndex + 2}`} className="absolute inset-0 h-full w-full object-cover transition duration-500 hover:scale-110" loading="lazy" /></figure>)}</div></div>
+                    <div className="mt-5">
+                      <div className="mb-2 flex items-center justify-between"><span className="text-[8px] font-bold uppercase tracking-[.16em] text-[#07856f]">More original views</span><span className="text-[8px] font-semibold text-[#80948d]">+4 images</span></div>
+                      <div className="grid grid-cols-4 gap-1.5">
+                        {additionalImages.map((image, galleryIndex) => {
+                          const artworkAlt = GALLERY_ARTWORK_ALT[image]
+                          return (
+                            <figure key={`${place.name}-gallery-${galleryIndex}`} className="relative aspect-[4/3] overflow-hidden rounded-lg bg-[#dce8df]">
+                              <DestinationPhoto
+                                src={image}
+                                alt={artworkAlt ?? `${place.name} travel view ${galleryIndex + 2}`}
+                                className={`absolute inset-0 h-full! w-full ${artworkAlt ? "object-contain" : "object-cover"}`}
+                              />
+                            </figure>
+                          )
+                        })}
+                      </div>
+                    </div>
                   </div>
                   <div className="mt-7 grid grid-cols-2 gap-2 border-t border-[#0a5b49]/10 pt-5 sm:grid-cols-3"><div><span className="block text-[8px] font-bold uppercase tracking-[.15em] text-[#80948d]">Best moment</span><strong className="mt-1 block text-xs">{place.best}</strong></div><div><span className="block text-[8px] font-bold uppercase tracking-[.15em] text-[#80948d]">Allow</span><strong className="mt-1 block text-xs">{place.time}</strong></div><div className="col-span-2 sm:col-span-1"><span className="block text-[8px] font-bold uppercase tracking-[.15em] text-[#80948d]">Travel note</span><strong className="mt-1 line-clamp-2 block text-xs font-medium">{place.tip}</strong></div></div>
                 </div>
@@ -444,7 +1003,16 @@ function AroundPlacesPage({ destination, destinations, onBack }: { destination: 
   )
 }
 
-export default function DestinationsPage({ destinations, onBack }: DestinationsPageProps) {
+export default function DestinationsPage({ destinations: baseDestinations, onBack }: DestinationsPageProps) {
+  const destinations = useMemo(() => [
+    ...baseDestinations.map((destination) => {
+      const photo = DESTINATION_PHOTOS[destination.name]
+      return photo ? { ...destination, img: `${GUIDE_PHOTO_BASE}${photo}` } : destination
+    }),
+    ...Object.entries(GUIDE_ADDITIONS)
+      .filter(([name]) => !baseDestinations.some((destination) => destination.name === name))
+      .map(([name, details]) => ({ name, ...details })),
+  ], [baseDestinations])
   const [activeFilter, setActiveFilter] = useState<Filter>("All")
   const [query, setQuery] = useState("")
   const [selected, setSelected] = useState<Destination | null>(null)
@@ -458,6 +1026,7 @@ export default function DestinationsPage({ destinations, onBack }: DestinationsP
   const [isTouristMapDragging, setIsTouristMapDragging] = useState(false)
   const touristMapDragRef = useRef({ active: false, startX: 0, startY: 0, startPanX: 0, startPanY: 0 })
   const touristMapCanvasRef = useRef<HTMLDivElement | null>(null)
+  const touristMapDetailsRef = useRef<HTMLElement | null>(null)
 
   useEffect(() => {
     const focusMobileMap = () => {
@@ -484,6 +1053,16 @@ export default function DestinationsPage({ destinations, onBack }: DestinationsP
   }, [mapSelectionName, mobileMapZoom, touristMapOpen])
 
   useEffect(() => {
+    if (!touristMapOpen || !window.matchMedia("(max-width: 1023px)").matches) return
+
+    const frame = window.requestAnimationFrame(() => {
+      touristMapDetailsRef.current?.scrollIntoView({ behavior: "smooth", block: "center" })
+    })
+
+    return () => window.cancelAnimationFrame(frame)
+  }, [mapSelectionName, touristMapOpen])
+
+  useEffect(() => {
     if (!selected) return
 
     const previousOverflow = document.body.style.overflow
@@ -502,6 +1081,7 @@ export default function DestinationsPage({ destinations, onBack }: DestinationsP
   const filteredDestinations = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase()
     return destinations.filter((destination) => {
+      if (HIDDEN_GALLERY_DESTINATIONS.has(destination.name)) return false
       const matchesFilter = activeFilter === "All" || getCategory(destination) === activeFilter
       const intelligence = PLACE_INTELLIGENCE[destination.name]
       const matchesQuery = !normalizedQuery ||
@@ -511,13 +1091,15 @@ export default function DestinationsPage({ destinations, onBack }: DestinationsP
   }, [activeFilter, destinations, query])
 
   const hero = destinations[0]
-  const popularMapDestinations = POPULAR_MAP_NAMES
+  const guideDestinations = GUIDE_DESTINATION_NAMES
     .map((name) => destinations.find((destination) => destination.name === name))
     .filter((destination): destination is Destination => Boolean(destination))
   const mapSelection = destinations.find((destination) => destination.name === mapSelectionName) ?? hero
   const googleMapUrl = `https://www.google.com/maps?q=${encodeURIComponent(`${mapSelection.name}, Sri Lanka`)}&z=${mapSelection.name === "Sri Lanka" ? 8 : 11}&t=k&output=embed`
   const selectedCategory = selected ? getCategory(selected) : null
-  const selectedGuide = selectedCategory ? DESTINATION_GUIDES[selectedCategory] : null
+  const selectedGuide = selected && selectedCategory
+    ? GUIDE_ADDITIONS[selected.name]?.guide ?? DESTINATION_GUIDES[selectedCategory]
+    : null
   const selectedIntel = selected ? PLACE_INTELLIGENCE[selected.name] : null
   const nearbyStory = nearbySelection ? getNearbyPlaceStory(nearbySelection.place, nearbySelection.parent) : null
   const nearbyParentIntel = nearbySelection ? PLACE_INTELLIGENCE[nearbySelection.parent.name] : null
@@ -542,9 +1124,9 @@ export default function DestinationsPage({ destinations, onBack }: DestinationsP
       .slice(0, 4)
     : []
   const smartTrip = SMART_TRIP_FACTS[mapSelection.name] ?? { distance: "Flexible", drive: "Your pace", mood: mapSelection.tag }
-  const mapGuide = DESTINATION_GUIDES[getCategory(mapSelection)]
+  const mapGuide = GUIDE_ADDITIONS[mapSelection.name]?.guide ?? DESTINATION_GUIDES[getCategory(mapSelection)]
   const mapIntel = PLACE_INTELLIGENCE[mapSelection.name]
-  const mapSelectionIndex = Math.max(0, popularMapDestinations.findIndex((destination) => destination.name === mapSelection.name))
+  const mapSelectionIndex = Math.max(0, guideDestinations.findIndex((destination) => destination.name === mapSelection.name))
   const selectedTouristMapPoint = DESTINATION_TOURIST_MAP_POINTS.find((point) => point.destination === mapSelection.name)
   const touristMapPanLimit = Math.max(0, (touristMapZoom - 1) * 50)
   const touristMapAutoTranslateX = touristMapOpen && selectedTouristMapPoint
@@ -557,12 +1139,16 @@ export default function DestinationsPage({ destinations, onBack }: DestinationsP
   const touristMapTranslateY = Math.max(-touristMapPanLimit, Math.min(touristMapPanLimit, touristMapAutoTranslateY + touristMapDrag.y))
 
   const selectRelativeDestination = (direction: number) => {
-    if (!popularMapDestinations.length) return
-    const nextIndex = (mapSelectionIndex + direction + popularMapDestinations.length) % popularMapDestinations.length
-    setMapSelectionName(popularMapDestinations[nextIndex].name)
+    if (!guideDestinations.length) return
+    const nextIndex = (mapSelectionIndex + direction + guideDestinations.length) % guideDestinations.length
+    setMapSelectionName(guideDestinations[nextIndex].name)
   }
 
   const openSmartDestination = () => {
+    if (HIDDEN_GALLERY_DESTINATIONS.has(mapSelection.name)) {
+      setSelected(mapSelection)
+      return
+    }
     setActiveFilter("All")
     setQuery(mapSelection.name)
     document.getElementById("destination-gallery")?.scrollIntoView({ behavior: "smooth" })
@@ -701,7 +1287,7 @@ export default function DestinationsPage({ destinations, onBack }: DestinationsP
                 <figcaption><small>0{index + 1} · {getCategory(destination)}</small><strong>{destination.name}</strong><span>{destination.tag}</span></figcaption>
               </figure>
             ))}
-            <div className="destination-hero-note"><span>25</span><p>places.<br />One small island.</p></div>
+            <div className="destination-hero-note"><span>{destinations.length}</span><p>places.<br />One small island.</p></div>
           </div>
         </div>
       </section>
@@ -748,9 +1334,9 @@ export default function DestinationsPage({ destinations, onBack }: DestinationsP
               </div>
             </aside>
 
-            {touristMapOpen ? <article className="destination-map-details relative self-end overflow-hidden rounded-2xl border border-white/25 bg-[#04243a]/94 p-3 shadow-2xl backdrop-blur-xl lg:absolute lg:p-4" aria-live="polite">
+            {touristMapOpen ? <article ref={touristMapDetailsRef} className="destination-map-details relative self-end overflow-hidden rounded-2xl border border-white/25 bg-[#04243a]/94 p-3 text-white shadow-2xl backdrop-blur-xl lg:absolute lg:p-4" aria-live="polite">
               <button type="button" onClick={resetTouristMap} className="absolute right-5 top-5 z-10 grid h-8 w-8 place-items-center rounded-full border border-white/25 bg-[#021827]/75 text-sm text-white backdrop-blur hover:bg-white hover:text-[#06223a]" aria-label="Close destination details">×</button>
-              <img key={mapSelection.img} src={mapSelection.img} alt={mapSelection.name} className="h-40 w-full rounded-xl object-cover lg:h-[clamp(6.5rem,11vw,10rem)]" />
+              <DestinationPhoto src={mapSelection.img} alt={mapSelection.name} className="h-40! w-full rounded-xl object-cover lg:h-[clamp(6.5rem,11vw,10rem)]!" loading="eager" />
               <div className="mt-3 flex items-center gap-2"><span className="text-xl text-[#ffbf4a]">⌖</span><h3 className="min-w-0 truncate text-2xl font-black lg:text-[clamp(1.1rem,1.7vw,1.8rem)]">{mapSelection.name}</h3></div>
               <p className="mt-1 text-xs text-white/55">⌖ {mapIntel?.district ?? "Sri Lanka"} District</p>
               <p className="mt-2 text-xs font-bold text-[#ffd05e]">★ 4.9 <span className="font-normal text-white/60">traveller rating</span></p>
@@ -786,32 +1372,29 @@ export default function DestinationsPage({ destinations, onBack }: DestinationsP
           </div>
 
           <div className="grid gap-6 lg:grid-cols-3 lg:gap-8">
-            <aside className="lg:col-span-1">
+            <aside className="min-w-0 lg:col-span-1">
               <div className="rounded-2xl border-2 border-gray-200 bg-white p-4 shadow-xl md:p-6">
                 <h3 className="mb-4 flex items-center gap-2 text-lg font-medium text-[#0A2342] md:text-xl"><span className="text-[#FFD700]">✦</span>Select Destination</h3>
                 <div className="flex gap-3 overflow-x-auto pb-3 lg:block lg:max-h-[720px] lg:space-y-2 lg:overflow-y-auto lg:pr-2">
-                  {popularMapDestinations.map((destination,index)=>{
+                  {guideDestinations.map((destination,index)=>{
                     const isActive=destination.name===mapSelection.name
-                    return <button type="button" key={destination.name} onClick={()=>setMapSelectionName(destination.name)} className={`w-[11rem] shrink-0 rounded-xl p-3 text-left transition duration-300 lg:w-full lg:p-4 ${isActive?"bg-gradient-to-br from-[#FFD700] to-[#FFA500] shadow-lg lg:scale-[1.02]":"bg-gray-50 hover:bg-gray-100"}`}>
-                      <div className="flex items-center gap-3"><span className="relative h-12 w-12 shrink-0 overflow-hidden rounded-xl"><img src={destination.img} alt="" className="h-full w-full object-cover"/></span><span className="min-w-0"><small className={`block text-[9px] font-bold uppercase tracking-wider ${isActive?"text-[#0A2342]/60":"text-gray-400"}`}>{String(index+1).padStart(2,"0")} · {getCategory(destination)}</small><strong className={`mt-1 block truncate text-sm ${isActive?"text-[#0A2342]":"text-gray-700"}`}>{destination.name}</strong><span className={`block truncate text-xs ${isActive?"text-[#0A2342]/70":"text-gray-500"}`}>{destination.tag}</span></span></div>
+                    return <button type="button" key={destination.name} onClick={()=>setMapSelectionName(destination.name)} aria-pressed={isActive} className={`w-[11rem] shrink-0 rounded-xl p-3 text-left transition duration-300 lg:w-full lg:p-4 ${isActive?"bg-gradient-to-br from-[#FFD700] to-[#FFA500] shadow-lg lg:scale-[1.02]":"bg-gray-50 hover:bg-gray-100"}`}>
+                      <div className="flex items-center gap-3"><span className="relative h-12 w-12 shrink-0 overflow-hidden rounded-xl bg-slate-100"><DestinationPhoto src={destination.img} className="h-full! w-full object-cover" /></span><span className="min-w-0"><small className={`block text-[9px] font-bold uppercase tracking-wider ${isActive?"text-[#0A2342]/60":"text-gray-400"}`}>{String(index+1).padStart(2,"0")} · {getCategory(destination)}</small><strong className={`mt-1 block truncate text-sm ${isActive?"text-[#0A2342]":"text-gray-700"}`}>{destination.name}</strong><span className={`block truncate text-xs ${isActive?"text-[#0A2342]/70":"text-gray-500"}`}>{destination.tag}</span></span></div>
                     </button>
                   })}
                 </div>
               </div>
             </aside>
 
-            <article className="overflow-hidden rounded-2xl border-2 border-[#FFD700]/30 bg-white shadow-2xl lg:col-span-2">
-              <div className="group relative h-72 overflow-hidden md:h-96">
-                <img key={mapSelection.name} src={mapSelection.img} alt={mapSelection.name} className="h-full w-full object-cover transition duration-700 group-hover:scale-105"/>
-                <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent"/>
-                <div className="absolute inset-x-0 bottom-0 p-5 text-white md:p-8">
-                  <div className="mb-3 flex flex-wrap items-center gap-2"><span className="rounded-full bg-[#FFD700] px-3 py-1 text-xs font-bold text-[#0A2342]">{mapSelection.tag}</span><span className="rounded-full border border-white/25 bg-black/20 px-3 py-1 text-xs backdrop-blur-xl">{getCategory(mapSelection)}</span></div>
-                  <h3 className="text-4xl font-medium md:text-5xl">{mapSelection.name}</h3>
-                  <p className="mt-2 max-w-2xl text-sm leading-6 text-white/85 md:text-base">{mapGuide.intro}</p>
-                </div>
-              </div>
-
+            <article className="min-w-0 overflow-hidden rounded-2xl border-2 border-[#FFD700]/30 bg-white shadow-2xl lg:col-span-2">
+              <GuidePhoto key={mapSelection.img} destination={mapSelection} />
               <div className="space-y-7 p-5 md:p-8">
+                <header className="border-b border-slate-200 pb-5">
+                  <div className="mb-3 flex flex-wrap items-center gap-2"><span className="rounded-full bg-[#FFD700] px-3 py-1 text-xs font-bold text-[#0A2342]">{mapSelection.tag}</span><span className="rounded-full bg-slate-100 px-3 py-1 text-xs text-[#0A2342]">{getCategory(mapSelection)}</span></div>
+                  <h3 className="break-words text-4xl font-medium text-[#0A2342] md:text-5xl">{mapSelection.name}</h3>
+                  <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600 md:text-base">{mapGuide.intro}</p>
+                </header>
+
                 <div className="grid gap-3 sm:grid-cols-3 md:gap-4">
                   <div className="flex items-center gap-3 rounded-xl border border-blue-200 bg-gradient-to-br from-blue-50 to-white p-4"><span className="text-blue-600">◷</span><div><small className="block text-xs text-gray-500">Best Time</small><strong className="text-sm font-medium text-gray-900">{mapGuide.bestTime}</strong></div></div>
                   <div className="flex items-center gap-3 rounded-xl border border-green-200 bg-gradient-to-br from-green-50 to-white p-4"><span className="text-green-600">◴</span><div><small className="block text-xs text-gray-500">Duration</small><strong className="text-sm font-medium text-gray-900">{mapGuide.stay}</strong></div></div>
@@ -869,8 +1452,8 @@ export default function DestinationsPage({ destinations, onBack }: DestinationsP
                 </h2>
                 <div className="mt-5 flex items-center gap-3">
                   <span className="text-[9px] font-bold uppercase tracking-[.2em] text-white/35">Explore</span>
-                  <span className="h-px flex-1 bg-white/10"><span className="block h-px bg-gradient-to-r from-[#7af0bd] to-transparent" style={{ width: `${((mapSelectionIndex + 1) / popularMapDestinations.length) * 100}%` }} /></span>
-                  <span className="text-[10px] font-semibold tabular-nums text-white/60">{String(mapSelectionIndex + 1).padStart(2, "0")} / {String(popularMapDestinations.length).padStart(2, "0")}</span>
+                  <span className="h-px flex-1 bg-white/10"><span className="block h-px bg-gradient-to-r from-[#7af0bd] to-transparent" style={{ width: `${((mapSelectionIndex + 1) / guideDestinations.length) * 100}%` }} /></span>
+                  <span className="text-[10px] font-semibold tabular-nums text-white/60">{String(mapSelectionIndex + 1).padStart(2, "0")} / {String(guideDestinations.length).padStart(2, "0")}</span>
                 </div>
               </div>
 
@@ -900,7 +1483,7 @@ export default function DestinationsPage({ destinations, onBack }: DestinationsP
                 <span className="text-[9px] font-semibold text-white/30">Tap to explore</span>
               </div>
               <div className="destination-map-list flex-1 overflow-y-auto p-3">
-                {popularMapDestinations.map((destination, index) => {
+                {guideDestinations.map((destination, index) => {
                   const isActive = destination.name === mapSelection.name
                   return (
                     <button
@@ -912,7 +1495,7 @@ export default function DestinationsPage({ destinations, onBack }: DestinationsP
                     >
                       {isActive && <span className="absolute -left-px top-1/2 h-7 w-1 -translate-y-1/2 rounded-r-full bg-[#4ee5a3]" />}
                       <span className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl">
-                        <img src={destination.img} alt="" className="h-full w-full object-cover transition duration-500 group-hover:scale-110" />
+                        <DestinationPhoto src={destination.img} className="h-full! w-full object-cover" />
                         <span className="absolute inset-0 bg-black/10" />
                       </span>
                       <span className="min-w-0 flex-1">
@@ -1006,7 +1589,7 @@ export default function DestinationsPage({ destinations, onBack }: DestinationsP
               Meet your private Suzuki Every—air-conditioned, locally driven, and ready to turn the road to {mapSelection.name} into part of the story.
             </p>
             <div className="smart-route-chips" aria-label="Choose a smart route">
-              {popularMapDestinations.slice(0, 5).map((destination) => (
+              {guideDestinations.filter((destination) => SMART_TRIP_FACTS[destination.name]).slice(0, 5).map((destination) => (
                 <button type="button" key={destination.name} className={destination.name === mapSelection.name ? "is-active" : ""} onClick={() => setMapSelectionName(destination.name)}>
                   {destination.name}
                 </button>
@@ -1100,12 +1683,12 @@ export default function DestinationsPage({ destinations, onBack }: DestinationsP
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
             {filteredDestinations.map((destination, index) => {
               const category = getCategory(destination)
-              const guide = DESTINATION_GUIDES[category]
+              const guide = GUIDE_ADDITIONS[destination.name]?.guide ?? DESTINATION_GUIDES[category]
               const intelligence = PLACE_INTELLIGENCE[destination.name]
               return (
                 <button type="button" key={destination.name} onClick={() => setSelected(destination)} aria-label={`Open full guide to ${destination.name}`} className="group flex min-h-[37rem] w-full flex-col overflow-hidden rounded-[1.8rem] border border-[#0a5b49]/10 bg-white text-left shadow-[0_16px_45px_rgba(8,61,50,.07)] outline-none ring-[#ff9a6c] transition duration-300 hover:-translate-y-1.5 hover:shadow-[0_28px_70px_rgba(8,61,50,.14)] focus-visible:ring-4">
-                  <div className="relative min-h-[18rem] overflow-hidden bg-[#16483e]">
-                    <img src={destination.img} alt="" loading="lazy" className="absolute inset-0 h-full w-full object-cover transition duration-700 group-hover:scale-105" />
+                  <div className="relative h-72 w-full shrink-0 overflow-hidden bg-[#16483e]">
+                    <DestinationPhoto src={destination.img} className="absolute inset-0 h-full! w-full object-cover motion-safe:transition-transform motion-safe:duration-700 motion-safe:group-hover:scale-105" />
                     <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(3,35,29,.02),rgba(3,35,29,.58))]" />
                     <div className="absolute inset-x-0 top-0 flex items-start justify-between p-5">
                       <span className="rounded-full border border-white/35 bg-[#062f28]/25 px-3 py-1.5 text-[9px] font-bold uppercase tracking-[0.16em] text-white backdrop-blur-xl">{destination.tag}</span>
@@ -1169,7 +1752,7 @@ export default function DestinationsPage({ destinations, onBack }: DestinationsP
 
             <div className="grid lg:h-full lg:grid-cols-[.94fr_1.06fr]">
               <div className="relative min-h-[20rem] overflow-hidden bg-[#123f35] sm:min-h-[25rem] lg:min-h-0">
-                <img src={selected.img} alt={`Beautiful view of ${selected.name}`} className="absolute inset-0 h-full w-full object-cover" />
+                <DestinationPhoto src={selected.img} alt={`Landscape around ${selected.name}`} className="absolute inset-0 h-full! w-full object-cover" loading="eager" />
                 <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(3,28,24,.12)_20%,rgba(3,28,24,.34)_55%,rgba(3,28,24,.92)_100%)]" />
                 <div className="absolute left-6 top-6 flex items-center gap-2 sm:left-8 sm:top-8">
                   <span className="rounded-full border border-white/30 bg-black/15 px-3 py-1.5 text-[9px] font-bold uppercase tracking-[0.18em] text-white backdrop-blur-xl">{selected.tag}</span>
@@ -1233,8 +1816,8 @@ export default function DestinationsPage({ destinations, onBack }: DestinationsP
                   </div>
                   <div className="grid grid-cols-2 gap-2">
                     {relatedDestinations.map((destination) => (
-                      <button type="button" key={destination.name} onClick={() => setSelected(destination)} className="group relative min-h-32 overflow-hidden rounded-[1.2rem] text-left text-white">
-                        <img src={destination.img} alt="" className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-110" />
+                      <button type="button" key={destination.name} onClick={() => setSelected(destination)} className="group relative min-h-32 overflow-hidden rounded-[1.2rem] bg-[#16483e] text-left text-white">
+                        <DestinationPhoto src={destination.img} className="absolute inset-0 h-full! w-full object-cover motion-safe:transition-transform motion-safe:duration-500 motion-safe:group-hover:scale-105" />
                         <span className="absolute inset-0 bg-gradient-to-t from-[#042d26]/90 via-[#042d26]/15 to-transparent" />
                         <span className="absolute inset-x-0 bottom-0 p-3"><small className="block text-[8px] font-bold uppercase tracking-wider text-white/65">{getCategory(destination)}</small><strong className="mt-0.5 block font-['Instrument_Serif'] text-xl font-normal">{destination.name}</strong></span>
                       </button>
@@ -1255,7 +1838,7 @@ export default function DestinationsPage({ destinations, onBack }: DestinationsP
             <button type="button" onClick={() => setNearbySelection(null)} className="fixed right-5 top-5 z-30 grid h-12 w-12 place-items-center rounded-full border border-white/50 bg-white/92 text-[#063e34] shadow-xl transition hover:rotate-90 sm:absolute sm:right-7 sm:top-7" aria-label="Close nearby place details">✕</button>
 
             <header className="relative min-h-[62vh] overflow-hidden bg-[#123f35] text-white">
-              <img src={nearbyHero} alt={`Regional view near ${nearbySelection.place}`} className="absolute inset-0 h-full w-full object-cover" />
+              <DestinationPhoto src={nearbyHero} alt={`Regional view near ${nearbySelection.place}`} className="absolute inset-0 h-full! w-full object-cover" loading="eager" />
               <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(2,27,23,.92)_0%,rgba(2,27,23,.6)_48%,rgba(2,27,23,.15)_80%),linear-gradient(0deg,rgba(2,27,23,.8),transparent_60%)]" />
               <div className="relative flex min-h-[62vh] flex-col justify-between p-6 sm:p-10 lg:p-14">
                 <div className="flex flex-wrap items-center gap-2">
@@ -1313,7 +1896,7 @@ export default function DestinationsPage({ destinations, onBack }: DestinationsP
                   <div className="grid grid-cols-2 gap-2">
                     {nearbyGallery.map((destination, index) => (
                       <figure key={`${destination.name}-${index}`} className={`relative overflow-hidden rounded-[1.2rem] bg-[#123f35] ${index === 0 ? "col-span-2 min-h-56" : "min-h-36"}`}>
-                        <img src={destination.img} alt={`Regional inspiration from ${destination.name}`} className="absolute inset-0 h-full w-full object-cover transition duration-700 hover:scale-105" />
+                        <DestinationPhoto src={destination.img} alt={`Regional inspiration from ${destination.name}`} className="absolute inset-0 h-full! w-full object-cover motion-safe:transition-transform motion-safe:duration-700 motion-safe:hover:scale-105" />
                         <span className="absolute inset-0 bg-gradient-to-t from-[#03251f]/70 via-transparent to-transparent" />
                         <figcaption className="absolute inset-x-0 bottom-0 p-4 text-white"><small className="block text-[8px] font-bold uppercase tracking-[.15em] text-white/60">Regional inspiration</small><strong className="mt-1 block font-['Instrument_Serif'] text-2xl font-normal">{destination.name}</strong></figcaption>
                       </figure>

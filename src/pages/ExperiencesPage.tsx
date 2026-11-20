@@ -109,7 +109,7 @@ export default function ExperiencesPage({ onNavigate }: ExperiencesPageProps) {
 
   return (
     <main className="experience-atlas">
-      <section ref={heroRef} className="experience-atlas__hero" aria-labelledby="experience-hero-title">
+      <section id="experiences-overview" ref={heroRef} className="experience-atlas__hero" aria-labelledby="experience-hero-title">
         <div className="experience-atlas__hero-stage">
           <div className="experience-atlas__hero-scene">
             <img className="experience-atlas__hero-image experience-atlas__hero-image--base" src="/assets/experiences-hero-sri-lanka.png" alt="Sri Lanka landscape with Sigiriya, a hill-country train, tea fields, an elephant and tropical coast" width="1672" height="941" decoding="async" fetchPriority="high" draggable={false} />
@@ -130,7 +130,7 @@ export default function ExperiencesPage({ onNavigate }: ExperiencesPageProps) {
         </div>
       </section>
 
-      <section className="experience-atlas__manifesto">
+      <section id="experiences-intro" className="experience-atlas__manifesto scroll-mt-24">
         <div><p className="experience-atlas__kicker"><span /> More than a destination</p><h2>Come for the view.<br /><em>Leave with a story.</em></h2></div>
         <div><p>Sri Lanka fits astonishing variety into one small island: cloud forests and coral bays, ancient capitals and living kitchens, quiet rituals and wild encounters.</p><p>This guide turns that variety into an easy starting point. Choose a feeling, see where it leads, then shape the pace around you.</p></div>
         <div className="experience-atlas__manifesto-image"><img src="/assets/minneriya-national-park-main.png" alt="Elephants crossing the grassland at Minneriya" /><span>Wild encounters · Minneriya</span></div>
@@ -168,7 +168,7 @@ export default function ExperiencesPage({ onNavigate }: ExperiencesPageProps) {
         </div>
       </section>
 
-      <section className="experience-season">
+      <section id="experiences-seasons" className="experience-season scroll-mt-24">
         <div className="experience-season__intro"><p className="experience-atlas__kicker"><span /> Follow the good weather</p><h2>There is always<br />a coast in season.</h2><p>Sri Lanka’s two monsoon patterns mean the best beach, surf and wildlife conditions move around the island through the year.</p></div>
         <div className="experience-season__board">
           <article><span>DEC — APR</span><h3>South & west</h3><p>Beach days in Mirissa and Galle, hill-country trains, whale watching and dry-season trails.</p><div><b>28°C</b><small>Coast average</small></div></article>
@@ -177,13 +177,13 @@ export default function ExperiencesPage({ onNavigate }: ExperiencesPageProps) {
         </div>
       </section>
 
-      <section className="experience-day">
-        <div className="experience-day__image"><img src="/assets/local-flavours-ella-main.png" alt="A Sri Lankan table filled with local dishes" /><span>One island · a thousand stories</span></div>
+      <section id="experiences-day" className="experience-day scroll-mt-24">
+        <div className="experience-day__image"><img src="/assets/first-light-firelight-dining.png" alt="Sri Lankan rice and curry served at sunset overlooking the tea country" /><span>One island · a thousand stories</span></div>
         <div className="experience-day__content"><p className="experience-atlas__kicker"><span /> A day worth travelling for</p><h2>First light<br />to firelight.</h2><ol><li><time>05:30</time><div><strong>Climb before sunrise</strong><p>Cool air, quiet paths and gold arriving over the plains.</p></div></li><li><time>10:30</time><div><strong>Cook with a local host</strong><p>Market vegetables, fresh hoppers and recipes told by memory.</p></div></li><li><time>15:30</time><div><strong>Follow the wild</strong><p>A slow safari as elephants emerge into evening light.</p></div></li><li><time>19:30</time><div><strong>Dinner under the stars</strong><p>Night sounds, warm spice and nowhere else to be.</p></div></li></ol></div>
       </section>
 
-      <section className="experience-atlas__closing">
-        <img src="/assets/coconut-tree-hill-main.png" alt="The tropical coast at Coconut Tree Hill in Mirissa" />
+      <section id="experiences-closing" className="experience-atlas__closing scroll-mt-24">
+        <img src="/assets/mirissa-closing-sunset.png" alt="Mirissa coastline and Coconut Tree Hill glowing at sunset" />
         <div className="experience-atlas__closing-overlay" />
         <div><p className="experience-atlas__kicker"><span /> Your journey, your rhythm</p><h2>What will you<br /><em>remember?</em></h2><p>Tell us what draws you in. We’ll connect the right places, pace and experiences into one effortless island journey.</p><div><button type="button" onClick={() => onNavigate("reach-us")}>Create my journey <span>↗</span></button><button type="button" onClick={() => onNavigate("tours")}>Explore curated tours</button></div></div>
       </section>
