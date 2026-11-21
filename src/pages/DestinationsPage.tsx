@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react"
 import destinationAdventureMap from "../assets/sri-lanka-destination-adventure-map.png"
+import areaGuidePhotos from "./areaGuidePhotos.json"
 
 export type Destination = {
   name: string
@@ -87,6 +88,7 @@ type PlaceIntelligence = {
 }
 
 const GUIDE_PHOTO_BASE = `${import.meta.env.BASE_URL}assets/`
+const AREA_GUIDE_PHOTOS: Record<string, Record<string, string[]>> = areaGuidePhotos
 const RUMASSALA_ARTWORK = `${GUIDE_PHOTO_BASE}rumassala-discover.jpg`
 const GALLERY_ARTWORK_ALT: Partial<Record<string, string>> = {
   [RUMASSALA_ARTWORK]: "Discover Rumassala, Sri Lanka, above the forested coast and Peace Pagoda",
@@ -373,6 +375,62 @@ export const PLACE_IMAGE_GALLERIES: Record<string, string[]> = {
     `${GUIDE_PHOTO_BASE}bentota-guesthouses-river-view-dining-balcony.jpg`,
     `${GUIDE_PHOTO_BASE}bentota-guesthouses-canopy-bedroom.jpg`,
     `${GUIDE_PHOTO_BASE}bentota-guesthouses-woodland-cottage.jpg`,
+  ],
+  "Coral Sanctuary": [
+    `${GUIDE_PHOTO_BASE}hikkaduwa-coral-sanctuary-colourful-coral-reef.jpg`,
+    `${GUIDE_PHOTO_BASE}hikkaduwa-coral-sanctuary-school-of-reef-fish.jpg`,
+    `${GUIDE_PHOTO_BASE}hikkaduwa-coral-sanctuary-aerial-view-of-the-reef.jpg`,
+    `${GUIDE_PHOTO_BASE}hikkaduwa-coral-sanctuary-tropical-fish-over-coral.jpg`,
+    `${GUIDE_PHOTO_BASE}hikkaduwa-coral-sanctuary-sea-turtle-over-the-reef.jpg`,
+  ],
+  "Seenigama Temple": [
+    `${GUIDE_PHOTO_BASE}seenigama-temple-offshore-temple-and-palms.jpg`,
+    `${GUIDE_PHOTO_BASE}seenigama-temple-aerial-view-of-the-islet.jpg`,
+    `${GUIDE_PHOTO_BASE}seenigama-temple-island-temple-under-blue-sky.jpg`,
+    `${GUIDE_PHOTO_BASE}seenigama-temple-temple-beyond-the-surf.jpg`,
+    `${GUIDE_PHOTO_BASE}seenigama-temple-temple-across-calm-water.jpg`,
+  ],
+  "Tsunami Museum": [
+    `${GUIDE_PHOTO_BASE}hikkaduwa-tsunami-museum-palm-lined-museum-entrance.jpg`,
+    `${GUIDE_PHOTO_BASE}hikkaduwa-tsunami-museum-visitors-in-the-exhibition.jpg`,
+    `${GUIDE_PHOTO_BASE}hikkaduwa-tsunami-museum-museum-facade-and-sign.jpg`,
+    `${GUIDE_PHOTO_BASE}hikkaduwa-tsunami-museum-museum-and-garden-path.jpg`,
+    `${GUIDE_PHOTO_BASE}hikkaduwa-tsunami-museum-tsunami-memorial-statue.jpg`,
+  ],
+  "Dodanduwa Lagoon": [
+    `${GUIDE_PHOTO_BASE}dodanduwa-lagoon-kayak-at-sunset.jpg`,
+    `${GUIDE_PHOTO_BASE}dodanduwa-lagoon-lagoon-under-leafy-branches.jpg`,
+    `${GUIDE_PHOTO_BASE}dodanduwa-lagoon-lagoon-framed-by-palms.jpg`,
+    `${GUIDE_PHOTO_BASE}dodanduwa-lagoon-waterside-terrace.jpg`,
+    `${GUIDE_PHOTO_BASE}dodanduwa-lagoon-wooden-jetty-at-sunset.jpg`,
+  ],
+  "Local flavours of Hikkaduwa": [
+    `${GUIDE_PHOTO_BASE}local-flavours-hikkaduwa-seafood-lunch.jpg`,
+    `${GUIDE_PHOTO_BASE}local-flavours-hikkaduwa-rice-and-curry-bowl.jpg`,
+    `${GUIDE_PHOTO_BASE}local-flavours-hikkaduwa-kottu-and-curry.jpg`,
+    `${GUIDE_PHOTO_BASE}local-flavours-hikkaduwa-egg-hopper-and-curries.jpg`,
+    `${GUIDE_PHOTO_BASE}local-flavours-hikkaduwa-beachside-dining-at-sunset.jpg`,
+  ],
+  "Hikkaduwa market & café trail": [
+    `${GUIDE_PHOTO_BASE}hikkaduwa-market-cafe-seafront-breakfast-and-juice.jpg`,
+    `${GUIDE_PHOTO_BASE}hikkaduwa-market-cafe-open-air-cafe.jpg`,
+    `${GUIDE_PHOTO_BASE}hikkaduwa-market-cafe-cafe-overlooking-the-ocean.jpg`,
+    `${GUIDE_PHOTO_BASE}hikkaduwa-market-cafe-tropical-fruit-stall.jpg`,
+    `${GUIDE_PHOTO_BASE}hikkaduwa-market-cafe-market-produce-displays.jpg`,
+  ],
+  "Boutique stays near Hikkaduwa": [
+    `${GUIDE_PHOTO_BASE}boutique-stays-hikkaduwa-private-villa-and-pool.jpg`,
+    `${GUIDE_PHOTO_BASE}boutique-stays-hikkaduwa-pool-with-ocean-view.jpg`,
+    `${GUIDE_PHOTO_BASE}boutique-stays-hikkaduwa-palm-lined-seafront-pool.jpg`,
+    `${GUIDE_PHOTO_BASE}boutique-stays-hikkaduwa-white-villa-and-pool.jpg`,
+    `${GUIDE_PHOTO_BASE}boutique-stays-hikkaduwa-poolside-villa-at-sunset.jpg`,
+  ],
+  "Hikkaduwa guesthouses & nature lodges": [
+    `${GUIDE_PHOTO_BASE}hikkaduwa-guesthouses-garden-guesthouse.jpg`,
+    `${GUIDE_PHOTO_BASE}hikkaduwa-guesthouses-woodland-cabins.jpg`,
+    `${GUIDE_PHOTO_BASE}hikkaduwa-guesthouses-beachfront-veranda.jpg`,
+    `${GUIDE_PHOTO_BASE}hikkaduwa-guesthouses-canopy-bedroom.jpg`,
+    `${GUIDE_PHOTO_BASE}hikkaduwa-guesthouses-waterfront-terrace.jpg`,
   ],
   "Temple of the Tooth": [
     `${GUIDE_PHOTO_BASE}kandy-temple-lakeside-evening.png`,
@@ -913,8 +971,7 @@ function AroundPlacesPage({ destination, destinations, onBack }: { destination: 
   const attractionPlaces = (intelligence?.nearby ?? []).map((place, index) => {
     const story = getNearbyPlaceStory(place, destination)
     const placeCategory: AroundCategory = story.kind === "Culture & heritage" ? "Culture & history" : "Nature"
-    const suppliedGallery = PLACE_IMAGE_GALLERIES[place]
-    return { name: place, category: placeCategory, description: story.intro, best: story.bestMoment, time: story.visitTime, tip: story.travelTip, image: suppliedGallery?.[0] ?? destinations.find((item) => item.name === place)?.img ?? imagePool[index % imagePool.length], mapQuery: `${place}, ${district}, Sri Lanka` }
+    return { name: place, category: placeCategory, description: story.intro, best: story.bestMoment, time: story.visitTime, tip: story.travelTip, image: destinations.find((item) => item.name === place)?.img ?? imagePool[index % imagePool.length], mapQuery: `${place}, ${district}, Sri Lanka` }
   })
 
   const servicePlaces = [
@@ -924,10 +981,13 @@ function AroundPlacesPage({ destination, destinations, onBack }: { destination: 
     { name: `${destination.name} guesthouses & nature lodges`, category: "Hotels" as AroundCategory, description: `Smaller guesthouses and nature lodges offer a more personal stay, often with home-cooked meals, local hosts and easy access to sunrise walks or quieter surrounding places.`, best: "Slow travel", time: "Two to three nights", tip: "Check room access, meal options and sustainability practices before booking.", image: imagePool[7 % imagePool.length], mapQuery: `guest houses and nature lodges near ${destination.name}, Sri Lanka` },
   ]
 
-  const places = [...attractionPlaces, ...servicePlaces].map((place) => ({
-    ...place,
-    image: PLACE_IMAGE_GALLERIES[place.name]?.[0] ?? place.image,
-  }))
+  const suppliedPhotos = AREA_GUIDE_PHOTOS[destination.name]
+  const places = [...attractionPlaces, ...servicePlaces].map((place) => {
+    const gallery = suppliedPhotos?.[place.name]?.map((file) => `${GUIDE_PHOTO_BASE}area-guides/${file}`)
+      ?? PLACE_IMAGE_GALLERIES[place.name]
+
+    return { ...place, image: gallery?.[0] ?? place.image, gallery }
+  })
   const visiblePlaces = category === "All" ? places : places.filter((place) => place.category === category)
 
   return (
@@ -963,8 +1023,7 @@ function AroundPlacesPage({ destination, destinations, onBack }: { destination: 
         <div className="space-y-5">
           {visiblePlaces.map((place, index) => {
             const mapUrl = `https://www.google.com/maps?q=${encodeURIComponent(place.mapQuery)}&z=13&output=embed`
-            const suppliedGallery = PLACE_IMAGE_GALLERIES[place.name]
-            const additionalImages = suppliedGallery?.slice(1, 5) ?? [...imagePool.slice(index + 1), ...imagePool.slice(0, index + 1)]
+            const additionalImages = place.gallery?.slice(1, 5) ?? [...imagePool.slice(index + 1), ...imagePool.slice(0, index + 1)]
               .filter((image, imageIndex, list) => image !== place.image && list.indexOf(image) === imageIndex)
               .slice(0, 4)
             return (
@@ -974,7 +1033,7 @@ function AroundPlacesPage({ destination, destinations, onBack }: { destination: 
                   <div>
                     <p className="text-[9px] font-bold uppercase tracking-[.2em] text-[#07856f]">Around {destination.name}</p><h2 className="mt-3 font-['Instrument_Serif'] text-[clamp(2.7rem,4vw,4.8rem)] font-normal leading-[.86] tracking-[-.04em]">{place.name}</h2><p className="mt-5 max-w-2xl text-sm leading-7 text-[#5b746c]">{place.description}</p>
                     <div className="mt-5">
-                      <div className="mb-2 flex items-center justify-between"><span className="text-[8px] font-bold uppercase tracking-[.16em] text-[#07856f]">More original views</span><span className="text-[8px] font-semibold text-[#80948d]">+4 images</span></div>
+                      <div className="mb-2 flex items-center justify-between"><span className="text-[8px] font-bold uppercase tracking-[.16em] text-[#07856f]">More original views</span><span className="text-[8px] font-semibold text-[#80948d]">+${additionalImages.length} images</span></div>
                       <div className="grid grid-cols-4 gap-1.5">
                         {additionalImages.map((image, galleryIndex) => {
                           const artworkAlt = GALLERY_ARTWORK_ALT[image]
